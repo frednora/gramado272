@@ -21,7 +21,7 @@ irq1_KEYBOARD (void)
     //refresh_screen();
 
     // Disable mouse port.
-    wait_then_write (0x64,0xA7);
+    //wait_then_write (0x64,0xA7);
 
     // #test
     // See: ps2kbd.c
@@ -47,7 +47,7 @@ done:
     if ( PS2.used == TRUE )
     {
         if ( PS2.mouse_initialized == TRUE ){
-            wait_then_write (0x64,0xA8);
+            //wait_then_write (0x64,0xA8);
         }
     }
 }

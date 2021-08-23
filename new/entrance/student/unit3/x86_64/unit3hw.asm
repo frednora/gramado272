@@ -116,17 +116,11 @@ unit3Irq0Release:
     
     sti
     iretq
-    
-    
-    
-    
-
-
 
 
 ;; #delete
-hwlib_something: 
-    ret
+;hwlib_something: 
+    ;ret
 
 
 ;----------------------------------------------

@@ -56,6 +56,7 @@ tss1_end:
 ;; ==================================
 ;; Limpar a flag nt em rflags
 ;; e dar refresh na pipeline. #todo
+;; Isso evita taskswitching via hardware quando em 32bit.
 
 global _x64_clear_nt_flag
 _x64_clear_nt_flag:
@@ -544,7 +545,9 @@ setup_vectors:
     push rbx 
 
 ; 32 - Timer.
-    ; Iniciamos um timer provisório, depois o main() inicia o definitivo.
+; Iniciamos um timer provisório, 
+;depois iniciaremos o definitivo.
+;See: _turn_task_switch_on in  unit3hw.asm.
     mov rax,  qword unhandled_irq
     ;mov rax,  qword  _irq0 
     mov rbx,  qword 32

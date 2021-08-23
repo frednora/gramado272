@@ -202,7 +202,6 @@ _irq1:
 
     cli
 
-
     ;; Acumulator.
     push rax
    
@@ -990,16 +989,11 @@ extern _irq12_MOUSE
 ; Capture context
 global _irq12
 _irq12:
-
     cli
 
-    ;pushad
-    ;push ds
-    ;push es
-    ;push fs
-    ;push gs
-    ;push ss 
-
+    ;; Acumulator.
+    push rax
+   
     push rax
     push rbx
     push rcx
@@ -1020,37 +1014,22 @@ _irq12:
     ;push es
     push fs
     push gs
+    push rsp
+    pushfq
+    cld
 
-; See:
-; mouse.c
+; See: mouse.c
     call _irq12_MOUSE
 
-    ;; EOI.
-    ;; Order: Second, first.
-    mov al, 0x20
-    
-    out 0xA0, al 
-    IODELAY 
-    
-    out 0x20, al
-    IODELAY 
+    ;int 3
 
-    ;pop ss
-    ;pop gs 
-    ;pop fs 
-    ;pop es 
-    ;pop ds
-    ;popad
-
+    popfq
+    pop rsp
     pop gs
     pop fs
     ;pop es
     ;pop ds
-    
-    ;#bugbug
-    ;#todo: Pop the registers.
-    ;popad
-    
+
     pop r15
     pop r14
     pop r13
@@ -1068,6 +1047,17 @@ _irq12:
     pop rax
 
 
+    ;; EOI.
+    ;; Order: Second, first.
+    mov al, 0x20
+    out 0xA0, al 
+    IODELAY 
+    out 0x20, al
+    IODELAY 
+
+    
+    ;; The acumulator.
+    pop rax
 
     sti
     iretq

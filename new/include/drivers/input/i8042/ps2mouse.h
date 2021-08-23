@@ -129,7 +129,8 @@ unsigned long g_mousepointer_height;
 // == prototypes =====================
 //
 
-void ps2mouse_initialize_device (void);
+unsigned char xxx_mouse_read (void);
+void expect_ack (void);
 
 
 #endif    

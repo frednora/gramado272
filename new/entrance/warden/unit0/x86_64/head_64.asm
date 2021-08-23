@@ -122,12 +122,17 @@ START:
     ; Disable IRQs
     ; Out 0xFF to 0xA1 and 0x21 to disable all IRQs.
 
+
+;; Esse rotina existe mais pra frente,
+;; mas poderíamos antecipa-la.
+
     ;mov al, 0xFF  
     ;out 0xA1, al
     ;out 0x21, al
 
-    ;See: headlib.asm
-    ; This is so dangeours
+;See: unit0.asm
+; This is so dangeours
+
     call setup_idt      ; Create a common handler, 'unhandled_int'.
     call setup_faults   ; Setup vectors for faults and exceptions.
     call setup_vectors  ; Some new vectors.
@@ -190,17 +195,17 @@ START:
     out 0xA1, al
     IODELAY
 
+
 ;
 ; Mask all interrupts.
 ;
-
     cli
-
     mov  al, 255
     out  0xA1,  al
     IODELAY
     out  0x21,  al
     IODELAY
+
 
 ;
 ; Early PIT initialization.
@@ -231,10 +236,11 @@ START:
 ; #todo: RTC
 ;
 
+
+
 ;
 ; Unmask all maskable interrupts.
 ;
-
     mov al, 0
     out 0xA1, al
     IODELAY
