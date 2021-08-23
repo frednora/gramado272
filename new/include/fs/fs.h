@@ -110,11 +110,12 @@ struct cwd_d CWD;
 #define  FS_SYSTEMWORKINGDIRECTORY_ID   2
 #define  FS_UNKNOWNWORKINGDIRECTORY_ID  (-1)
 
-#define CACHE_SAVED        1
-#define CACHE_NOT_SAVED    0
 
-#define CACHE_LOADED        1
-#define CACHE_NOT_LOADED    0
+// FAT cache
+#define FAT_CACHE_LOADED        1
+#define FAT_CACHE_NOT_LOADED    0
+#define FAT_CACHE_SAVED        1
+#define FAT_CACHE_NOT_SAVED    0
 
 
 
@@ -459,7 +460,9 @@ fsFAT16ListFiles (
     
 int init_directory_facilities(void);
 void fsInitializeWorkingDiretoryString (void);
-void fsInitTargetDir (unsigned long dir_address, char *name);
+
+int fsInitTargetDir (unsigned long dir_address, char *dir_name);
+
 int fsList ( const char *dir_name );
 
 void 
@@ -534,7 +537,7 @@ fsLoadFile (
     int dir_entries,
     const char *file_name, 
     unsigned long buffer,
-    unsigned long buffer_limit );
+    unsigned long buffer_size_in_bytes );
 
 unsigned long 
 fsLoadFile2 ( 

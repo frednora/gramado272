@@ -2079,17 +2079,18 @@ void sys_reboot (void)
 {
     debug_print("sys_reboot:\n");
 
-    // FAT cache.
-    // This is the FAT cache for the system disk.
-    // The boot partition.
-    
-    // Message
-    if(fat_cache_saved==CACHE_NOT_SAVED)
-        debug_print("sys_reboot: CACHE_NOT_SAVED\n");
+// FAT cache.
+// This is the FAT cache for the system disk.
+// The boot partition.
 
-    
-    debug_print("sys_reboot: Saving FAT cache\n");
-    fs_save_fat(VOLUME1_FAT_ADDRESS,VOLUME1_FAT_LBA,246);
+// Message
+    if(fat_cache_saved == FAT_CACHE_NOT_SAVED)
+    {
+        debug_print("sys_reboot: FAT_CACHE_NOT_SAVED\n");
+        debug_print("sys_reboot: Saving FAT cache\n");
+        fs_save_fat(VOLUME1_FAT_ADDRESS,VOLUME1_FAT_LBA,246);
+        fat_cache_saved = FAT_CACHE_SAVED;
+    }
 
 //
 // Reboot

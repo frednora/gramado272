@@ -26,50 +26,59 @@ void I8042Controller_do_drain(void)
  */
 
 // #??
-// is this the besto option fo x86_64?
+// is this the best option for x86_64?
 #define __local_out_any_b(p)  asm volatile ( "outb %%al,%0" : : "dN"((p)) : "eax" )
 
 // Espera para ler ou para escrever!
-
 #define __I8042_BUFFER_FULL  0x01
+
+// #todo: Descreva pra que serve o bit 1. valor 2.
 
 void kbdc_wait (unsigned char type)
 {
-    unsigned char Status=0;
-    //unsigned char Type=0;   //#todo
-    
-    // 0 = READ
-    if (type==0)
+    unsigned char StatusChar=0;
+    unsigned char Type=0;
+
+    int i=0;
+    int timeout=10000;
+
+    Type = (type & 0xFF);
+
+// =====================================
+// 0 = READ
+    if (Type==0)
     {
-        for (;;) 
+        // Spin
+        for (i=0; i<timeout; i++) 
         {
-            Status = in8(0x64);
+            StatusChar = (unsigned char) in8(0x64);
            
            // Sinalizado que o buffer ta cheio.
            // # Somente para mouse.
            // See: serenity os.
-           if ( (Status & __I8042_BUFFER_FULL) != 0 )  
+           // Quando for '1' eu saio.
+           if ( (StatusChar & __I8042_BUFFER_FULL) != 0 )
+           {
+               __local_out_any_b (0x80);
                return;
-
-            // #todo: delay
-            // __local_out_any_b (0x80);
-            // wait_ns (400);
-
+           }
         };
+        // End of time.
+        return;
     }
 
-
-    // 1 = WRITE
-    if (type==1)
+// =====================================
+// 1 = WRITE
+    if (Type==1)
     {
-        for (;;)
+        for (i=0; i<timeout; i++)
         {
+            // Quando for '0', eu saio.
             if ( !(in8(0x64) & 2) )
+            {
+                __local_out_any_b (0x80);
                 return;
-            
-            // #todo: delay
-            // __local_out_any_b (0x80);
-            // wait_ns (400);
+            }
         };
     };
 }  
@@ -89,6 +98,8 @@ void prepare_for_output(void)
     // 1 = WRITE
     kbdc_wait(1);
 }
+
+
 
 //====================================================================
 
@@ -120,6 +131,9 @@ int PS2_initialize(void)
 }
 
 
+#define __PS2MOUSE_SET_DEFAULTS              0xF6
+#define __PS2MOUSE_SET_RESOLUTION            0xE8
+
 // This is called during the kernel initialization.
 // Called by I_x64main in x64init.c
 int PS2_early_initialization(void)
@@ -140,10 +154,11 @@ int PS2_early_initialization(void)
     
 // ====================================================================    
 //keyboard
-    //wait_then_write(I8042_STATUS, 0xae);  // enable keyboard port
-    //PS2.keyboard_initialized = TRUE;
-    //expect_ack();
-    //for (i=0; i<20000; i++){};
+    wait_then_write(I8042_STATUS, 0xae);  // enable keyboard port
+    keyboard_expect_ack();
+    PS2.keyboard_initialized = TRUE;
+
+
 
 
 // ====================================================================    
@@ -155,7 +170,10 @@ int PS2_early_initialization(void)
     //wait_then_write(I8042_STATUS, 0xa8);  // enable mouse port
     //PS2.mouse_initialized    = TRUE;
 
-/*
+
+
+
+
 //++
 //======================================================
     // #obs:
@@ -173,6 +191,9 @@ int PS2_early_initialization(void)
     // #todo: me parece que para habilitar o secundario eh
     // preciso apenas mandar 0xA8 para a porta 0x64.
 
+// ========================================
+// Enable the interrupts
+
     // Dizemos para o controlador entrar no modo leitura.
     // Esperamos para ler e lemos.
     // 0x20 Read Command Byte
@@ -188,6 +209,9 @@ int PS2_early_initialization(void)
     wait_then_write (0x64,I8042_WRITE);   // I8042_WRITE = 0x60
     wait_then_write (0x60,status);   
     
+// ========================================
+// Activate mouse port. (2nd port)
+
     // 0x64 <<< 0xA8 ?? enable aux
     // 0x64 <<< 0xA9 ?? check for mouse
     // #todo: See i8042.h for the commands used in the initialization.
@@ -204,13 +228,53 @@ int PS2_early_initialization(void)
 
     // Enable mouse.
     wait_then_write(0x64,0xA8);
-    expect_ack();
-    for (i=0; i<20000; i++){};
+    mouse_expect_ack();
+
+// ========================================
+// Reset
+//  Isso reseta o controlador inteiro ?
+
+    // Essa rotina avisa que vai escrever na porta do mouse
+    // antes de escrever.
+    // Então reseta somente o mouse e não o teclado.
+    zzz_mouse_write(0xFF); 
+    mouse_expect_ack();
+
+// ========================================
+// Default
+
+    // 0xF6 Set default settings.
+    zzz_mouse_write (__PS2MOUSE_SET_DEFAULTS);
+    mouse_expect_ack();
+
+// --------------------------------------
+	// set sample rate
+	zzz_mouse_write(0xF3);
+	mouse_expect_ack(); // ACK
+	
+	zzz_mouse_write(200);
+	mouse_expect_ack(); // ACK
+
+	// set resolution
+	zzz_mouse_write(__PS2MOUSE_SET_RESOLUTION);
+	mouse_expect_ack(); // ACK
+	
+	zzz_mouse_write(3);
+	mouse_expect_ack(); // ACK
+
+	
+	//set scaling 1:1
+	zzz_mouse_write(0xE6);
+	mouse_expect_ack(); // ACK
+
+	// Enable the mouse
+	zzz_mouse_write(0xF4);
+	mouse_expect_ack(); // ACK
+
+    PS2.mouse_initialized = TRUE;
 
 //======================================================
 //-- 
-*/
-
 
 
 // ====================================================================    

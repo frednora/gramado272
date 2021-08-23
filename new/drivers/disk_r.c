@@ -168,11 +168,12 @@ fs_load_fat(
 
     unsigned long __fatAddress=0;
     unsigned long __fatLBA=0;
-    size_t        __fatSize=0;
-    
-    __fatAddress = fat_address;
-    __fatLBA     = fat_lba;
-    __fatSize    = fat_size;   //fat size in sectors. 246?
+    size_t        __fatSizeInSectors=0;
+
+
+    __fatAddress       = fat_address;
+    __fatLBA           = fat_lba;
+    __fatSizeInSectors = (fat_size & 0xFFFF);   //fat size in sectors. 246?
 
 
     debug_print ("fs_load_fat:\n");
@@ -182,7 +183,7 @@ fs_load_fat(
     //
     
     // Se ja está na memória, então não precisamos carregar novamente.
-    if (fat_cache_loaded==CACHE_LOADED){
+    if (fat_cache_loaded==FAT_CACHE_LOADED){
          debug_print("fs_load_fat: FAT cache already loaded!\n");
          return;
     }
@@ -195,10 +196,10 @@ fs_load_fat(
     __load_sequential_sectors ( 
         __fatAddress, 
         __fatLBA, 
-        __fatSize );
+        __fatSizeInSectors );
 
-    // Changing the status
-    fat_cache_loaded = CACHE_LOADED;
+// Changing the status
+    fat_cache_loaded = FAT_CACHE_LOADED;
 }
 
 
@@ -212,7 +213,9 @@ fs_load_metafile (
 {
 
     debug_print ("fs_load_metafile:\n");
-    
+
+    unsigned long SizeInSectors = (size & 0xFFFFFFFF);
+
     if (buffer == 0){
         debug_print ("fs_load_metafile: [ERROR] buffer\n");
         return;
@@ -226,7 +229,7 @@ fs_load_metafile (
     __load_sequential_sectors ( 
         buffer, 
         first_lba, 
-        size );
+        SizeInSectors );
 }
 
 /*

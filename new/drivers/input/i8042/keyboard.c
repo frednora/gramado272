@@ -9,6 +9,9 @@
 #include <kernel.h>  
 
 
+// quando tem uma interrupção de mouse eu desligo o teclado e espero por ack
+// mas quando tem uma interrupção de teclado, então eu desligo o mouse mas não espero o ack.
+
 __VOID_IRQ 
 irq1_KEYBOARD (void)
 {
@@ -21,8 +24,9 @@ irq1_KEYBOARD (void)
     //refresh_screen();
 
     // Disable mouse port.
-    //wait_then_write (0x64,0xA7);
-
+    wait_then_write (0x64,0xA7);
+    //mouse_expect_ack();
+    
     // #test
     // See: ps2kbd.c
     
@@ -47,7 +51,8 @@ done:
     if ( PS2.used == TRUE )
     {
         if ( PS2.mouse_initialized == TRUE ){
-            //wait_then_write (0x64,0xA8);
+            wait_then_write (0x64,0xA8);
+            //mouse_expect_ack();
         }
     }
 }

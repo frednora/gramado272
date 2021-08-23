@@ -548,17 +548,19 @@ int init_directory_facilities(void)
 }
 
 
-// Called by fsInit.
+// Called by fsInit inthis document.
 int fat16Init (void)
 {
     debug_print ("fat16Init: [TODO]\n");
 
-    fat_cache_loaded = CACHE_NOT_LOADED;
-    fat_cache_saved  = CACHE_NOT_SAVED;
+// Initializing the cache state.
+    fat_cache_loaded = FAT_CACHE_NOT_LOADED;
+    fat_cache_saved  = FAT_CACHE_NOT_SAVED;
 
+// Set type.
     set_filesystem_type (FS_TYPE_FAT16);
 
-    // Structures and fat.
+// Structures and fat.
 
     // #todo
     fs_init_structures();
@@ -569,6 +571,10 @@ int fat16Init (void)
     return 0;
 }
 
+
+// #todo
+// Change the return type to 'int' and
+// remove all the messages. Maybe.
 void fs_init_structures (void)
 {
     int Type=0;
@@ -576,55 +582,68 @@ void fs_init_structures (void)
     debug_print ("fs_init_structures: [TODO]\n");
 
 //
-// The root file system.
+// struct
 //
-    
-    // "/"
+
+// Initialize the 'root' filesystem structure.
+// "/"
+
     debug_print ("fs_init_structures: root\n");
 
     root = (void *) kmalloc ( sizeof(struct filesystem_d) );
-
     if ( (void *) root == NULL ){
         panic ("fs_init_structures: Couldn't create the root structure.\n");
-    }else{
-        root->objectType  = ObjectTypeFileSystem;
-        root->objectClass = ObjectClassKernelObjects;
-        root->used  = TRUE;
-        root->magic = 1234;
+    }
 
-        // pointer
-        
-        root->name = (char *) ____root_name;
-        
-        
-        //
-        // #todo #bugbug   volume_vfs  ??
-        //
-        
-        // Se o volume do vfs ainda não foi criado 
-        // então não podemos prosseguir.
+
+    root->objectType  = ObjectTypeFileSystem;
+    root->objectClass = ObjectClassKernelObjects;
+
+// #todo
+// Vamos fazer isso no final da rotina.
+    root->used  = TRUE;
+    root->magic = 1234;
+
+// Name.
+// pointer 
+
+    root->name = (char *) ____root_name;
+
+//
+// #todo 
+// #bugbug   volume_vfs  ??
+//
+
+// Se o volume do vfs ainda não foi criado 
+// então não podemos prosseguir.
+
         //if ( (void *) volume_vfs == NULL )
         //{
         //    debug_print("fs_init_structures: [FAIL] volume_vfs not initialized");
         //    panic      ("fs_init_structures: [FAIL] volume_vfs not initialized");
         //}
         //volume_vfs->fs = root;
-        
-        
-        storage->fs = root;
-        //...
-    };
+ 
 
+    if( (void*) storage == NULL)
+         panic("fs_init_structures: storage");
+
+    storage->fs = root;
+
+    // ...
 
 //
 // Type
 // 
-    // #bugbug: 
-    // Em qual disco e volume pegamos o tipo de sistema de arquivos?
+
+// #bugbug: 
+// Em qual disco e volume pegamos o tipo de sistema de arquivos?
+
     debug_print ("fs_init_structures: Type\n");
 
-
     Type = (int) get_filesystem_type();
+
+    Type = ( Type & 0xFFFF );
 
     if ( Type <= 0 ){
         panic ("fs_init_structures: [PANIC] Type");
@@ -664,68 +683,67 @@ void fs_init_structures (void)
             // ...
             break;
 
-        // Nothing for now.
         case FS_TYPE_EXT2:
-            panic ("fs_init_structures: [PANIC] FS_TYPE_EXT2 not supported");
-            break;
-
-        //...
-
-        // Nothing for now.
         default:
             panic ("fs_init_structures: [PANIC] default Type");
             break;
     };
-    
-    // Done.
 }
 
+
+// #todo
+// Change the return type to 'int' and
+// remove all the messages. Maybe.
 void fs_init_fat (void)
 {
     debug_print ("fs_init_fat: [TODO]\n");
 
-    // The root file system structure.
-    // "/"
+//
+// root
+//
+
+// The root file system structure.
+// "/"
 
     if ( (void *) root == NULL ){
-        panic ("fs_init_fat: No root file system!\n");
+        panic ("fs_init_fat: root\n");
     }
-
 
 //
 // fat
 //
-    
+
+// The 'fat' structure.
+
     fat = (void *) kmalloc ( sizeof(struct fat_d) );
 
     if ( (void *) fat == NULL ){
-        panic ("fs_init_fat: No fat struture \n");
-    }else{
+        panic ("fs_init_fat: fat\n");
+    }
 
-        // Info.
-        fat->address = root->fat_address; 
-        fat->type    = root->type;
+// Info
 
-        // Continua ...
+    fat->address = root->fat_address; 
+    fat->type    = root->type;
 
-        // #todo
-        // Check this values.
+// #todo
+// Check this values.
 
-        if ( fat->address == 0 )
-            panic ("fs_init_fat: fat address \n");
-
-        // is it int ?
-        if ( fat->type <= 0 )
-            panic ("fs_init_fat: fat type \n");
-    };
+// Continua ...
 
 
-	// #bugbug
-	// N�o fizemos nada com a estrutura 'fat'
-	// tem que passar esse ponteiro para algum lugar.
+    if ( fat->address == 0 )
+        panic ("fs_init_fat: fat->address\n");
 
-	// Continua a inicializa��o da fat.
+// #bugbug: Is it int ?
+    if ( fat->type <= 0 )
+        panic ("fs_init_fat: fat->type\n");
 
+
+// Continua a inicialização da fat.
+
+// #bugbug
+// Tem que passar esse ponteiro para algum lugar.
 }
 
 
@@ -778,17 +796,15 @@ int file_truncate ( file *_file, size_t len)
 // OUT:
 // 0 = OK. #todo: Isso poderia ser '1'.
 // < 0 Means error.
-
 // #todo
 // We can do the same for some other types.
 // Use TRUE or FALSE.
 
-// #todo
-// Isso deve ir para um módulo responsável pelo formato elf
-// e começar com elfXXXX()
-
 int fsCheckELFFile ( unsigned long address )
 {
+    if( address == 0 )
+        return 0;
+
     return (int) elfCheckSignature(address);
 }
 
@@ -798,7 +814,6 @@ int fsCheckELFFile ( unsigned long address )
  * fsFAT16ListFiles:
  *     Mostra os nomes dos arquivos de um diret�rio.
  *     Sistema de arquivos fat16.
- *
  * IN:
  *     dir_address = Ponteiro para um endere�o de mem�ria 
  *                   onde foi carregado o diret�rio. 
@@ -1044,11 +1059,11 @@ void fsInitializeWorkingDiretoryString (void)
         FS_PATHNAME_SEPARATOR );
 
 
-    //
-    // Size
-    //
+//
+// Size
+//
 
-    // #test
+// #test
 
     CWD.path[31] = 0;
 
@@ -1060,12 +1075,12 @@ void fsInitializeWorkingDiretoryString (void)
 
     CWD.size = size;
 
-	//More ?...
+// More ?...
 
     debug_print ("fsInitializeWorkingDiretoryString: done\n");
 
-    // See: 
-    // kernel/include/rtl/fs/fs.h
+// See: 
+// kernel/include/rtl/fs/fs.h
 
     CWD.initialized = TRUE;
 }
@@ -1075,16 +1090,19 @@ void fsInitializeWorkingDiretoryString (void)
 /*
  ***************************
  * fsInitTargetDir:
- * 
- *     Para inicializarmos o sistema ja' com um alvo, 
- * no caso o root dir. 
+ *     Para inicializarmos o sistema já com um alvo.
  */
 
-void fsInitTargetDir (unsigned long dir_address, char *name)
+// using the structure 'current_target_dir'.
+
+// IN:
+// directory address, directory name.
+
+int fsInitTargetDir (unsigned long dir_address, char *dir_name)
 {
     int i=0;
-    
-    
+
+
     current_target_dir.used  = TRUE;
     current_target_dir.magic = 1234;
 
@@ -1093,33 +1111,38 @@ void fsInitTargetDir (unsigned long dir_address, char *name)
     };
 
 
-    // Dir address
-    
+// Dir address
+
     if (dir_address == 0)
         panic("fsInitTargetDir: dir_address\n");
 
     //current_target_dir.current_dir_address = VOLUME1_ROOTDIR_ADDRESS;
-    current_target_dir.current_dir_address = dir_address;
+    current_target_dir.current_dir_address = (unsigned long) dir_address;
 
-    // Dir name
+// Dir name
     
-    if ( (void*) name == NULL )
-        panic("fsInitTargetDir: name\n");
+    if ( (void*) dir_name == NULL )
+        panic("fsInitTargetDir: dir_name\n");
 
-    if (*name == 0)
-        panic("fsInitTargetDir: *name\n");
+    if (*dir_name == 0)
+        panic("fsInitTargetDir: *dir_name\n");
 
     //current_target_dir.name[0] = '/';
     //current_target_dir.name[1] = 0;
 
-    // Limits: Copy 8 bytes only
+// Limits: 
+// Copy 8 bytes only
+
     for ( i=0; i<8; i++ ){
-        current_target_dir.name[i] = name[i];
+        current_target_dir.name[i] = dir_name[i];
     };
 
 // done:
     current_target_dir.initialized = TRUE;
+    
+    return 0;
 }
+
 
 /*
  **********************
@@ -1138,7 +1161,7 @@ int fsList ( const char *dir_name )
 
     debug_print ("fsList:\n");
 
-    // dir name.
+// Directory name
 
     if ( (void *) dir_name == NULL ){
         debug_print ("fsList: [FAIL] dir_name\n");
@@ -1150,12 +1173,19 @@ int fsList ( const char *dir_name )
         goto fail;
     }
 
-    // copy
-    for ( i=0; i<11; i++ ){
+// Copy name
+// Limits: 
+// Copy 8 bytes only
+
+    for ( i=0; i<8; i++ ){
         current_target_dir.name[i] = dir_name[i];
     };
     current_target_dir.name[i] = '\0';
 
+
+// #shortcut
+// '[' 
+// #todo: Document this feature.
 
     if ( dir_name[0] == '[' && dir_name[1] == 0 )
     {
@@ -1163,9 +1193,11 @@ int fsList ( const char *dir_name )
         Absolute = TRUE;
 
         current_target_dir.current_dir_address = VOLUME1_ROOTDIR_ADDRESS;
+        // Clear the whole buffer.
         for ( i=0; i<11; i++ ){
             current_target_dir.name[i] = '\0';
         };
+        // Create the name.
         current_target_dir.name[0] = '/';
         current_target_dir.name[1] = '\0'; 
     }
@@ -1196,11 +1228,10 @@ int fsList ( const char *dir_name )
     //printk ("fsList: current_target_dir.name = {%s}\n", current_target_dir.name);
     
 
-    // Listing ...
-
-    // IN:
-    // name, dir address, number of entries;
-    // No return value.
+// Listing ...
+// IN:
+// name, dir address, number of entries;
+// No return value.
 
     fsFAT16ListFiles ( 
         (const char *)     current_target_dir.name,
@@ -1208,13 +1239,14 @@ int fsList ( const char *dir_name )
         256 );
 
     debug_print ("fsList: done\n");
-    return 0;  
+    return 0;
 
 fail:
     debug_print ("fsList: fail\n");
     refresh_screen();
     return -1;
 }
+
 
 /*
  *********************************
@@ -1531,23 +1563,62 @@ found:
 }
 
 
+// WORKER
+// Called by fsLoadFile
+// Some invalid address.
+// We can not load a file in the same addresses of the
+// base kernel or the rootdir ...
+// See: gva.h
+// Protectng some core areas.
+// OUT: 
+// TRUE = OK | FALSE = FAIL
+
+int __check_address_validation( unsigned long address )
+{
+
+// OK.
+    int Status=TRUE;
+
+// fat, rootdir, base kernel, lfb, backbuffer ...
+
+    if ( address == VOLUME1_FAT_ADDRESS_VA )           { Status=FALSE; }
+    if ( address == VOLUME1_ROOTDIR_ADDRESS_VA )       { Status=FALSE; }
+    if ( address == KERNEL_IMAGE_BASE )                { Status=FALSE; }
+    if ( address == DEFAULT_LFB_VIRTUALADDRESS )       { Status=FALSE; }
+    if ( address == DEFAULT_BACKBUFFER_VIRTUALADDRESS ){ Status=FALSE; }
+    // ...
+
+// #todo
+// We can check against some other core addresses.
+
+//done:
+    return (int) Status;
+}
+
+
 /*
  **************
  * fsLoadFile:
- *    Carrega um arquivo na memória.
+ *    It loads a file into the memory.
  * 
  * IN:
  *     fat_address  = FAT address.
  *     dir_addresss = Directory address.
  *     dir_entries  = Number of entries in the given directory.
  *     file_name    = File name.
- *     file_address = Where to load the file. The buffer.
- *     buffer_limit = Maximum buffer size.
+ *     buffer = Where to load the file. The buffer.
+ *     buffer_size_in_bytes = Maximum buffer size.
  * 
  * OUT: 
  *    1=fail 
  *    0=ok.
  */
+
+// #bugbug
+// Essa rotina somente consegue pegar o tamanho do arquivo
+// se o arquivo estiver no diretório raiz.
+// #todo: Criar uma rotina para pegar o tamanho do arquivo em 
+// qualquer diretório.
 
 // #obs
 // Rotina específica para FAT16.
@@ -1559,6 +1630,9 @@ found:
 // in the diretory. It is using the limit of the root dir
 // for all the directories, 512 entries.
 
+// #todo
+// Maybe we need to use a structure for that set of parameters.
+
 unsigned long 
 fsLoadFile ( 
     unsigned long fat_address,
@@ -1566,25 +1640,30 @@ fsLoadFile (
     int dir_entries,
     const char *file_name, 
     unsigned long buffer,
-    unsigned long buffer_limit )
+    unsigned long buffer_size_in_bytes )
 {
 
     int Status=-1;
     int i=0;
     int SavedDirEntry = 0;
     unsigned short next=0;
-    
-    // #todo: 
-    // Rever. Número máximo de entradas.
-    // #bugbug: 
-    // Esse eh o numero de entradas no diretorio raiz.
 
-    unsigned long DirEntries = (unsigned long) dir_entries;
+    int is_valid=FALSE;
+
+// #todo: 
+// Rever. Número máximo de entradas.
+// #bugbug: 
+// Esse eh o numero de entradas no diretorio raiz.
+
+    unsigned long DirEntries = (unsigned long) (dir_entries & 0xFFFF);
     unsigned long MaxEntries = (unsigned long) FAT16_ROOT_ENTRIES;
 
-    // Where to load the file.
+// Address: Where to load the file.
     unsigned long Buffer      = (unsigned long) buffer;
-    unsigned long BufferLimit = (unsigned long) buffer_limit;
+
+// Size: maximum buffer size in size.
+    unsigned long BufferSizeInBytes = (unsigned long) (buffer_size_in_bytes & 0xFFFFFFFF);
+
 
     unsigned long z = 0;       //Deslocamento do rootdir 
     unsigned long n = 0;       //Deslocamento no nome.
@@ -1606,14 +1685,16 @@ fsLoadFile (
     // Usado junto com o endereço do arquivo.
     unsigned long SectorSize=0;
 
+// Sectors per cluster.
     int Spc=0;
-
 
     // #debug:
     debug_print ("fsLoadFile:\n");
     //printf      ("fsLoadFile:\n");
 
-    // Updating fat address and dir address.
+
+// Fat address and dir address.
+// Vectors of 'short'
 
     if ( fat_address == 0 ){
         panic("fsLoadFile: [FAIL] fat_address\n");
@@ -1623,20 +1704,20 @@ fsLoadFile (
         panic("fsLoadFile: [FAIL] dir_address\n");
     }
 
+// Addresses.
     unsigned short *  fat = (unsigned short *) fat_address;
     unsigned short *__dir = (unsigned short *) dir_address;
 
-    // #debug
-    // We only support one address for now.
+// #debug
+// We only support one address for now.
+
     if ( fat_address != VOLUME1_FAT_ADDRESS ){
-        panic("fsLoadFile: [FIXME] Sorry. We only support ONE fat address for now!\n");
+        panic("fsLoadFile: Not valid fat address\n");
     }
 
-
-    //
-    // Initialize variables.
-    //
-
+//
+// Initialize variables.
+//
 
     /*
     if (____IsCdRom) {
@@ -1647,44 +1728,40 @@ fsLoadFile (
     */
 
     SectorSize = SECTOR_SIZE;
-    // ...
+
+// ...
 
 
-    // DIR
-    // Não carregaremos mais um diretório nesse momento
-    // usaremos o endereço passado por argumento.
-    // Esperamos que nesse endereço tenha um diretório carregado.
+// =======================
 
-
-    if ( DirEntries > MaxEntries )
-    {
-        panic ("fsLoadFile: [FAIL] DirEntries\n");
-    }
-
-    // #test
-    // Used only for debug.
-    
-    if ( DirEntries < MaxEntries )
-    {
-        panic ("fsLoadFile: [DEBUG] DirEntries IS LESS THE 512\n");
-    }
-
-
-//load_DIR:
+// How many entries in this directory.
 
     if ( MaxEntries == 0 || MaxEntries > FAT16_ROOT_ENTRIES )
     {
         panic ("fsLoadFile: [FAIL] MaxEntries limits\n");
     }
 
+    if ( DirEntries > MaxEntries ){
+        panic ("fsLoadFile: [FAIL] DirEntries\n");
+    }
 
-    if ( BufferLimit == 0 ){
-        panic("fsLoadFile: [FAIL] BufferLimit\n");
+// #test
+// Used only for debug.
+
+    if ( DirEntries < MaxEntries ){
+        panic ("fsLoadFile: [DEBUG] DirEntries IS LESS THE 512\n");
+    }
+
+
+// =======================
+
+    if ( BufferSizeInBytes == 0 ){
+        panic("fsLoadFile: [FAIL] BufferSizeInBytes\n");
     }
 
     // limite maximo de uma imagem de processo.
-    if ( BufferLimit > (512*4096) ){
-        panic("fsLoadFile: [FAIL] BufferLimit\n");
+    if ( BufferSizeInBytes > (512*4096) ){
+        panic("fsLoadFile: [FAIL] BufferSizeInBytes\n");
     }
 
     // Root file system structure.
@@ -1760,26 +1837,26 @@ fsLoadFile (
          FileNameSize = 11;
          //return 1; //fail
     }
-    
-    
-    //
-    // File size.
-    //
-    
-    // Pegar o tamanho do arquivo e comparar com o limite do buffer.
-    
-    // #bugbug: 
-    // Essa rotina so pega o tamanho dos arquivos que estao 
-    // no diretorio raiz.
-    // Comparando nosso tamanho obtido com o tamanho do buffer.
-    // Como a rotina de pegar o tamanho so pega no diretorio raiz
-    // por enquanto, entao vamos apenas emitir um alerta que 
-    // o tamanho do arquivo eh maior que o buffer, servira para debug.
-    // Isso porque em todas as tentativas de pegar o tamanho do arquivo
-    // fora do root, retornara 0.
-    // #todo
-    // Precisamos usar as estruturas de diretorio e 
-    // as estruturas de buffer.
+
+
+//
+// File size
+//
+
+// Pegar o tamanho do arquivo e comparar com o limite do buffer.
+
+// #bugbug: 
+// Essa rotina so pega o tamanho dos arquivos que estao 
+// no diretorio raiz.
+// Comparando nosso tamanho obtido com o tamanho do buffer.
+// Como a rotina de pegar o tamanho so pega no diretorio raiz
+// por enquanto, entao vamos apenas emitir um alerta que 
+// o tamanho do arquivo eh maior que o buffer, servira para debug.
+// Isso porque em todas as tentativas de pegar o tamanho do arquivo
+// fora do root, retornara 0.
+// #todo
+// Precisamos usar as estruturas de diretorio e 
+// as estruturas de buffer.
     
     FileSize = (unsigned long) fsRootDirGetFileSize ( (unsigned char *) file_name );
     
@@ -1793,12 +1870,15 @@ fsLoadFile (
     //printf ("Antes: FileSize %d BufferLimit %d\n",
     //        FileSize, BufferLimit );
 
-    //if ( FileSize > 4000 )
-    if ( FileSize > BufferLimit )
+
+// Limits:
+// The file size can't be bigger than the buffer size.
+
+    if ( FileSize > BufferSizeInBytes )
     {
         debug_print ("fsLoadFile: [FAIL] Buffer Overflow\n");
-             printf ("fsLoadFile: [FAIL] FileSize %d BufferLimit %d\n",
-                 FileSize, BufferLimit );
+             printf ("fsLoadFile: [FAIL] FileSize %d BufferSizeInBytes %d\n",
+                 FileSize, BufferSizeInBytes );
         goto fail;
     }
 
@@ -1807,37 +1887,34 @@ fsLoadFile (
     //if ( file_name[0] == '/' && size == 1 )
     //{
     //}
-    
-    
-    //
-    // Search dirent.
-    //
 
 
+//
+// Search dirent
+//
 
-	//
-	// Compare.
-	//
+//
+// Compare
+//
 
-    // #bugbug
-    // #todo:
-    // Para a variável 'max' estamos considerando o número de
-    // entradas no diretório raiz. Mas precisamos considerar
-    // o número de entradas no diretório atual.
-    // >> Para isso vamos precisar de uma estrutura de diretório
-    // >> talvez a mesma usada em arquivos. (FILE)
+// #bugbug
+// #todo:
+// Para a variável 'max' estamos considerando o número de
+// entradas no diretório raiz. Mas precisamos considerar
+// o número de entradas no diretório atual.
+// >> Para isso vamos precisar de uma estrutura de diretório
+// >> talvez a mesma usada em arquivos. (file)
 
+// Descrição da rotina:
+// Procura o arquivo no diretório raiz.
+// Se a entrada não for vazia.
+// Copia o nome e termina incluindo o char '0'.
+// Compara 'n' caracteres do nome desejado, 
+// com o nome encontrado na entrada atual.
+// Se for encontrado o nome, então salvamos o número da entreda.
+// Cada entrada tem 16 words.
+// (32/2) próxima entrada! (16 words) 512 vezes!
 
-    // Descrição da rotina:
-    // Procura o arquivo no diretório raiz.
-    // Se a entrada não for vazia.
-    // Copia o nome e termina incluindo o char '0'.
-    // Compara 'n' caracteres do nome desejado, 
-    // com o nome encontrado na entrada atual.
-    // Se for encontrado o nome, então salvamos o número da entreda.
-    // Cada entrada tem 16 words.
-    // (32/2) próxima entrada! (16 words) 512 vezes!
-    
     i=0; 
     while ( i < MaxEntries )
     {
@@ -1850,24 +1927,21 @@ fsLoadFile (
 
             if ( Status == 0 ){ SavedDirEntry = i; goto __found; }
         }; 
-        z += 16;    
-        i++;        
+        z += 16;
+        i++;
     }; 
 
-
-    // Not found.
-    // Sai do while. 
-    // O arquivo não foi encontrado.
-    // O arquivo não foi encontrado.
+// Not found.
+// Saiu do while. 
+// O arquivo não foi encontrado.
 
 //notFound:
-    debug_print ("fsLoadFile: file not found\n");
+    debug_print ("fsLoadFile: File not found\n");
     printf      ("fsLoadFile 1: %s not found\n", file_name );  
     goto fail;
 
-
-    // Found.
-    // O arquivo foi encontrado.
+// Found.
+// O arquivo foi encontrado.
 
 __found:
 
@@ -1875,23 +1949,23 @@ __found:
     // printf ("file FOUND!\n");
     // refresh_screen();
     // while(1){}
-    
-    
-    //
-    // Cluster.
-    //
 
-    // Get the initial cluster. 
-    // Check cluster Limits.
-    // (word). 
-    // (0x1A/2) = 13.
-    // Checar se 'cluster' está fora dos limites.
-    // +São 256 entradas de FAT por setor. 
-    // +São 64 setores por FAT. 
-    // Isso varia de acordo com o tamanho do disco.
-    // O número máximo do cluster nesse caso é (256*64).
-    // #todo
-    // Na verdade os dois primeiros clusters estão indisponíveis.
+
+//
+// Cluster
+//
+
+// Get the initial cluster. 
+// Check cluster Limits.
+// (word). 
+// (0x1A/2) = 13.
+// Checar se 'cluster' está fora dos limites.
+// +São 256 entradas de FAT por setor. 
+// +São 64 setores por FAT. 
+// Isso varia de acordo com o tamanho do disco.
+// O número máximo do cluster nesse caso é (256*64).
+// #todo
+// Na verdade os dois primeiros clusters estão indisponíveis.
 
 
     cluster = __dir[ z+13 ];
@@ -1904,33 +1978,42 @@ __found:
     }
 
 
+// ========================================
+// FAT
+// Carrega fat na memória.
 
-    // FAT
-    // Carrega fat na memória.
-    // #bugbug: 
-    // Não devemos carregar a FAT na memória toda vez que 
-    // formos carregar um arquivo. 
-    // Talvez ela deva ficar sempre na memória.
-    // Precisamos de estruturas para volumes que nos dê esse 
-    // tipo de informação
+// #bugbug: 
+// Não devemos carregar a FAT na memória toda vez que 
+// formos carregar um arquivo. 
+// Talvez ela deva ficar sempre na memória.
+// Precisamos de estruturas para volumes que nos dê esse 
+// tipo de informação
+
+// #todo
+// precisamos de uma estrutura que nos diga o tamanho
+// da FAT para o volume que estamos atuando.
+// Aliás, qual é o volume?
 
 //loadFAT:
 
-    //fs_load_fat(VOLUME1_FAT_ADDRESS,VOLUME1_FAT_LBA,128);
+// 128?
+// 246?
+
     fs_load_fat(VOLUME1_FAT_ADDRESS,VOLUME1_FAT_LBA,246);
-    
-    // Load clusters.
-    // Carregar o arquivo, cluster por cluster.
-    // #todo: 
-    // Por enquanto, um cluster é igual à um setor, 512 bytes.
-    // Loop de entradas na FAT.
-    // #todo: 
-    // Esse loop é provisório, while pode ser problema.
-    
-    // #todo
-    // Tabela temporária para salvar os números dos clusters
-    // usados pelo arquivo.
-    // ?? Qual será o tamanho dessa tabela ??
+
+
+// Load clusters.
+// Carregar o arquivo, cluster por cluster.
+// #todo: 
+// Por enquanto, um cluster é igual à um setor, 512 bytes.
+// Loop de entradas na FAT.
+// #todo: 
+// Esse loop é provisório, while pode ser problema.
+// #todo
+// Tabela temporária para salvar os números dos clusters
+// usados pelo arquivo.
+// ?? Qual será o tamanho dessa tabela ??
+
     //unsigned short tmp_table[1024];
     
     //#todo: Use while()
@@ -1940,15 +2023,15 @@ __found:
     // int fsReadClusterChain ( char *file_address, short first_cluster, char *fat_address ){}
 
 
-    //
-    // == Load cluster chain ===================================
-    //
+//
+// == Load cluster chain ===================================
+//
 
 __loop_next_entry:
 
-    // #todo
-    // Esse while é para o caso de termos mais de um setor por cluster.
-    // Mas não é nosso caso até o momento.
+// #todo
+// Esse while é para o caso de termos mais de um setor por cluster.
+// Mas não é nosso caso até o momento.
 
 	/*
 	while(1)
@@ -1971,72 +2054,46 @@ __loop_next_entry:
 	*/
 
 
-    // #todo
-    // Poderia ter uma versão dessa função para ler
-    // um dado número de setores consecutivos.
+// #todo
+// Poderia ter uma versão dessa função para ler
+// um dado número de setores consecutivos.
 
+// #todo
+// #importante
+// Esse é o momento em que vamos registrar na estrutura de arquivos
+// quais foram os clusters usados pelo arquivo, para assim podermos
+// salvar somente somente os setores modificados e não sempre o 
+// arquivo todo.
+// >> Mas não temos a estrutura de arquivos no momento.
+// Mesmo assim, talvez ja possomos salvar os números dos clusters
+// em uma tabela temporária.
 
-    // #todo
-    // #importante
-    // Esse é o momento em que vamos registrar na estrutura de arquivos
-    // quais foram os clusters usados pelo arquivo, para assim podermos
-    // salvar somente somente os setores modificados e não sempre o 
-    // arquivo todo.
-    // >> Mas não temos a estrutura de arquivos no momento.
-    // Mesmo assim, talvez ja possomos salvar os números dos clusters
-    // em uma tabela temporária.
-    
     //tmp_table[tmp_table_index] = cluster;
     //tmp_table_index++;
 
-    // #todo
-    // Create some limits for 'Buffer'.
-    // We can not load a file in the same address of the
-    // base kernel or the rootdir ...
-    // See: gva.h
-    
-    // #test
-    // Protectng some core areas.
-    // We can use a helper function for this validation.
 
-    // fat
-    if ( Buffer == VOLUME1_FAT_ADDRESS_VA ){
-        panic("fsLoadFile: [FAIL] can not load at VOLUME1_FAT_ADDRESS_VA\n");
-    }
+// Some invalid address.
+// We can not load a file in the same core addresses.
 
-    // rootdir
-    if ( Buffer == VOLUME1_ROOTDIR_ADDRESS_VA ){
-        panic("fsLoadFile: [FAIL] can not load at VOLUME1_ROOTDIR_ADDRESS_VA\n");
-    }
-
-    // base kernel
-    if ( Buffer == KERNEL_IMAGE_BASE ){
-        panic("fsLoadFile: [FAIL] can not load at KERNEL_IMAGE_BASE\n");
-    }
-
-    // lfb
-    if ( Buffer == DEFAULT_LFB_VIRTUALADDRESS ){
-        panic("fsLoadFile: [FAIL] can not load at DEFAULT_LFB_VIRTUALADDRESS\n");
-    }
-
-    // backbuffer
-    if ( Buffer == DEFAULT_BACKBUFFER_VIRTUALADDRESS ){
-        panic("fsLoadFile: [FAIL] can not load at DEFAULT_BACKBUFFER_VIRTUALADDRESS\n");
-    }
+    is_valid = (int) __check_address_validation( (unsigned long) Buffer );
+    if( is_valid != TRUE )
+        panic ("fsLoadFile: is_valid");
 
 
-    //
-    // Read LBA.
-    //
+//
+// Read LBA
+//
 
-    // Caution!
-    // Read lba.
-    // Increment buffer base address.
-    // Pega o próximo cluster na FAT.
-    // Configura o cluster atual.
-    // Ver se o cluster carregado era o último cluster do arquivo.
-    // Vai para próxima entrada na FAT.
+// Caution!
+// Read lba.
+// Increment buffer base address.
+// Pega o próximo cluster na FAT.
+// Configura o cluster atual.
+// Ver se o cluster carregado era o último cluster do arquivo.
+// Vai para próxima entrada na FAT.
 
+// #bugbug
+// Vector overflow ?
 
     read_lba ( 
         Buffer, 
@@ -2044,23 +2101,31 @@ __loop_next_entry:
 
     Buffer = (unsigned long) (Buffer + SectorSize); 
 
+// #todo
+// #important
+// Check this value against a vector limit.
+// We already did that a single time before.
+
+    if ( cluster <= 0 || cluster > 0xFFF0 )
+        panic("fsLoadFile: fat[] vector overflow.");
+
     next = (unsigned short) fat[cluster];
 
-    cluster = (unsigned short) next;
+    cluster = (unsigned short) (next & 0xFFFF);
 
-    // ?? done
-    // ?? message  
-    // salvar a tabela na estrutura de arquivo.
-    // Onde está a estrutura de arquivos ??
-    // Em que momento ela é criada ?
-    // #bugbug: tem arquivo carregado pelo kernel
-    // sem ter sido registrado na estrutura do processo kernel.
+// ?? done
+// ?? message  
+// salvar a tabela na estrutura de arquivo.
+// Onde está a estrutura de arquivos ??
+// Em que momento ela é criada ?
+// #bugbug: tem arquivo carregado pelo kernel
+// sem ter sido registrado na estrutura do processo kernel.
 
     if ( cluster == 0xFFFF || cluster == 0xFFF8 ){ return (unsigned long) 0; }
 
     goto __loop_next_entry;
 
-    // Fail
+// Fail
 
 fail:
     debug_print("fsLoadFile: [FAIL] \n");
@@ -2068,6 +2133,7 @@ fail:
     refresh_screen ();
     return (unsigned long) 1;
 }
+
 
 // Not tested yet
 unsigned long 
@@ -2124,6 +2190,9 @@ int fsLoadFileFromCurrentTargetDir (void)
     unsigned long new_address = 0;
 
 
+// #bugbug
+    unsigned long xxxTempFileSize = 4096;   //4KB
+
     debug_print ("fsLoadFileFromCurrentTargetDir: [FIXME] Loading dir \n");
 
 	//#bugbug
@@ -2132,19 +2201,19 @@ int fsLoadFileFromCurrentTargetDir (void)
 	//aqui no m'aquimo o arquivo pode ter 4kb.
 	//acho ques estamos falando somente de diret'orio aqui.
 
-    // #bugbug
-    // too much allocation.
-    // How many times this function is called ??
-    // 4KB each time ?
+// #bugbug
+// too much allocation.
+// How many times this function is called ??
+// 4KB each time ?
 
-    new_address = (unsigned long) kmalloc (4096);
+    new_address = (unsigned long) kmalloc ((size_t)xxxTempFileSize);
 
     if ( new_address == 0 ){
         debug_print ("fsLoadFileFromCurrentTargetDir: new_address\n");
         return -1;
     }
 
-    current_target_dir.current_dir_address = new_address;
+    current_target_dir.current_dir_address = (unsigned long) new_address;
 
     // ??
     // Se o endereço atual falhar, 
@@ -2170,7 +2239,7 @@ int fsLoadFileFromCurrentTargetDir (void)
                     FAT16_ROOT_ENTRIES, //#bugbug: Number of entries.          // number of entries.
                     (unsigned char *) current_target_dir.name,                 // file name 
                     (unsigned long)   current_target_dir.current_dir_address,  // file address
-                    4096 );                                    // #bugbug buffer limit 4KB.
+                    (unsigned long) xxxTempFileSize );                                    // #bugbug buffer limit 4KB.
     //scheduler_unlock ();
     //taskswitch_unlock ();
     //--
@@ -2311,7 +2380,7 @@ void fsUpdateWorkingDiretoryString ( char *string )
 // helper function to handle fat cache status.
 void fs_fat16_cache_not_saved(void)
 {
-    fat_cache_saved = CACHE_NOT_SAVED;
+    fat_cache_saved = FAT_CACHE_NOT_SAVED;
 }
 
 /*
@@ -3146,7 +3215,6 @@ void sys_pwd (void)
 // IN: 
 // name, size in sectors, size in bytes, adress, flag. 
 // OUT:
-
 
 // #bugbug
 // O nome nao esta ficando certo na entrada.

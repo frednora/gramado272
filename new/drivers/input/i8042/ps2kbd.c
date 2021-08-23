@@ -524,6 +524,58 @@ void xxx_keyboard_write (uint8_t data)
 
 
 
+/*
+ **************************************
+ * zzz_keyboard_read:
+ *     Pega um byte na porta 0x60.
+ */
+
+unsigned char zzz_keyboard_read (void)
+{
+    prepare_for_input();
+    
+    return (unsigned char) in8(0x60);
+}
+
+void keyboard_expect_ack (void)
+{
+    // #bugbug
+    // ? loop infinito  
+    // while ( xxx_mouse_read() != 0xFA );
+
+    unsigned char ack_value=0;
+    int timeout=100;
+
+    while(1) 
+    {
+        timeout--;
+        if (timeout<0){  break;  }
+
+        //ack_value = (unsigned char) zzz_keyboard_read();
+        
+        prepare_for_input();
+        ack_value = (unsigned char) in8(0x60);
+        
+        // OK
+        if (ack_value == 0xFA){
+            return;  
+        }
+    }; 
+
+// Acabou o tempo, vamos checar o valor.
+// Provavelmente esta errado.
+    if ( ack_value != 0xFA )
+    {
+        //#debug
+        //printf ("expect_ack: not ack\n");
+        return;
+        //return -1;
+    }
+
+    return;
+    //return 0;
+}
+
 
 
 

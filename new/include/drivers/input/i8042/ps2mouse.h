@@ -129,8 +129,9 @@ unsigned long g_mousepointer_height;
 // == prototypes =====================
 //
 
-unsigned char xxx_mouse_read (void);
-void expect_ack (void);
+void zzz_mouse_write(unsigned char data);
+unsigned char zzz_mouse_read (void);
+void mouse_expect_ack (void);
 
 
 #endif    

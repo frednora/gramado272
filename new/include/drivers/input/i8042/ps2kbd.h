@@ -217,6 +217,10 @@ int get_shift_status (void);
 uint8_t xxx_keyboard_read (void);
 void xxx_keyboard_write (uint8_t data);
 
+//
+unsigned char zzz_keyboard_read (void);
+void keyboard_expect_ack (void);
+
 #endif    
 
 
