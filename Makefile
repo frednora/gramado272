@@ -99,6 +99,7 @@ gramado-sm \
 gramado-cmd \
 gramado-ns \
 gramado-boot \
+gramado-shell \
 gramadoos     
 
 
@@ -181,6 +182,13 @@ gramado-boot:
 #========================================
 
 #7
+gramado-shell:
+# Install BMPs
+	sudo cp gramado/shell/themes/presence/*.BMP base/
+
+
+
+#8
 # Gramado Window System files.
 gramadoos:
 	@echo "Build: Building Window Server ..."
@@ -281,23 +289,35 @@ clean3:
 clean4:
 	@echo "==================="
 	@echo "Cleaning all system binaries ..."
+# Clear newos kernel image
 	-rm -rf new/KERNEL.BIN
+# Clear system folder
+	-rm -rf gramado/bin/*.BIN
+# Clear libraries folder
+	-rm -rf lib/fonts/bin/*.FON
+# Clear boot images
 	-rm -rf boot/x86/bin/*.BIN
+# Clear session manager stuff
 	-rm -rf sm/*.BIN
 	-rm -rf sm2/*.BIN
 	-rm -rf sm3/*.BIN
+# Clear commands folder
 	-rm -rf cmd/bin/*.BIN
-	-rm -rf gramado/bin/*.BIN
+# Clear ns service stuff
 	-rm -rf ns/bin/*.BIN
-	-rm -rf lib/fonts/bin/*.FON
 clean5:
+# Clear root dir
 	-rm -rf base/*.BIN 
+	-rm -rf base/*.BMP
+# Clear system folder 
 	-rm -rf base/GRAMADO/*.BIN 
+# Clear applications folder
 	-rm -rf base/PROGRAMS/*.BIN 
+# Clear unix-like stuff
 	-rm -rf base/UBASE/BOOT/*.BIN 
 	-rm -rf base/UBASE/BIN/*.BIN 
 	-rm -rf base/UBASE/SBIN/*.BIN
-	
+
 # ...
 
 

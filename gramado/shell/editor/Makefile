@@ -29,24 +29,22 @@ CFLAGS = -m64 \
 	-fno-stack-protector \
 	-s \
 	-Werror=strict-prototypes    
-	
-
-LIBC      = ../../lib/rtl/include/
-LIBCOBJ   = ../../lib/rtl/obj
-LIBGWS    = ../libgws/include/
-LIBGWSOBJ = ../libgws/obj
 
 
-	##
-	## Objects
-	##
+LIBC      = ../../../lib/rtl/include/
+LIBCOBJ   = ../../../lib/rtl/obj
+LIBGWS    = ../../libgws/include/
+LIBGWSOBJ = ../../libgws/obj
+
+
+#
+# Objects
+#
 
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
 ioctl.o socket.o \
 gws.o connect.o events.o rw.o    
-
-
 
 
 .PHONY: all all-c hello-link finalize clean
@@ -81,13 +79,13 @@ all-c:
 	
 	
 hello-link:
-	ld -m elf_x86_64 -T ../link.ld -o GWM.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../../link.ld -o EDITOR.BIN $(myObjects)    
 
 finalize:
-	cp GWM.BIN  ../bin
+	cp EDITOR.BIN  ../../bin
 
 clean:
 	-rm *.o
-	-rm GWM.BIN 
+	-rm EDITOR.BIN 
 	
 	

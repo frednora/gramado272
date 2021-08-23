@@ -29,22 +29,23 @@ CFLAGS = -m64 \
 	-fno-stack-protector \
 	-s \
 	-Werror=strict-prototypes    
+	
 
 
-LIBC      = ../../lib/rtl/include/
-LIBCOBJ   = ../../lib/rtl/obj
-LIBGWS    = ../libgws/include/
-LIBGWSOBJ = ../libgws/obj
+LIBC      = ../../../lib/rtl/include/
+LIBCOBJ   = ../../../lib/rtl/obj
+LIBGWS    = ../../libgws/include/
+LIBGWSOBJ = ../../libgws/obj
 
-
-	##
-	## Objects
-	##
+#
+# Objects
+#
 
 myObjects = crt0.o main.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
-ioctl.o socket.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
+socket.o \
 gws.o connect.o events.o rw.o    
+
 
 
 .PHONY: all all-c hello-link finalize clean
@@ -53,7 +54,7 @@ all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
+	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -o main.o
 
 all-c:
 
@@ -79,13 +80,13 @@ all-c:
 	
 	
 hello-link:
-	ld -m elf_x86_64 -T ../link.ld -o EDITOR.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../../link.ld -o LOGON.BIN $(myObjects)    
 
 finalize:
-	cp EDITOR.BIN  ../bin
+	cp LOGON.BIN  ../../bin
 
 clean:
 	-rm *.o
-	-rm EDITOR.BIN 
+	-rm LOGON.BIN 
 	
 	

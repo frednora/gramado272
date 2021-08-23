@@ -29,23 +29,23 @@ CFLAGS = -m64 \
 	-fno-stack-protector \
 	-s \
 	-Werror=strict-prototypes    
+	
+
+LIBC      = ../../../lib/rtl/include/
+LIBCOBJ   = ../../../lib/rtl/obj
+LIBGWS    = ../../libgws/include/
+LIBGWSOBJ = ../../libgws/obj
 
 
-
-LIBC      = ../../lib/rtl/include/
-LIBCOBJ   = ../../lib/rtl/obj
-LIBGWS    = ../libgws/include/
-LIBGWSOBJ = ../libgws/obj
-
-
-	##
-	## Objects
-	##
+#
+# Objects
+#
 
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
 ioctl.o socket.o \
 gws.o connect.o events.o rw.o    
+
 
 
 
@@ -61,7 +61,6 @@ all-c:
 
 	cp $(LIBCOBJ)/crt0.o   .
 	cp $(LIBCOBJ)/rtl.o  .
-
 
 	cp $(LIBCOBJ)/ctype.o   .
 	cp $(LIBCOBJ)/stdio.o .
@@ -80,15 +79,15 @@ all-c:
 	cp $(LIBGWSOBJ)/gws.o .
 	cp $(LIBGWSOBJ)/rw.o .
 	
-
+	
 hello-link:
-	ld -m elf_x86_64 -T ../link.ld -o FILEMAN.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../../link.ld -o GWM.BIN $(myObjects)    
 
 finalize:
-	cp FILEMAN.BIN  ../bin
+	cp GWM.BIN  ../../bin
 
 clean:
 	-rm *.o
-	-rm FILEMAN.BIN 
+	-rm GWM.BIN 
 	
 	
