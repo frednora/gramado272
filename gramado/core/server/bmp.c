@@ -613,20 +613,18 @@ bmpDisplayBMP (
     //printf ("HeaderSize={%x}\n",bi->bmpSize);
 
     // X and Y.
-    X = x;
-    Y = y;
+    X = (x & 0xFFFF);
+    Y = (y & 0xFFFF);
     
     // Width and height.
     Width  = *( unsigned long * ) &bmp[18];
     Height = *( unsigned long * ) &bmp[22];
 
     // Salvar.
-    bi->bmpWidth  = (unsigned long) Width;
-    bi->bmpHeight = (unsigned long) Height;
+    bi->bmpWidth  = (unsigned long) (Width  & 0xFFFF);
+    bi->bmpHeight = (unsigned long) (Height & 0xFFFF);
 
     //printf ("w=%d h=%d\n",Width,Height);
-
-
 
 
     // Number of bits per pixel.
@@ -669,14 +667,14 @@ bmpDisplayBMP (
 
     // Top, Left, Bottom.
 
-    left = x; 
-    top  = y; 
+    left = (x & 0xFFFF);
+    top  = (y & 0xFFFF);
     bottom = ( top + bi->bmpHeight );
 
 
-    //
-    // Data area.
-    //
+//
+// Data area.
+//
 
     // bpp
     // The begin of the data area depends on the bpp value.
@@ -1107,16 +1105,17 @@ bmpDisplayCursorBMP (
  * gwssrv_get_system_icon:
  *     Get an address to a shared memory buffer
  * where there is an icon previously loaded by the kernel.
- * 
  */
 
 // Called by gwssrv_display_system_icon.
 
 void *gwssrv_get_system_icon (int n)
 {
-    if (n<0){
-        return NULL;
-    }
+
+// #danger
+// #todo: max limit
+
+    if (n<0){  return NULL;  }
 
     return (void *) gramado_system_call(9100,n,n,n);
 }
@@ -1149,29 +1148,31 @@ gwssrv_display_system_icon (
     // limits for x and y.
 
 
+    unsigned long bmp_x = (x & 0xFFFF);
+    unsigned long bmp_y = (y & 0xFFFF);
 
 
-    //
-    // Get buffer address.
-    //
+
+//
+// Get buffer address.
+//
 
     sm_buffer = (char *) gwssrv_get_system_icon(index);
     //sm_buffer = gwssrv_get_system_icon(2);
     // ...
 
-    //
-    // check
-    //
+//
+// check
+//
 
-    // Check pointer validation
+// Check pointer validation
 
-    if ( (void *) sm_buffer == NULL )
-    {
+    if ( (void *) sm_buffer == NULL ){
         printf ("gwssrv_display_system_icon: bmp_buffer fail\n");
         return -1;
     }
 
-    // Check BM header.
+// Check BM header
 
     if ( sm_buffer[0] != 'B' || sm_buffer[1] != 'M' )
     {
@@ -1209,7 +1210,9 @@ gwssrv_display_system_icon (
         // ??
         
         bmpDisplayBMP( 
-            (char *) sm_buffer, (unsigned long) x, (unsigned long) y ); 
+            (char *) sm_buffer, 
+            (unsigned long) bmp_x, 
+            (unsigned long) bmp_y ); 
 
         //gde_display_bmp((char *)sm_buffer, (unsigned long) 80, (unsigned long) 80); 
     }
@@ -1220,8 +1223,7 @@ gwssrv_display_system_icon (
      // #bugbug #todo
      // We need to use the routine to refresh the rectangle.
      
-     if (RefreshScreen == TRUE)
-     {
+     if (RefreshScreen == TRUE){
          invalidate_surface_retangle();
          //gws_show_backbuffer();
      }

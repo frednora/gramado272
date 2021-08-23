@@ -311,6 +311,93 @@ void demoTerry(void)
 }
 
 
+// WORKER
+// Paint button borders.
+// Called only for xxxCreateWindow
+// >>> No checks
+
+void 
+__paint_buttom_borders(
+    struct gws_window_d *w,
+    unsigned int color1,
+    unsigned int color2,
+    unsigned int color2_light,
+    unsigned int outer_color )
+{
+
+    if ( (void*) w == NULL )
+        return;
+
+//  ____
+// |
+//
+// board1, borda de cima e esquerda.
+
+// Cima
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top,
+        w->width-2, 1, 
+        outer_color, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top+1,
+        w->width-2, 1, 
+        color1, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, w->top+1+1,
+        w->width-4, 1, 
+        color1, TRUE,0 );
+
+// Esq
+    rectBackbufferDrawRectangle ( 
+        w->left, w->top+1, 
+        1, w->height-2,
+        outer_color, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top+1, 
+        1, w->height-2,
+        color1, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, w->top+1+1, 
+        1, w->height-4,
+        color1, TRUE,0 );
+
+//  
+//  ____|
+//
+// board2, borda direita e baixo.
+
+// Dir
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1 -1 -1), w->top+1+1, 
+        1, w->height-4, 
+        color2_light, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1 -1), w->top+1, 
+        1, w->height-2, 
+        color2, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1), w->top+1, 
+        1, w->height-2, 
+        outer_color, TRUE, 0 );
+
+// Baixo
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, ( (w->top) + (w->height) -1 -1 -1),  
+        w->width-4, 1, 
+        color2_light, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, ( (w->top) + (w->height) -1 -1),  
+        w->width-2, 1, 
+        color2, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, ( (w->top) + (w->height) -1 ),  
+        w->width-2, 1, 
+        outer_color, TRUE, 0 );
+}
+
+
+
+
 /*
  ********************
  * xxxCreateWindow: 
@@ -493,13 +580,13 @@ void *xxxCreateWindow (
 // Button suport
 //
 
-    int buttonFocus=0;
-    int buttonSelected=0;
+    int buttonFocus    = FALSE;
+    int buttonSelected = FALSE;
 
     unsigned int buttonBorderColor1=0;
     unsigned int buttonBorderColor2=0;
     unsigned int buttonBorderColor2_light=0;
-
+    unsigned int buttonBorder_outercolor=0;  //Essa cor muda de acordo com o foco 
 
     debug_print ("xxxCreateWindow:\n");
 
@@ -1072,6 +1159,7 @@ void *xxxCreateWindow (
 
         // Simple window. (Sem barra de títulos).
         case WT_SIMPLE:
+            window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
             window->background_style = 0;
@@ -1080,6 +1168,7 @@ void *xxxCreateWindow (
         // Edit box. (Simples + borda preta).
         // Editbox não tem sombra, tem bordas. 
         case WT_EDITBOX:
+            window->frame.used = TRUE;
             Background = TRUE;
             Border     = TRUE;
             window->backgroundUsed = TRUE;
@@ -1090,6 +1179,7 @@ void *xxxCreateWindow (
         // Sombra, bg, título + borda, cliente area ...
         // #obs: Teremos recursividade para desenhar outras partes.
         case WT_OVERLAPPED:
+            window->frame.used = TRUE;
             Shadow         = TRUE;
             Background     = TRUE;
             TitleBar       = TRUE;
@@ -1107,6 +1197,7 @@ void *xxxCreateWindow (
 
         // Popup. (um tipo de overlapped mais simples).
         case WT_POPUP:
+            window->frame.used = FALSE;
             Shadow     = TRUE;
             Background = TRUE;
             window->shadowUsed     = TRUE;
@@ -1118,6 +1209,7 @@ void *xxxCreateWindow (
         // Caixa de seleção. Caixa de verificação. Quadradinho.
         // #todo: checkbox has borders.
         case WT_CHECKBOX:
+            window->frame.used = FALSE;
             Background = TRUE;
             Border     = TRUE;
             window->backgroundUsed = TRUE;
@@ -1132,6 +1224,7 @@ void *xxxCreateWindow (
         // Only the bg for now.
         // #todo: Button has borders.
         case WT_BUTTON:
+            window->frame.used = TRUE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
             window->background_style = 0;
@@ -1140,6 +1233,7 @@ void *xxxCreateWindow (
         // Status bar.
         // #todo: checkbox has borders sometimes.
         case WT_STATUSBAR:
+            window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
             window->background_style = 0;
@@ -1148,6 +1242,7 @@ void *xxxCreateWindow (
         // Ícone da área de trabalho.
         // #todo: icons has borders sometimes.
         case WT_ICON:
+            window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
             window->background_style = 0;
@@ -1505,23 +1600,29 @@ void *xxxCreateWindow (
         switch ( status )
         {
             case BS_FOCUS:
-                buttonBorderColor1 = COLOR_BLUE;
-                buttonBorderColor2 = COLOR_BLUE;
+                buttonFocus = TRUE;
+                buttonBorderColor1       = COLOR_BLUE;
+                buttonBorderColor2       = COLOR_BLUE;
+                buttonBorderColor2_light = xCOLOR_GRAY5;
+                buttonBorder_outercolor  = COLOR_BLUE;
                 break;
 
             case BS_PRESS:
                 buttonSelected = TRUE;
-                buttonBorderColor1 = COLOR_WHITE; 
-                buttonBorderColor2 = xCOLOR_GRAY3;
+                buttonBorderColor1       = COLOR_WHITE; 
+                buttonBorderColor2       = xCOLOR_GRAY3;
                 buttonBorderColor2_light = xCOLOR_GRAY5; 
+                buttonBorder_outercolor  = COLOR_BLACK;
                 break;
 
             case BS_HOVER:
                 break;
                     
             case BS_DISABLED:
+                buttonFocus = FALSE;
                 buttonBorderColor1 = COLOR_GRAY;
                 buttonBorderColor2 = COLOR_GRAY;
+                buttonBorder_outercolor  = COLOR_GRAY;
                 break;
 
             case BS_PROGRESS:
@@ -1529,17 +1630,19 @@ void *xxxCreateWindow (
 
             case BS_DEFAULT:
             default: 
+                buttonFocus = FALSE;
                 buttonSelected = FALSE;
-                buttonBorderColor1 = COLOR_WHITE;
-                buttonBorderColor2 = xCOLOR_GRAY3; 
+                buttonBorderColor1       = COLOR_WHITE;
+                buttonBorderColor2       = xCOLOR_GRAY3; 
                 buttonBorderColor2_light = xCOLOR_GRAY5;
+                buttonBorder_outercolor  = COLOR_BLACK;
                 break;
         };
 
         // center?
         size_t tmp_size = (size_t) strlen ( (const char *) windowname );
         unsigned long offset = 
-            ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) / 2 );
+            ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) >> 1 );
 
 
         //#debug
@@ -1552,80 +1655,14 @@ void *xxxCreateWindow (
 // Paint button
 //
 
-// Maybe we can use a helper function to do this job.
-// See: button.c
-
         if ( (void*) Parent != NULL )
         {
-
-            //  ____
-            // |
-            //
-            
-            //board1, borda de cima e esquerda.
-            
-            //cima
-            rectBackbufferDrawRectangle ( 
-                window->left+1, window->top,
-                window->width-2, 1, 
-                COLOR_BLACK, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                window->left+1, window->top+1,
-                window->width-2, 1, 
-                buttonBorderColor1, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                window->left+1+1, window->top+1+1,
-                window->width-4, 1, 
-                buttonBorderColor1, TRUE,0 );
-               
-            //esq
-            rectBackbufferDrawRectangle ( 
-                window->left, window->top+1, 
-                1, window->height-2,
-                COLOR_BLACK, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                window->left+1, window->top+1, 
-                1, window->height-2,
-                buttonBorderColor1, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                window->left+1+1, window->top+1+1, 
-                1, window->height-4,
-                buttonBorderColor1, TRUE,0 );
-
-            //  
-            //  ____|
-            //
-
-            //board2, borda direita e baixo.
-            
-            //dir
-            rectBackbufferDrawRectangle ( 
-                 ((window->left) + (window->width) -1 -1 -1), window->top+1+1, 
-                 1, window->height-4, 
-                 buttonBorderColor2_light, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                 ((window->left) + (window->width) -1 -1), window->top+1, 
-                 1, window->height-2, 
-                 buttonBorderColor2, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                 ((window->left) + (window->width) -1), window->top+1, 
-                 1, window->height-2, 
-                 COLOR_BLACK, TRUE,0 );
-
-            //baixo
-            rectBackbufferDrawRectangle ( 
-                 window->left+1+1, ( (window->top) + (window->height) -1 -1 -1),  
-                 window->width-4, 1, 
-                 buttonBorderColor2_light, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                 window->left+1, ( (window->top) + (window->height) -1 -1),  
-                 window->width-2, 1, 
-                 buttonBorderColor2, TRUE,0 );
-            rectBackbufferDrawRectangle ( 
-                 window->left+1, ( (window->top) + (window->height) -1 ),  
-                 window->width-2, 1, 
-                 COLOR_BLACK, TRUE,0 );
-
+            __paint_buttom_borders(
+                (struct gws_window_d *)window,
+                (unsigned int) buttonBorderColor1,
+                (unsigned int) buttonBorderColor2,
+                (unsigned int) buttonBorderColor2_light,
+                (unsigned int) buttonBorder_outercolor );
 
             // Button label
 

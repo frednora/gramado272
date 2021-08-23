@@ -140,10 +140,10 @@ int PS2_early_initialization(void)
     
 // ====================================================================    
 //keyboard
-    wait_then_write(I8042_STATUS, 0xae);  // enable keyboard port
-    PS2.keyboard_initialized = TRUE;
-    expect_ack();
-    for (i=0; i<20000; i++){};
+    //wait_then_write(I8042_STATUS, 0xae);  // enable keyboard port
+    //PS2.keyboard_initialized = TRUE;
+    //expect_ack();
+    //for (i=0; i<20000; i++){};
 
 
 // ====================================================================    

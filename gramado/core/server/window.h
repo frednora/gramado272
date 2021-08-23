@@ -318,6 +318,81 @@ typedef enum {
 
 
 
+//
+// frame control
+//
+
+#define FRAME_MIN_X    (24 + 24 + 24)
+#define FRAME_MIN_Y    (24 + 24 + 24)
+
+// Esses componentes também existem na
+// estrutura de janela. Mas eles só serão relevantes
+// se as flags aqui indicarem que eles existem.
+// #todo: Talvez todos possam vir para dentro da estrutura de frame.
+
+#define FRAME_FLAGS_TITLEBAR   1
+#define FRAME_FLAGS_MENUBAR    2
+#define FRAME_FLAGS_STATUSBAR  4
+#define FRAME_FLAGS_SCROLLBAR  8
+#define FRAME_FLAGS_BORDER     16
+
+
+// Not a pointer.
+struct frame_d
+{
+
+// Se estamos usando ou não frame nessa janela.
+    int used;
+    int magic;
+
+//
+// Limits in pixel
+//
+
+// width
+    unsigned long min_x;
+    unsigned long max_x;
+
+// height
+    unsigned long min_y;
+    unsigned long max_y;
+
+// type
+// normal application frame
+// full screen applications may has a button.
+    // int type;
+
+// + 1 - pintamos com retângulos.
+// + 2 - expandimos uma imagem.
+    int style;
+
+// The elements.
+// Um monte de flags pra indicar os elementos usados no frame.
+    unsigned long flags;
+
+// icon
+// The title bar icon
+    int icon_id;
+
+// image
+// The address of the expandable image 
+// used for drawing the frame.
+    int image_id;
+
+// main color
+    unsigned int color1;
+    unsigned int color2;
+    unsigned int color3;
+    unsigned int color4;
+
+// decoration color
+    unsigned int ornament_color1;
+    unsigned int ornament_color2;
+    unsigned int ornament_color3;
+    unsigned int ornament_color4;
+};
+
+
 /*
  ********************************
  * gws_window_d:
@@ -485,6 +560,7 @@ struct gws_window_d
 // 
 //==================================================
 
+    struct frame_d frame;
 
     // In the window stack we have two major components:
     // + The frame (top frame and bottom frame).

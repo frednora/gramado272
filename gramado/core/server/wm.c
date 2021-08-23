@@ -401,8 +401,9 @@ wmDrawFrame (
         // área da janela de aplicativo.
         // Usado somente por overlapped window.
         
+        window->frame.ornament_color1 = COLOR_BLACK;
         window->titlebar_ornament_color = COLOR_BLACK;
-
+        
         rectBackbufferDrawRectangle ( 
             tbWindow->left, ( (tbWindow->top) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
             tbWindow->width, METRICS_TITLEBAR_ORNAMENT_SIZE, 
@@ -417,15 +418,14 @@ wmDrawFrame (
         // O posicionamento em relação
         // à janela é consistente por questão de estilo.
         
-        // See:
-        // bmp.c
+        // See: bmp.c
         // IN: index, x, y.
 
         window->titlebarHasIcon = FALSE;
-
+        window->frame.icon_id = 1;
         if( useIcon == TRUE ){
             gwssrv_display_system_icon( 
-                1, 
+                (int) window->frame.icon_id, 
                 (tbWindow->left + METRICS_ICON_LEFT), 
                 (tbWindow->top  + METRICS_ICON_TOP) );
              window->titlebarHasIcon = TRUE;
