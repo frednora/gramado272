@@ -95,7 +95,6 @@ PHONY := build-gramado-files
 build-gramado-files: \
 newos \
 gramado-lib \
-gramado-sm \
 gramado-cmd \
 gramado-ns \
 gramado-boot \
@@ -123,19 +122,6 @@ gramado-lib:
 
 
 #3
-# Session Manager
-gramado-sm:
-	@echo "Build: Building Session Manager ..."
-
-	$(Q) $(MAKE) -C sm/
-	$(Q) $(MAKE) -C sm2/
-	$(Q) $(MAKE) -C sm3/
-
-	sudo cp sm/SM.BIN    base/
-	sudo cp sm2/SM2.BIN  base/
-	sudo cp sm3/SM3.BIN  base/
-
-#4
 gramado-cmd:
 	@echo "Build: Building cmd applications ..."
 
@@ -152,7 +138,7 @@ gramado-cmd:
 #	-sudo cp cmd/bin/UNAME.BIN      base/
 
 
-#5
+#4
 gramado-ns:
 	@echo "Build: Building Network Server ..."
 
@@ -160,7 +146,7 @@ gramado-ns:
 	-sudo cp ns/bin/GNSSRV.BIN  base/
 	-sudo cp ns/bin/GNS.BIN     base/
 
-#6
+#5
 gramado-boot:
 	@echo "Build: Building bootloader ..."
 
@@ -181,14 +167,14 @@ gramado-boot:
 
 #========================================
 
-#7
+#6
 gramado-shell:
 # Install BMPs
 	sudo cp gramado/shell/themes/presence/*.BMP base/
 
 
 
-#8
+#7
 # Gramado Window System files.
 gramadoos:
 	@echo "Build: Building Window Server ..."
@@ -237,9 +223,6 @@ vhd-copy-files:
 	@echo "========================="
 	@echo "Build: Copying files into the mounted VHD ..."
 
-	#Copy SM.BIN to base/
-	#sudo cp sm/SM.BIN  base/
-	
 	# Copy base
 	# sends everything from base to root.
 	sudo cp -r base/*  /mnt/gramadoxvhd
@@ -297,10 +280,6 @@ clean4:
 	-rm -rf lib/fonts/bin/*.FON
 # Clear boot images
 	-rm -rf boot/x86/bin/*.BIN
-# Clear session manager stuff
-	-rm -rf sm/*.BIN
-	-rm -rf sm2/*.BIN
-	-rm -rf sm3/*.BIN
 # Clear commands folder
 	-rm -rf cmd/bin/*.BIN
 # Clear ns service stuff
