@@ -668,8 +668,11 @@ pciHandleDevice (
     unsigned char dev, 
     unsigned char fun )
 { 
+
+    struct pci_device_d  *D;
+
     int Status = -1;
-    struct pci_device_d *D; 
+
     uint32_t data=0;
     
     // char, block, network
@@ -692,6 +695,11 @@ pciHandleDevice (
     if ( (void *) D == NULL ){
         panic ("pciHandleDevice: D\n");
     }else{
+
+// #important
+
+        memset( D, 0, sizeof(struct pci_device_d) );
+
         D->objectType  = ObjectTypePciDevice;
         D->objectClass = ObjectClassKernelObjects;
         D->used  = (int) TRUE;
@@ -951,8 +959,11 @@ pciHandleDevice (
     __file = (file *) kmalloc ( sizeof(file) );
     
     if ( (void *) __file == NULL ){
-        panic("pciHandleDevice: __file fail, can't register device\n");
+        panic("pciHandleDevice: __file\n");
     }else{
+
+        memset( __file, 0, sizeof(struct file_d) );
+        
         __file->used  = TRUE;
         __file->magic = 1234;
         __file->isDevice = TRUE;

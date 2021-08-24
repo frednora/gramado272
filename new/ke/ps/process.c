@@ -1033,6 +1033,9 @@ struct process_d *create_process (
         panic ("create_process: Process\n");
     }
 
+    memset( Process, 0, sizeof(struct process_d) );
+
+
 //get_next:
 
 	// Get empty.

@@ -887,6 +887,8 @@ struct thread_d *create_thread (
         panic ("create_thread: [FAIL] Thread\n");
     }
 
+    memset( Thread, 0, sizeof(struct thread_d) );
+
     // Belongs to this process.
     Thread->ownerPID = (int) ProcessID; //pid;
     Thread->process = (void *) Process;

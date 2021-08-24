@@ -206,6 +206,9 @@ void *CreateDesktop ( struct room_d *room )
     if ( (void *) Current == NULL ){
         panic ("CreateDesktop: Current\n");
     } else {
+
+        memset( Current, 0, sizeof(struct desktop_d) );
+
         Current->room = (void *) room;
 
 		//continua...

@@ -722,6 +722,10 @@ void *xxxCreateWindow (
         //return NULL; 
     }
 
+    memset( window, 0, sizeof(struct gws_window_d) );
+
+
+
 // Validate the window rectangle.
 // We will not flush it for now.
 

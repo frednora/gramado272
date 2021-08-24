@@ -542,11 +542,15 @@ struct tty_d *tty_create(void)
     __tty = (struct tty_d *) kmalloc( sizeof(struct tty_d) );
     
     if ( (void *) __tty == NULL ){
-        panic ("tty_create: __tty kmalloc fail \n");   
+        panic ("tty_create: __tty\n");   
         //return NULL;
     }else{
+
+        memset( __tty, 0, sizeof(struct tty_d) );
+        
         __tty->objectType  = ObjectTypeTTY;
         __tty->objectClass = ObjectClassKernelObjects;
+        
         __tty->used  = TRUE;
         __tty->magic = 1234;
 

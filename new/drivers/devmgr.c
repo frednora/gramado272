@@ -110,6 +110,8 @@ struct device_d *devmgr_device_object (void){
              if ( (void *) d == NULL ){
                  panic ("devmgr_device_object: [ERROR] d\n"); 
              }
+             
+             memset( d, 0, sizeof(struct device_d) );
 
              d->used  = TRUE;
              d->magic = 1234;

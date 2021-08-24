@@ -1643,16 +1643,20 @@ void __initialize_file_table(void)
     for (i=0; i<NUMBER_OF_FILES; i++)
     {
         tmp = (void*) kmalloc (sizeof(file));
-        if ((void*)tmp==NULL){
+        if ((void*)tmp==NULL)
+        {
            x_panic("__initialize_file_table: tmp\n");
         }
-        tmp->used  = TRUE;
-        tmp->magic = 1234;
+        memset( tmp, 0, sizeof(struct file_d) );
+
         tmp->____object = ObjectTypeFile; //Regular file
         tmp->_flags = 0; // (__SWR | __SRD); 
         tmp->fd_counter = 0;
         tmp->_tmpfname = NULL;
         //...
+
+        tmp->used  = TRUE;
+        tmp->magic = 1234;
  
         //salva
         file_table[i] = (unsigned long) tmp; 
@@ -1672,15 +1676,18 @@ void __initialize_inode_table(void)
     for (i=0; i<32; i++)
     {
         tmp_inode = (void*) kmalloc (sizeof(struct inode_d));
-        if ((void*)tmp_inode==NULL){
+        if ((void*)tmp_inode==NULL)
+        {
             x_panic("__initialize_inode_table: tmp_inode\n");
         }
-        tmp_inode->used  = TRUE;
-        tmp_inode->magic = 1234;
+        memset( tmp_inode, 0, sizeof(struct inode_d) );
+
         tmp_inode->filestruct_counter = 0;
         tmp_inode->path[0] = 0;
         //...
 
+        tmp_inode->used  = TRUE;
+        tmp_inode->magic = 1234;
         //salva
         inode_table[i] = (unsigned long) tmp_inode; 
     };

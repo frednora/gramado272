@@ -2371,10 +2371,12 @@ int main (int argc, char **argv)
 
 
 //
-// Window server.
+// Window server
 //
 
-    // The window server main struture.
+// The window server main struture.
+// See: ?
+
     struct gws_d *window_server;
     
     window_server = (struct gws_d *) malloc ( sizeof( struct gws_d) );
@@ -2385,6 +2387,8 @@ int main (int argc, char **argv)
         printf            ("gwssrv.bin: [FAIL] window_server \n");
         exit(1);
     }
+    
+    memset( window_server, 0, sizeof(struct gws_d) );
     
     // Saving the pointer.
     

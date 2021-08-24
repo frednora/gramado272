@@ -462,6 +462,9 @@ int gwsInit(void)
         //while(1);
  
     }else{
+
+        memset( CurrentDisplay, 0, sizeof(struct gws_display_d) );
+
         CurrentDisplay->used  = TRUE; 
         CurrentDisplay->magic = 1234; 
 
@@ -492,6 +495,9 @@ int gwsInit(void)
         //while(1);
 
     }else{
+
+        memset( DeviceScreen, 0, sizeof(struct gws_screen_d) );
+
         DeviceScreen->used  = TRUE;
         DeviceScreen->magic = 1234;
 
@@ -572,8 +578,9 @@ int gwsInit(void)
 //
 // == gui structure ============================================
 //
-    
-    // First level structure for the GUI.
+
+
+// First level structure for the GUI.
 
     gui = (void *) malloc( sizeof( struct gui_d) );
 
@@ -583,6 +590,8 @@ int gwsInit(void)
         printf     ("gwsInit: gui\n");
         exit(1);
     }
+
+    memset( gui, 0, sizeof(struct gui_d) );
 
 
 //

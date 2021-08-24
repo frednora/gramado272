@@ -96,12 +96,12 @@ all:
 
 
 	# security
-	$(CC) -c desktop.c   $(KERNEL_INCLUDE) $(CFLAGS) -o desktop.o
-	$(CC) -c room.c      $(KERNEL_INCLUDE) $(CFLAGS) -o room.o
-	$(CC) -c usession.c  $(KERNEL_INCLUDE) $(CFLAGS) -o usession.o
-	$(CC) -c logoff.c    $(KERNEL_INCLUDE) $(CFLAGS) -o logoff.o
-	$(CC) -c logon.c     $(KERNEL_INCLUDE) $(CFLAGS) -o logon.o
-	$(CC) -c userenv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o userenv.o
+	$(CC) -c security/desktop.c   $(KERNEL_INCLUDE) $(CFLAGS) -o desktop.o
+	$(CC) -c security/room.c      $(KERNEL_INCLUDE) $(CFLAGS) -o room.o
+	$(CC) -c security/usession.c  $(KERNEL_INCLUDE) $(CFLAGS) -o usession.o
+	$(CC) -c security/logoff.c    $(KERNEL_INCLUDE) $(CFLAGS) -o logoff.o
+	$(CC) -c security/logon.c     $(KERNEL_INCLUDE) $(CFLAGS) -o logon.o
+	$(CC) -c security/userenv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o userenv.o
 
 
 	# view

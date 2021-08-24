@@ -1194,8 +1194,8 @@ FILE *fopen ( const char *filename, const char *mode ){
 // Open.
 //
 
-    // See:
-    // fcntl.c
+// See:
+// fcntl.c
 
     fd = open (filename, flags, oflags);  
     
@@ -1204,7 +1204,9 @@ FILE *fopen ( const char *filename, const char *mode ){
         return NULL;
     }
 
+//
 // Stream
+//
 
     __stream = (FILE *) malloc ( sizeof(FILE) );
 
@@ -1212,6 +1214,9 @@ FILE *fopen ( const char *filename, const char *mode ){
         printf ("fopen: __stream fail\n");
         return NULL;
     }
+
+// #important
+    memset( __stream, 0, sizeof(struct _iobuf) );
 
 // Descriptor
     __stream->_file = fd;
@@ -6151,6 +6156,7 @@ void stdioInitialize(void)
         //printf      ("stdioInitialize: stdin fail\n");
         exit(1);
     }
+    memset( stdin, 0, sizeof(struct _iobuf) );
 
 // ===============
 // stdout
@@ -6162,7 +6168,8 @@ void stdioInitialize(void)
         //printf ("stdioInitialize: stdout fail\n");
         exit(1);
     }
-
+    memset( stdout, 0, sizeof(struct _iobuf) );
+    
 // ===============
 // stderr
     debug_print ("stdioInitialize: [3] stderr\n");  
@@ -6173,6 +6180,10 @@ void stdioInitialize(void)
         //printf ("stdioInitialize: stderr fail\n");
         exit(1);
     }
+    memset( stderr, 0, sizeof(struct _iobuf) );
+
+
+
 
 //
 // Buffers

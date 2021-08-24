@@ -102,6 +102,8 @@ int openat (int dirfd, const char *pathname, int flags)
  *
  */
 
+// Called by fopen().
+
 // #obs
 // Isso precisa abrir um arquivo, colocar o ponteiro na 
 // lista de arquivos abertos e retornar o índice. 

@@ -24,11 +24,15 @@ struct socket_d *create_socket_object (void)
 
     s = (void *) kmalloc ( sizeof( struct socket_d ) );
 
-    if ( (void *) s ==  NULL ){
-        printf ( "create_socket_object: allocation fail \n");
+    if ( (void *) s ==  NULL )
+    {
+        printf ( "create_socket_object: s \n");
         refresh_screen();
         return NULL;
+    
     }else{
+
+        memset( s, 0, sizeof(struct socket_d) );
 
         //s->objectType =
         //s->objectClass =
@@ -349,6 +353,7 @@ socket_gramado (
         printf      ("socket_gramado: [FAIL] _file fail\n");
         goto fail;
     }
+    memset( _file, 0, sizeof(struct file_d) );
 
 
 // Object type
@@ -559,6 +564,9 @@ socket_inet (
         goto fail;
 
     }else{
+
+        memset( _file, 0, sizeof(struct file_d) );
+            
         _file->used = 1;
         _file->magic = 1234;
         _file->pid = (pid_t) current_process;
@@ -901,6 +909,9 @@ socket_unix (
         goto fail;
 
     }else{
+
+        memset( _file, 0, sizeof(struct file_d) );
+        
         _file->used = 1;
         _file->magic = 1234;
         _file->pid = (pid_t) current_process;
