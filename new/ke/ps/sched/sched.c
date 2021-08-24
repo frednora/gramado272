@@ -59,9 +59,10 @@ int __scheduler_rr (unsigned long sched_flags)
 
     //debug_print ("scheduler: [not tested] \n");
 
-#ifdef SERIAL_DEBUG_VERBOSE
-    debug_print(" SCHEDULER: ");
-#endif
+//#ifdef SERIAL_DEBUG_VERBOSE
+    debug_print(" SCHEDULER \n");
+    //printf     (" SCHEDULER \n"); refresh_screen();
+//#endif
 
 
 //
@@ -75,6 +76,7 @@ int __scheduler_rr (unsigned long sched_flags)
 // #todo:
 // We need to create another hook for the AP cores.
 
+    // O Window server é o idle.
     rootConductor = (void *) ____IDLE;
 
     // Check
@@ -175,10 +177,14 @@ int __scheduler_rr (unsigned long sched_flags)
 
 
 
+
+
 // Finalizing the list.
 // The tmpConductor and it's next.
     tmpConductor       = (void *) tmpConductor->next; 
-    tmpConductor->next = NULL;
+    //tmpConductor->next = NULL;               // Reescalona ao fim do round.
+    tmpConductor->next = (void *) ____IDLE;  // Reescalona quando o scheduler for chamado pelo timer.
+
 
 
 // done:

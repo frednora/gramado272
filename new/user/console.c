@@ -1202,6 +1202,17 @@ int consoleCompareStrings(void)
         goto exit_cmp;
     }
 
+
+// ps2
+// Testing the full initialization of ps2 interface.
+// This is a work in progress.
+    if ( strncmp( prompt, "ps2", 3 ) == 0 )
+    {
+        printf("[Test]: Full ps2 initialization!\n");
+        PS2_initialization();
+        goto exit_cmp;
+    }
+
 // reboot
     if ( strncmp( prompt, "reboot", 6 ) == 0 ){
         hal_reboot();

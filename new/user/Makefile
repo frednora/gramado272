@@ -92,10 +92,8 @@ all:
 
 	$(CC) -c vt.c   $(KERNEL_INCLUDE) $(CFLAGS) -o vt.o
 	$(CC) -c console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 
-	$(CC) -c font.c  $(KERNEL_INCLUDE) $(CFLAGS) -o font.o
 
-
-	# security
+# security
 	$(CC) -c security/desktop.c   $(KERNEL_INCLUDE) $(CFLAGS) -o desktop.o
 	$(CC) -c security/room.c      $(KERNEL_INCLUDE) $(CFLAGS) -o room.o
 	$(CC) -c security/usession.c  $(KERNEL_INCLUDE) $(CFLAGS) -o usession.o
@@ -103,11 +101,10 @@ all:
 	$(CC) -c security/logon.c     $(KERNEL_INCLUDE) $(CFLAGS) -o logon.o
 	$(CC) -c security/userenv.c   $(KERNEL_INCLUDE) $(CFLAGS) -o userenv.o
 
-
-	# view
-
-	$(CC) -c char.c   $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
-	$(CC) -c dtext.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dtext.o
+# gr
+	$(CC) -c gr/char.c   $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
+	$(CC) -c gr/dtext.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dtext.o
+	$(CC) -c gr/font.c   $(KERNEL_INCLUDE) $(CFLAGS) -o font.o
 
 
 

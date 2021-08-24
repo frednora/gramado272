@@ -76,13 +76,25 @@ struct ps2_d  PS2;
 //
 
 
-//#todo
-void ps2(void);
-
-
-
-int PS2_initialize(void);
+// ================
+// Early initialization
+// Only the keyboard.
+// It is working
 int PS2_early_initialization(void);
+
+// ================
+// This is the full initialization.
+// #bugbug This is a test yet.
+// It fails in the real machine.
+int PS2_initialization(void);
+
+
+
+
+void ps2(void);
+int PS2_initialize(void);
+
+
 
 
 int ps2_ioctl ( int fd, unsigned long request, unsigned long arg );

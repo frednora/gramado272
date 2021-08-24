@@ -58,6 +58,12 @@
 // =====================================================
 //
 
+
+// Usado pelo ponteiro.
+int saved_mouse_x;
+int saved_mouse_y;
+
+
 // this is gonna be used by PS2 structure in ps2.h
 struct ps2_mouse_d
 {
@@ -128,6 +134,8 @@ unsigned long g_mousepointer_height;
 //
 // == prototypes =====================
 //
+
+void DeviceInterface_PS2Mouse(void);
 
 void zzz_mouse_write(unsigned char data);
 unsigned char zzz_mouse_read (void);

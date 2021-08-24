@@ -15,11 +15,11 @@
  * elas devem ter um contador que enviará mensagens para o 
  * aplicativo sempre que se esgota a contagem.
  *
- * Histórico:
- *     Versão: 1.0, 2013 - Esse arquivo foi criado por Fred Nora.
+ * Hostory:
+ *     2013 - Created by Fred Nora.
  */
 
- 
+
 /*
 I/O port     Usage
 0x40         Channel 0 data port (read/write)
@@ -141,17 +141,23 @@ void DeviceInterface_PIT(void)
     jiffies++;
 
 
-    if ( (jiffies % level) == 0 )
-    {
+// Compositor
+    if ( (jiffies % level) == 0 ){
         debug_print ("  -- TICK --  \n");
-        
         UpdateScreenFlag = TRUE;
     }
 
-    if ( (jiffies % 32) == 0 )
-    {
+// Demo
+    if ( (jiffies % 32) == 0 ){
         DemoFlag = TRUE;
     }
+
+// Scheduler
+// Ignoramos a tid retornada pela rotina.
+    if ( (jiffies % 1000) == 0 ){
+        KiScheduler();
+    }
+
 }
 
 

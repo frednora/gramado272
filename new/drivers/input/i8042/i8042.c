@@ -134,16 +134,45 @@ int PS2_initialize(void)
 #define __PS2MOUSE_SET_DEFAULTS              0xF6
 #define __PS2MOUSE_SET_RESOLUTION            0xE8
 
+
+// Early initialization
+// Only keyboard.
+int PS2_early_initialization(void)
+{
+
+    debug_print ("PS2_early_initialization:\n");
+
+// The main structure first of all.
+    // #todo: create ps_initialize_main_structure();
+    PS2.used  = TRUE;
+    PS2.magic = 1234;
+    PS2.pooling = FALSE;
+
+// ====================================================================    
+//keyboard
+    wait_then_write(I8042_STATUS, 0xae);  // enable keyboard port
+    keyboard_expect_ack();
+    PS2.keyboard_initialized = TRUE;
+
+// ====================================================================    
+//mouse
+    PS2.mouse_initialized    = FALSE;
+
+    return 0;
+}
+
+
 // This is called during the kernel initialization.
 // Called by I_x64main in x64init.c
-int PS2_early_initialization(void)
+
+int PS2_initialization(void)
 {
     unsigned char status = 0;
     int i=0;
     unsigned char device_id=0;
     
     
-    debug_print ("PS2_early_initialization: [TODO]\n");
+    debug_print ("PS2_initialization: [TODO]\n");
 
 // The main structure first of all.
     // #todo: create ps_initialize_main_structure();
@@ -276,6 +305,7 @@ int PS2_early_initialization(void)
 //======================================================
 //-- 
 
+    debug_print ("PS2_initialization: done\n");
 
 // ====================================================================    
 

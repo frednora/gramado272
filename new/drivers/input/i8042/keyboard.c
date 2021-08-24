@@ -19,7 +19,14 @@ irq1_KEYBOARD (void)
 
     debug_print ("\n");
     debug_print ("irq1_KEYBOARD: [TODO]\n");
-    
+
+
+// Not initialized.
+    if ( PS2.keyboard_initialized != TRUE )
+    {
+        return;
+    }
+
     //printf ("k");
     //refresh_screen();
 

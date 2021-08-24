@@ -966,9 +966,21 @@ int I_x64main (void)
 // See: i8042.c
 
     PROGRESS("Kernel:1:10\n"); 
-    debug_print ("[x64] I_x64main: ps2\n");      
-    //PS2_initialize();           // This one will be called by the ring3 application.
-    PS2_early_initialization();   // Use this one now.
+    debug_print ("[x64] I_x64main: ps2\n"); 
+
+// ================
+// Early initialization
+// Only the keyboard.
+// It is working
+    PS2_early_initialization();
+
+
+// ================
+// This is the full initialization.
+// #bugbug This is a test yet.
+// It fails in the real machine.
+    //PS2_initialization();
+
 
 // ================================
 // Loading some system files.

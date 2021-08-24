@@ -779,7 +779,7 @@ void schedulerUpdateScreen(void)
     sprintf(data,"  FPS %d       ",fps);
     data[12]=0;
     draw_string(0,8,COLOR_YELLOW,data);
-    refresh_rectangle ( 0, 0, deviceWidth, 24);
+    refresh_rectangle ( 0, 0, deviceWidth, 24 );
 //=========================
 
 
