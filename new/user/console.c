@@ -1276,7 +1276,54 @@ int consoleCompareStrings(void)
         goto exit_cmp;
     }
 
+// msg:
+    if ( strncmp(prompt,"close",5) == 0 )
+    {
+        if( (void*) InitThread == NULL ){goto exit_cmp;}
+        kgws_send_to_tid(
+            InitThread->tid,
+            NULL,  //window
+            MSG_CLOSE,  //msg code
+            0,
+            0 );
+        goto exit_cmp;
+    }
 
+// msg:
+    if ( strncmp(prompt,"app1",4) == 0 ){
+        if( (void*) InitThread == NULL ){goto exit_cmp;}
+        kgws_send_to_tid(
+            InitThread->tid,
+            NULL,  //window
+            MSG_COMMAND,  //msg code
+            4001,
+            0 );
+        goto exit_cmp;
+    }
+
+// msg:
+    if ( strncmp(prompt,"app2",4) == 0 ){
+        if( (void*) InitThread == NULL ){goto exit_cmp;}
+        kgws_send_to_tid(
+            InitThread->tid,
+            NULL,  //window
+            MSG_COMMAND,  //msg code
+            4002,
+            0 );
+        goto exit_cmp;
+    }
+
+// msg:
+    if ( strncmp(prompt,"app3",4) == 0 ){
+        if( (void*) InitThread == NULL ){goto exit_cmp;}
+        kgws_send_to_tid(
+            InitThread->tid,
+            NULL,  //window
+            MSG_COMMAND,  //msg code
+            4003,
+            0 );
+        goto exit_cmp;
+    }
 
 
 // invalid

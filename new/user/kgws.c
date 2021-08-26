@@ -949,14 +949,14 @@ kgws_send_to_tid (
     } 
 
     tmp_msg = (unsigned long) msg;
-    tmp_msg = (unsigned long) ( tmp_msg & 0x0000FFFF );
+    //tmp_msg = (unsigned long) ( tmp_msg & 0x0000FFFF );
 
     tmp_ch = (unsigned long) long1;
-    tmp_ch = (unsigned long) ( tmp_ch & 0x000000FF );
+    //tmp_ch = (unsigned long) ( tmp_ch & 0x000000FF );
    
     // Scan code.
     tmp_sc = (unsigned long) long2;
-    tmp_sc = (unsigned long) ( tmp_sc & 0x000000FF );
+    //tmp_sc = (unsigned long) ( tmp_sc & 0x000000FF );
     
     //Send system message to the thread.
     t->window_list[ t->tail_pos ]  = window;

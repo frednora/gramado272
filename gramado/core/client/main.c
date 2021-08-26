@@ -246,6 +246,27 @@ gwsProcedure (
 
     switch (msg){
 
+        case MSG_CLOSE:
+            printf("gws.bin: Closing...\n");
+            exit(0);
+            break;
+        
+        case MSG_COMMAND:
+            printf("gws.bin: MSG_COMMAND %d \n",long1);
+            switch(long1){
+            case 4001:
+            printf("gws.bin: 4001\n");
+            gws_clone_and_execute("browser.bin");  break;
+            case 4002:
+            printf("gws.bin: 4002\n");
+            gws_clone_and_execute("fileman.bin");  break;
+            case 4003:
+            printf("gws.bin: 4003\n");
+            gws_clone_and_execute("terminal.bin");  break;
+            };
+            break;
+
+
         // 20 = MSG_KEYDOWN
         case MSG_KEYDOWN:
             switch(long1){
@@ -928,16 +949,15 @@ int main ( int argc, char *argv[] )
 
     //=================================
 
+    // Podemos chamar mais de um diálogo
+    // Retorna TRUE quando o diálogo chamado 
+    // consumiu o evento passado à ele.
+    // Nesse caso chamados 'continue;'
+    // Caso contrário podemos chamar outros diálogos.
+
     while (1){
-
         if ( rtl_get_event() == TRUE )
-        {  
-            // Podemos chamar mais de um diálogo
-            // Retorna TRUE quando o diálogo chamado 
-            // consumiu o evento passado à ele.
-            // Nesse caso chamados 'continue;'
-            // Caso contrário podemos chamar outros diálogos.
-
+        {
             gwsProcedure ( 
                 client_fd,
                 (void*) RTLEventBuffer[0], 
@@ -947,7 +967,6 @@ int main ( int argc, char *argv[] )
         }
     };
     //=================================
-
 
     // Isso ehestranho ... um cliente remoto nao deve poder fazer isso.
     //gws_debug_print ("gws: Sending command to close the server. \n");
