@@ -412,6 +412,8 @@
 // 0x40000000
 // #available
 
+#define __1GB_MARK_PA  (0x40000000)
+
 // #todo
 // Quando o sistema tiver memória o suficiente
 // Então colocaremos um backbuffer bem grande aqui.
@@ -420,7 +422,7 @@
 // Já podemos tentar isso na máquina real.
 
 
-#define BACKBUFFER_1GB  0x40000000
+#define BACKBUFFER_1GB_MARK_PA  0x40000000
 
 
 //
@@ -430,12 +432,16 @@
 // 0x80000000
 // #available
 
+#define __2GB_MARK_PA  (0x80000000)
+
 //
 // == 3GB =========================================================
 //
 
 // 0xC0000000
 // #available
+
+#define __3GB_MARK_PA  (0xC0000000)
 
 
 

@@ -209,6 +209,7 @@ void __ps2mouse_parse_data_packet (void)
 void ps2mouse_initialize_device (void)
 {
     unsigned char status = 0;
+    unsigned char device_id=0;
 
     debug_print ("ps2mouse_initialize_device:\n");
 
@@ -308,6 +309,80 @@ void ps2mouse_initialize_device (void)
 	// Enable the mouse
 	zzz_mouse_write(0xF4);
 	mouse_expect_ack(); // ACK
+
+//
+// #test
+//
+
+
+//++
+//=================================================
+
+/*
+//__enable_wheel:    
+  
+    // #obs:
+    // A rotina abaixo habilita a rodinha, se o dispositivo possui.
+    // Credits: Serenity OS.    
+
+    // Pega o device id e faz configurações de wheel.
+    zzz_mouse_write (PS2MOUSE_GET_DEVICE_ID);
+    mouse_expect_ack();
+    
+    device_id = zzz_mouse_read(); 
+    
+    if (device_id != PS2MOUSE_INTELLIMOUSE_ID){
+
+        // Send magical wheel initiation sequence.
+        zzz_mouse_write (PS2MOUSE_SET_SAMPLE_RATE);
+        mouse_expect_ack();
+        zzz_mouse_write (200);
+        mouse_expect_ack();
+        zzz_mouse_write (PS2MOUSE_SET_SAMPLE_RATE);
+        mouse_expect_ack();
+        zzz_mouse_write (100);
+        mouse_expect_ack();
+        zzz_mouse_write (PS2MOUSE_SET_SAMPLE_RATE);
+        mouse_expect_ack();
+        zzz_mouse_write (80);
+        mouse_expect_ack();
+
+        zzz_mouse_write (PS2MOUSE_GET_DEVICE_ID);
+        mouse_expect_ack();
+        
+        // Porque estamos lendo novamente?
+        device_id = zzz_mouse_read();
+    }
+
+    if (device_id == PS2MOUSE_INTELLIMOUSE_ID){
+        //m_has_wheel = true;
+        ps2_mouse_has_wheel = 1;
+        kprintf ("ps2mouse_initialize_device: Mouse wheel enabled!\n");
+    } else {
+        kprintf ("ps2mouse_initialize_device: No mouse wheel detected!\n");
+    };
+*/
+
+
+/*
+0xFF ResetMouse reset
+0xFE ResendFor serial communications errors
+0xF6 Set DefaultsSet default values
+0xF5 Disable (Data Reporting)In stream mode, 
+     should be sentbefore any other command
+0xF4 Enable (Data Reporting)In stream mode only
+0xF3 Set Sample RateSets state sampling rate
+0xF0 Set Remote modeSend data on request only
+0xEB Read DataSend data packet request
+0xEA Set Stream ModeSend data on events
+0xE9 Status RequestGet mouse configuration (3 bytes)
+0xE8 Set Resolution
+0xE7 Set Scaling 2:1Accelerationmode
+0xE6 Set Scaling 1:1Linear mode
+*/
+
+//=================================================
+//--
 
     debug_print ("ps2mouse_initialize_device: done\n");
 }
