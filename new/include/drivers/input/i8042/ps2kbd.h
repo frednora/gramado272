@@ -191,12 +191,12 @@ unsigned long keyboard_handler_address;
 //
 
 
-void *__do_111 ( unsigned long buffer );
+
 
 
 void kbdc_wait (unsigned char type);
 
-void ps2kbd_initialize_device (void);
+
 
 // ==
 

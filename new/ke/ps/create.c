@@ -5,7 +5,7 @@
 
 /*
  ******************************************************
- * create_CreateEarlyRing0IdleThread:
+ * create_tid0:
  *    Criando manualmente uma thread em ring 0.
  *    Para o processador ficar em hlt quando não tiver outra 
  * thread rodando.

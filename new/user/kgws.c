@@ -451,10 +451,13 @@ xxxKeyEvent (
     unsigned char raw_byte )
 {
 
-// ==== #importante ====
-// Na verdade isso aqui eh trabalho do window server.
-// Eh ele que le na fila de RAW bytes de constroi uma fila de eventos.
-// Esses eventos serao lidos pelos cliente.
+
+// #todo
+// Devemos considerar os marcadores de teclado extendido
+// obtidos em DeviceInterface_PS2Keyboard() em ps2kbd.c
+
+    // ??
+    // __has_e0_prefix and __has_e1_prefix
 
     // Step 0 
     // Declarações de variáveis.
@@ -509,6 +512,27 @@ xxxKeyEvent (
 	// estar em user mode.
 
 
+// Overrun raw byte
+// What to do?
+
+    if ( Keyboard_RawByte == 0xFF )
+    {
+        //?
+    }
+
+// See:
+// ps2kbd.c
+
+// #todo
+// The last byte was a prefix
+    //if( __has_e0_prefix == 1 )
+        //goto GotE0;
+
+// #todo
+// The last byte was a prefix
+    //if(__has_e1_prefix == 1 )
+        //goto GotE1;
+
 
 //
 // Debug
@@ -537,6 +561,14 @@ xxxKeyEvent (
 // ===================
 // --
 
+// #todo
+// Enable these shortcuts
+// Se temos a flag ou não
+    //if ( Keyboard_RawByte > 0x7F )
+         //goto key_released;
+    //if ( Keyboard_RawByte < 0x7F )
+         //goto key_pressed;
+
 
 // ==========
 // Step 2
@@ -544,6 +576,7 @@ xxxKeyEvent (
 // Traduzir rawbyte em evento.
 
 
+//key_released:
     // ================================================
     // Se a tecla for (liberada).
     // ligado. tecla liberada.
@@ -666,6 +699,7 @@ xxxKeyEvent (
     };
 
 
+//key_pressed:
     // ================================================
     //  Tecla (pressionada) ...........
     // bit desligado. tecla pressionada.

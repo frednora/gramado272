@@ -1,6 +1,89 @@
 
+// thread.c
 
 #include <kernel.h>
+
+
+/*
+ *********************** 
+ * sys_get_message:
+ *     Get a message from the current thread and 
+ * put it into the given buffer.
+ *     The message has 6 standard elements.
+ */
+
+// Called by sci.c
+
+// This is the service 111.
+// It is called by the applications.
+// It is also used for ipc.
+
+void *sys_get_message ( unsigned long buffer )
+{
+    struct thread_d  *t;
+
+    unsigned long *message_address = (unsigned long *) buffer;
+    int head_pos=0;
+
+    debug_print ("sys_get_message:\n");
+
+// buffer
+// #todo: Check some other invalid address.
+    if ( buffer == 0 ){ 
+        panic ("sys_get_message: buffer\n");
+        //return NULL;
+    }
+
+// #todo:
+// Check current_thread validation
+
+
+// Thread
+    t = (void *) threadList[current_thread];
+
+    if ( (void *) t == NULL ){
+        panic ("sys_get_message: t\n");
+    }
+
+    if ( t->used != TRUE || t->magic != 1234 ){
+        panic ("sys_get_message: t validation\n");
+    }
+
+// Offset
+    head_pos = (int) t->head_pos;
+
+// Get standard entries.
+    message_address[0] = (unsigned long) t->window_list[head_pos];
+    message_address[1] = (unsigned long) t->msg_list[head_pos];
+    message_address[2] = (unsigned long) t->long1_list[head_pos];
+    message_address[3] = (unsigned long) t->long2_list[head_pos];
+
+// Get extra entries.
+    message_address[4] = (unsigned long) t->long3_list[head_pos];
+    message_address[5] = (unsigned long) t->long4_list[head_pos];
+
+// Clean
+    t->window_list[head_pos] = NULL;
+    t->msg_list[head_pos] = 0;
+    t->long1_list[head_pos] = 0;
+    t->long2_list[head_pos] = 0;
+    t->long3_list[head_pos] = 0;
+    t->long4_list[head_pos] = 0;
+
+// Round
+    t->head_pos++;
+    if ( t->head_pos >= 31 ){  t->head_pos = 0;  }
+
+//done:
+    debug_print ("sys_get_message: done\n");
+// Yes, We have a message.
+    return (void *) 1;
+
+//fail0:
+// No message.
+    return NULL;
+} 
+
 
 // Thread stats
 unsigned long __GetThreadStats ( int tid, int index ){
@@ -767,7 +850,7 @@ struct thread_d *create_thread (
 
     int ProcessID = -1;
 
-    // Counter
+// Counter
     int i = USER_BASE_TID;
 
 

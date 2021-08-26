@@ -96,6 +96,9 @@ int PS2_initialize(void);
 
 
 
+void ps2kbd_initialize_device (void);
+void ps2mouse_initialize_device (void);
+
 
 int ps2_ioctl ( int fd, unsigned long request, unsigned long arg );
 

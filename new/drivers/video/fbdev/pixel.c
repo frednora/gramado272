@@ -119,7 +119,7 @@ backbuffer_putpixel (
 // #importante
 // Pegamos a largura do dispositivo.
 
-    int width = (int) SavedX;
+    int width = (int) (SavedX & 0xFFFF);
     
     width = (int) (width & 0xFFFF);
 

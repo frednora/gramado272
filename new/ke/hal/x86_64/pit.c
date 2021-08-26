@@ -15,7 +15,7 @@
  * elas devem ter um contador que enviará mensagens para o 
  * aplicativo sempre que se esgota a contagem.
  *
- * Hostory:
+ * History:
  *     2013 - Created by Fred Nora.
  */
 

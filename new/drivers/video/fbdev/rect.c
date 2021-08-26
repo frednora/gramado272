@@ -38,7 +38,9 @@ drawDataRectangle (
     unsigned long Height = (height & 0xFFFF);
     unsigned int Color   = color;
 
-    
+    //loop
+    unsigned long internal_height = (unsigned long) Height;
+
     // #todo
     // Get the clipping window/rectangle.
 
@@ -49,15 +51,11 @@ drawDataRectangle (
 // flag
     int UseClipping = TRUE;
 
+
 // dc: Clipping
+// Clipping support.
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
-
-
-    //loop
-    unsigned long internal_height = (unsigned long) Height;
-
-    // Clipping support.
     
     if ( deviceWidth == 0 || deviceHeight == 0 )
     {
@@ -65,6 +63,7 @@ drawDataRectangle (
         //panic       ("drawDataRectangle: [PANIC] w h\n");
         return;
     }
+
 
 //
 // Clipping rectangle
@@ -75,8 +74,8 @@ drawDataRectangle (
 // We need to handle the surfaces used by 
 // this embedded window server and the loadable one.
 
-    ClippingRect.left   = 0;
-    ClippingRect.top    = 0;
+    ClippingRect.left   = (unsigned long) 0;
+    ClippingRect.top    = (unsigned long) 0;
     ClippingRect.width  = (unsigned long) (deviceWidth  & 0xFFFF);
     ClippingRect.height = (unsigned long) (deviceHeight & 0xFFFF);
 
@@ -110,12 +109,12 @@ drawDataRectangle (
     // Dimensions
     Rect.x = 0;
     Rect.y = 0;
-    Rect.width  = Width;
-    Rect.height = Height;
+    Rect.width  = (Width  & 0xFFFF);
+    Rect.height = (Height & 0xFFFF);
 
     // Margins
-    Rect.left   = X; 
-    Rect.top    = Y;
+    Rect.left   = (X & 0xFFFF);
+    Rect.top    = (Y & 0xFFFF);
     Rect.right  = (unsigned long) (Rect.left + Rect.width);
     Rect.bottom = (unsigned long) (Rect.top  + Rect.height); 
 
@@ -261,7 +260,7 @@ refresh_rectangle (
     int bytes_count=0;
 
 
-    int FirstLine = (int) y;
+    int FirstLine = (int) (y & 0xFFFF);
 
     //int UseVSync = FALSE;
     int UseClipping = TRUE;

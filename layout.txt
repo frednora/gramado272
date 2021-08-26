@@ -2,27 +2,39 @@
 	Some design notes and scripts.
 /base
 	The root directory for the target boot partition.
+/boot
+	Boot loader for the 'new' system.
+	It loads the kernel image.
+/boot/bl32
+	Boot loader. BL.BIN.
+/boot/bm1632
+	Boot manager. BM.BIN.
+/cmd
+	User mode uni-like commands.
+/docs
+	Documentation
 /gramado
 	Gramado operating system.
-/landboot
-	Boot loader for the landos. KERNEL.BIN
-/landboot/bl32
-	Boot loader. BL.BIN.
-/landboot/bm1632
-	Boot manager. BM.BIN.
-/landlib
-	Ring 3 libraries.
-/landlib/fonts
+/gramado/core
+	The window server and the first client.
+/gramado/libgws
+	The client-side library for the window server.
+/gramado/shell
+	The User Interface.
+/lib
+	User mode libraries.
+/lib/fonts
 	The font support.
-/landlib/lib
-	Some ring 3 client-side libraries.
-/landlib/libcore
-	System's API. It uses kgws.
-/landlib/rtl
+/lib/lib
+	Some user mode client-side libraries.
+/lib/rtl
 	Ring 3 runtime library. The libc.
-/landos
-	The Land OS.
-/landos/init
-	The first ring 3 process for landos. INIT.BIN
-/landos/kernel
-	The landos base kernel.
+/new
+	The newos subsystem.
+	The kernel image.
+/ns
+	The network server.
+/scripts
+	Scripts
+/tools
+	Tools

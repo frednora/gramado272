@@ -12,8 +12,8 @@ __HEAD
 [bits 64]
 
 
-extern _kernel_main
 extern _magic
+extern _kernel_main
 
 
 ; See:
@@ -85,6 +85,8 @@ START:
     mov rax, qword __SYSTEM_BOOTING
     mov qword [_system_state], rax 
 
+    ;mov r8, rax
+
     xor rax, rax
     xor rbx, rbx
     xor rcx, rcx
@@ -99,6 +101,10 @@ START:
 
     mov ss, ax
     mov rsp, _xxxStack
+
+;
+; Initialize ldt with a NULL selector.
+;
 
     xor rax, rax
     lldt ax
@@ -277,9 +283,10 @@ START:
     ;; ...
 
 
-    ; Use the calling convention for this compiler.
-    ; rdi
-    ; See: main.c
+; Use the calling convention for this compiler.
+; rdi
+; No return
+; See: init.c
 
     xor rax, rax
     mov rdi, rax          ; #todo: arch type (2) ??
@@ -289,16 +296,12 @@ START:
 
     call _kernel_main
 
-    ;push qword 0x200
-    ;popfq
-
 Loop:
     sti ;cli
     hlt
     jmp Loop
 
 ; =======================================================
-
 align 8
 
 ;

@@ -8,7 +8,6 @@
 extern unsigned long SavedX; 
 extern unsigned long SavedY; 
 
-
 static long mouse_x = 0;
 static long mouse_y = 0;
 
@@ -202,6 +201,118 @@ void __ps2mouse_parse_data_packet (void)
     
     
 }
+
+
+#define __PS2MOUSE_SET_DEFAULTS              0xF6
+#define __PS2MOUSE_SET_RESOLUTION            0xE8
+
+void ps2mouse_initialize_device (void)
+{
+    unsigned char status = 0;
+
+    debug_print ("ps2mouse_initialize_device:\n");
+
+//++
+//======================================================
+    // #obs:
+    // A rotina abaixo habilita o segundo dispositivo. O mouse.
+    // Mas antes da habilitação temos uma rotina que não me lembro
+    // pra que serve, haha.
+    // #importante: 
+    // TALVEZ. Tô achando que essa rotina deva ser feita no 
+    // teclado, apos seu reset, e não aqui no mouse.
+    
+    // #bugbug
+    // Essa nao eh uma rotina de habilitaçao do dispositivo secundario,
+    // estamos apenas lendo a porta 60 e devolvendo o que lemos o que lemos
+    // com alguma modificaçao;
+    // #todo: me parece que para habilitar o secundario eh
+    // preciso apenas mandar 0xA8 para a porta 0x64.
+
+// ========================================
+// Enable the interrupts
+
+    // Dizemos para o controlador entrar no modo leitura.
+    // Esperamos para ler e lemos.
+    // 0x20 Read Command Byte
+    // I8042_READ = 0x20
+    wait_then_write(0x64,I8042_READ);
+    status = wait_then_read(0x60) | 2;
+
+    // Dizemos para o controlador entrar no modo escrita.
+    // Esperamos para escrever e escrevemos.
+    // Enable the PS/2 mouse IRQ (12).
+    // The keyboard uses IRQ 1 (and is enabled by bit 0 in this register).
+    // 0x60 Write Command Byte
+    wait_then_write (0x64,I8042_WRITE);   // I8042_WRITE = 0x60
+    wait_then_write (0x60,status);   
+    
+// ========================================
+// Activate mouse port. (2nd port)
+
+    // 0x64 <<< 0xA8 ?? enable aux
+    // 0x64 <<< 0xA9 ?? check for mouse
+    // #todo: See i8042.h for the commands used in the initialization.
+
+    // #test
+    // Habilitando o dispositivo secundario na forma bruta.
+    // Reenable mouse port.
+    // #bugbug: a rotina de inicializaçao da controladora ps2,
+    // esta fazendo isso ao fim da rotina. nao precisamos fazer isso aqui.
+    // Talvez atrapalhe a inicializaçao.
+    // 0xA8 Enable Mouse
+    // 0xA7 Disable Mouse
+    // 0xA9 Check Mouse InterfaceReturns 0, if OK
+
+    // Enable mouse.
+    wait_then_write(0x64,0xA8);
+    mouse_expect_ack();
+
+// ========================================
+// Reset
+//  Isso reseta o controlador inteiro ?
+
+    // Essa rotina avisa que vai escrever na porta do mouse
+    // antes de escrever.
+    // Então reseta somente o mouse e não o teclado.
+    zzz_mouse_write(0xFF); 
+    mouse_expect_ack();
+
+// ========================================
+// Default
+
+    // 0xF6 Set default settings.
+    zzz_mouse_write (__PS2MOUSE_SET_DEFAULTS);
+    mouse_expect_ack();
+
+// --------------------------------------
+	// set sample rate
+	zzz_mouse_write(0xF3);
+	mouse_expect_ack(); // ACK
+	
+	zzz_mouse_write(200);
+	mouse_expect_ack(); // ACK
+
+	// set resolution
+	zzz_mouse_write(__PS2MOUSE_SET_RESOLUTION);
+	mouse_expect_ack(); // ACK
+	
+	zzz_mouse_write(3);
+	mouse_expect_ack(); // ACK
+
+	
+	//set scaling 1:1
+	zzz_mouse_write(0xE6);
+	mouse_expect_ack(); // ACK
+
+	// Enable the mouse
+	zzz_mouse_write(0xF4);
+	mouse_expect_ack(); // ACK
+
+    debug_print ("ps2mouse_initialize_device: done\n");
+}
+
+
 
 
 void DeviceInterface_PS2Mouse(void)

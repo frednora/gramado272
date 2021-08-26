@@ -976,7 +976,7 @@ fail1:
 fail0:
     system_state = SYSTEM_ABORTED;
     // Return to xxxhead.asm and hang.
-    return (-1);
+    return -1;
 }
 
 

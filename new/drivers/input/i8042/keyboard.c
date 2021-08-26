@@ -22,8 +22,14 @@ irq1_KEYBOARD (void)
 
 
 // Not initialized.
+// Uma interrupção ocorreu antes mesmo de inicializarmos 
+// o dispositivo e o handler ja estava conectado.
+// apenas drenamos um byte pra evitar problemas.
+// Mas antes deveríamos checar se a flag indica que
+// o buffer está cheio.
     if ( PS2.keyboard_initialized != TRUE )
     {
+        in8(0x60);
         return;
     }
 

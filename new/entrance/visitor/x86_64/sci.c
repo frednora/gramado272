@@ -1420,15 +1420,11 @@ void *sci0 (
             break;
 
 
-
-        // 111 - Getting single message.
-        // No queue. See: thread structure.
-        // rotina interna, veja nesse documento.
-        // IN: buffer para mensagens.
-        // // See: hid/i8042/ps2kbd.c
+        // See: thread.c
+        // IN: buffer for message elements.
         case 111:
             //debug_print("sci0: 111\n");
-            return (void *) __do_111 ( (unsigned long) &message_address[0] );
+            return (void *) sys_get_message( (unsigned long) &message_address[0] );
             break;
 
 

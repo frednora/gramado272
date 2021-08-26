@@ -10,38 +10,40 @@
 
 void show_slot (int tid){
 
-    struct thread_d *t;
+    struct thread_d  *t;
 
 
+// tid
     if ( tid < 0 || tid >= THREAD_COUNT_MAX )
     {
         printf ("show_slot: tid\n");
         goto fail;
     }
 
+// Thread
     t = (void *) threadList[tid];
 
     if ( (void *) t == NULL ){
         printf ("show_slot: t\n");
         goto fail;
-    }else{
+    }
 
-        // Show one slot.
-        printf ("\n");
-        printf ("TID   PID   pdPA  Prio  State Quan *Jiffies initial_rip rflags   tName \n");
-        printf ("====  ====  ====  ====  ===== ==== ====    ==========  ======  ===== \n");
-        printf ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s \n", 
-            t->tid, 
-            t->ownerPID,
-            t->pml4_PA,
-            t->priority, 
-            t->state,
-            t->quantum,    // Quantum
-            t->step,       // >>> Jiffies
-            t->initial_rip,
-            t->rflags,
-            t->name_address );
-    };
+// Show one slot
+
+    printf ("\n");
+    printf ("TID   PID   pdPA  Prio  State Quan *Jiffies initial_rip rflags   tName \n");
+    printf ("====  ====  ====  ====  ===== ==== ====    ==========  ======  ===== \n");
+    printf ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s \n", 
+        t->tid, 
+        t->ownerPID,
+        t->pml4_PA,
+        t->priority, 
+        t->state,
+        t->quantum,    // Quantum
+        t->step,       // >>> Jiffies
+        t->initial_rip,
+        t->rflags,
+        t->name_address );
 
     goto done;
 
@@ -57,16 +59,17 @@ done:
  *     Show info about all threads.
  */
 
-void show_slots(void){
+// Loop
+// Mostra as tarefas válidas, mesmo que estejam com problemas.
 
-    struct process_d *p;
-    struct thread_d  *t;
+void show_slots(void)
+{
+    struct process_d  *p;
+    struct thread_d   *t;
     int i=0;
 
-    printf ("\nThread info:\n");
-
-    // Loop.
-    // Mostra as tarefas válidas, mesmo que estejam com problemas.
+    printf("\n");
+    printf("Thread info:\n");
 
     for ( i=0; i<THREAD_COUNT_MAX; i++ )
     {
@@ -76,7 +79,7 @@ void show_slots(void){
              t->used  == 1 && 
              t->magic == 1234 )
         {
-            show_slot (t->tid);
+            show_slot(t->tid);
         }
     };
 }

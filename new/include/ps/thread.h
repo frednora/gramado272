@@ -3,21 +3,36 @@
 #ifndef __THREAD_H
 #define __THREAD_H    1
 
-// hard coded.
-#define SYSTEM_TID    0
-#define INIT_TID      1
-// ...
 
+// =================================
+// System threads:
+
+// 0 = GWSSRV.BIN's control thread
+//     A ring 0 thread that belongs to the kernel process.
+//     it is the window server it self.
+// 1 = GWS.BIN's control thread
+//     This is the first client for the window server.
+//     It is a ring3 application.
+//     It belong to the init process.
+
+// KernelProcess->control
+#define WS_TID  0
+#define WS_FIRST_CLIENT_TID  1
+
+// InitProcess->control
+#define SYSTEM_TID  WS_TID
+#define INIT_TID    WS_FIRST_CLIENT_TID
+// =================================
+
+
+// The system's thread counter starts here.
+#define SYSTEM_BASE_TID  0
+// The user's thread counter starts here.
+#define USER_BASE_TID    100
 
 
 #define THREAD_MAGIC  1234
 
-
-
-//O primeiro índice na contagem das threads do sistema e o
-//primeiro índice na contagem das threads dos usuários.
-#define SYSTEM_BASE_TID  0
-#define USER_BASE_TID    100
 
 //
 // Preempt support.
@@ -635,18 +650,25 @@ struct thread_d
 
     // MAXEVENTS
     // See: events.h
-    
-    //++
-    struct window_d  *window_list[32];
-    int                  msg_list[32];
-    unsigned long      long1_list[32];
-    unsigned long      long2_list[32];
-    unsigned long      long3_list[32];
-    unsigned long      long4_list[32];
-    // offsets
+
+
+//++
+//========================
+// standard
+    struct window_d  *window_list[32];  // window pointer
+    int                  msg_list[32];  // message code
+    unsigned long      long1_list[32];  // long1
+    unsigned long      long2_list[32];  // long2
+// extra
+    unsigned long      long3_list[32];  // 
+    unsigned long      long4_list[32];  //
+// offsets
     int tail_pos;
     int head_pos;
-    //--
+//=========================
+//--
+
+
 
     // ====================================================
 
@@ -861,6 +883,16 @@ unsigned long threadList[THREAD_COUNT_MAX];
 //
 // == prototypes ===========================
 //
+
+// Service 111.
+// Get a message from the current thread and 
+// put it into the given buffer.
+// The message has 6 standard elements.
+// See: thread.c
+
+void *sys_get_message ( unsigned long buffer );
+
+
 
 int init_threads (void);
 
