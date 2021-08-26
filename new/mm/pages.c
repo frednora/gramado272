@@ -233,24 +233,20 @@ unsigned long get_new_frame (void){
 
     int i=0;
 
-    if (FT.frame_table_status != 1)
-        return 0;
+    panic("get_new_frame: [FIXME] This is a work in progress\n");
 
-    //#todo: limits
-    if (FT.frame_table_start == 0){
-        panic("invalid FT.frame_table_start");
+/*
+    if (FT.initialized != TRUE){
+        panic("get_new_frame: FT.initialized\n");
     }
 
-    for (i=0; i< FT.total_frames; i++)
-    {
-        if ( FT.frame_table[i] == 0)
-        {
-            FT.frame_table[i] = 1; // não free.
-            return (unsigned long) ( FT.frame_table_start + (i * 4096) ); 
-        }
-    };
+// Limits
+    if (FT.start_va == 0 || FT.end_va == 0 ){
+        panic("get_new_frame: limits\n");
+    }
+*/
 
-    //fail;
+//fail;
     return 0;
 }
 
@@ -493,47 +489,55 @@ void *clone_pml4 ( unsigned long pml4_va )
 
 /*
  ***********************************************************
- * initialize_frame_table:
+ * I_initialize_frame_table:
  *     Frame table to handle a pool of page frames.
  */
 
-int initialize_frame_table (void)
+
+int I_initialize_frame_table (void)
 {
     int i=0;
 
 
-    debug_print("initialize_frame_table:\n");
+    debug_print("I_initialize_frame_table:\n");
 
-    FT.total_frames = (FT.frame_table_size_in_bytes/4096);
+// Clear
+    FT.used  = FALSE;
+    FT.magic = 0;
+    FT.initialized = FALSE;
 
-    // Número de páginas necessárias para termos uma tabela.
-    // Cada página pode conter 4096 entradas de i byte
-    FT.n_pages = (FT.total_frames/4096); 
+// mmSetupPaging created our limts.
 
-    FT.frame_table = (unsigned char *) allocPages(FT.n_pages);
-
-    if ((void *) FT.frame_table ==NULL){
-        panic("initialize_frame_table: invalid FT.frame_table"); 
+    if( FT.start_pa == 0 ){
+         debug_print("I_initialize_frame_table: FT.start_pa\n");
+         panic      ("I_initialize_frame_table: FT.start_pa\n");
     }
 
-    //#todo: limits
-    if ( FT.frame_table_size_in_bytes == 0 ){
-        panic("initialize_frame_table: frame_table_size_in_bytes");
+    if( FT.end_pa == 0 ){
+         debug_print("I_initialize_frame_table: FT.end_pa\n");
+         panic      ("I_initialize_frame_table: FT.end_pa\n");
     }
 
-    // Clear frame table.
-    for (i=0; i < FT.total_frames; i++){
-        FT.frame_table[i] = 0;
-    }
 
-    //#debug
-    printf ("Table size in pages %d\n",FT.n_pages);
-    printf ("Total frames %d\n",FT.total_frames);
-    refresh_screen();
+// Size in bytes.
+    FT.size_in_bytes = (unsigned long) (FT.end_pa - FT.start_pa);
 
-    FT.frame_table_status = 1;
+// Size in KB.
+    FT.size_in_kb = (unsigned long) (FT.size_in_bytes/1024);
 
-    //ok
+// Size in MB.
+    FT.size_in_mb = (unsigned long) (FT.size_in_kb/1024);
+
+// Size in frames.
+// Each frame has 4096 bytes. 
+// This is because each page has 4096 bytes.
+    FT.size_in_frames = (FT.size_in_bytes/4096);
+
+//done:
+    FT.used = TRUE;
+    FT.magic = 1234;
+    FT.initialized = TRUE;
+    debug_print("I_initialize_frame_table: done\n");
     return 0;
 }
 
@@ -1459,8 +1463,7 @@ Entry_391:
 // ================================================
 //
 
-
-    //breakpoint
+// breakpoint
     debug_print ("mmSetUpPaging: tables done\n");
     //printf ("SetUpPaging: tables done\n");
 
@@ -1477,72 +1480,126 @@ Entry_391:
 // == Frame table =============================================
 //
 
-    // Vamos configurar a frame table de acordo com o
-    // total de memória ram.    
+// #important
+// Vamos configurar a frame table de acordo com o
+// total de memória RAM.
+// memorysizeTotal is the ram size in KB.
 
-    // Size in KB.
-    // Se for maior que 1 GB.
-    // Se for maior que 1024 MB. 
-    // (1024*1024) KB
-    if ( memorysizeTotal > (1024*1024)  )
+// Start:
+// FRAME_TABLE_START_PA
+// This is the start of the table.
+// This is the 256MB mark.
+// End:
+// FRAME_TABLE_END_PA
+// This is the end of the table.
+
+// See:
+// gpa.h
+
+
+//
+// Configura apenas o início e o fim.
+// O resto da tabela será configurado pela função
+// I_initialize_frame_table() 
+//
+
+    debug_print ("SetUpPaging: Setup FT\n");
+
+// Setup the start of the table.
+// It is always the same.
+// We need at least 256 MB.
+// The system with 256MB has no FT.
+// We need more them this to have a FT.
+
+// Start
+    FT.start_pa = __128MB_MARK_PA;
+    //FT.start_pa = __256MB_MARK_PA;
+    //FT.start_pa = __512MB_MARK_PA;
+    //FT.start_pa = __1GB_MARK_PA;
+
+// End
+// (Uninitialized)
+    FT.end_pa = 0; 
+
+
+// =================================================
+// Size in KB.
+// Se a RAM for maior ou igual à 1GB.
+
+    if ( memorysizeTotal >= (1024*1024)  )
     {
-        FT.frame_table_start = FRAME_TABLE_START_PA;  // 64 MB mark. 
-        FT.frame_table_end   = (0x40000000 - 1);      // 1GB -1 mark.
-        FT.frame_table_size_in_bytes  = (FT.frame_table_end - FT.frame_table_start);
-        //memória utilizada para isso.dado em kb.
-        mm_used_frame_table = (FT.frame_table_size_in_bytes/1024); 
+        debug_print ("SetUpPaging: We have 1GB or more\n");
+        FT.end_pa = __1GB_MARK_PA;
+        goto initialize_frame_table;
+    }
 
 
-    // Size in KB.
-    // Se for maior que 512 MB.
-    // (512*1024)KB
-    } else if ( memorysizeTotal > (512*1024) ){
+// =================================================
+// Size in KB.
+// Se a RAM for maior ou igual à 512MB.
 
-        FT.frame_table_start = FRAME_TABLE_START_PA;  // 64 MB mark. 
-        FT.frame_table_end   = (0x20000000 - 1);      // 512 MB -1 mark.
-        FT.frame_table_size_in_bytes  = (FT.frame_table_end - FT.frame_table_start);
-        //memória utilizada para isso.dado em kb.
-        mm_used_frame_table = (FT.frame_table_size_in_bytes/1024); 
+    if ( memorysizeTotal >= (512*1024) )
+    {
+        debug_print ("SetUpPaging: We have 512MB or more\n");
+        FT.end_pa = __512MB_MARK_PA;
+        goto initialize_frame_table;
+    } 
 
-    // Size in KB.
-    // Se for maior que 256 MB.
-    // (256*1024)KB
-    } else if ( memorysizeTotal > (256*1024) ){
+// =================================================
+// Size in KB.
+// Se a RAM for maior ou igual à 256MB.
 
-        FT.frame_table_start = FRAME_TABLE_START_PA;  // 64 MB mark. 
-        FT.frame_table_end   = (0x10000000 - 1);      // 256 MB -1 mark.
-        FT.frame_table_size_in_bytes  = (FT.frame_table_end - FT.frame_table_start);
-        //memória utilizada para isso.dado em kb.
-        mm_used_frame_table = (FT.frame_table_size_in_bytes/1024); 
-
-    // Size in KB.
-    // Se for maior que 128 MB.
-    // (128*1024) KB
-    } else if ( memorysizeTotal > (128*1024) ){
-
-        FT.frame_table_start = FRAME_TABLE_START_PA;  // 64 MB mark. 
-        FT.frame_table_end   = (0x08000000 - 1);      // 128 MB -1 mark.
-        FT.frame_table_size_in_bytes  = (FT.frame_table_end - FT.frame_table_start);
-        //memória utilizada para isso.dado em kb.
-        mm_used_frame_table = (FT.frame_table_size_in_bytes/1024); 
+    if ( memorysizeTotal >= (256*1024) )
+    {
+        debug_print ("SetUpPaging: We have 256MB or more\n");
+        FT.end_pa = __256MB_MARK_PA;
+        goto initialize_frame_table;
+    } 
 
 
-    // #ERROR
-    // A memória tem menos de 128 MB ou igual,
-    // Então não conseguiremos criar uma frame_table 
-    // que começe na marca de 64 MB.
+// =================================================
+// Error:
+// Size in KB.
+// Se a RAM for menor que 256MB.
 
-    }else{
-        debug_print ("mmSetUpPaging: [PANIC] We need at least 256 MB of RAM\n");
-        while(1){}
-    };
+// #bugbug
+// Nossa rotina que calcula o tamanho da memória RAM
+// nos entrga um valor que é um pouco menos que o
+// total disponível.
+// Porque ele não testa o último mega.
 
+// The available ram is less than 256.
+    if ( memorysizeTotal < (256*1024) ){
+        debug_print ("SetUpPaging: [ALERT] memorysizeTotal is less than 256MB\n");
+    }
+
+// The available RAM is almost 256MB
+// Its because we a 256MB card,
+// But the boot loader did not check the last mb.
+    if ( memorysizeTotal < (250*1024) ){
+        debug_print ("SetUpPaging: [PANIC] The system has less than 250MB of available RAM\n");
+        panic ("mmSetUpPaging: The system has less than 250MB of available RAM\n");
+    }
+
+// Não é menor que 250MB
+    FT.end_pa = (unsigned long)(250*1024*1024);
+
+//
+// Initializing all the other elements of the frame table
+//
+
+
+initialize_frame_table:
+
+    I_initialize_frame_table();
 
 
 // ================================================================
 //
 // Memory size
 //
+
+    debug_print ("SetUpPaging: Setup memory usage\n");
 
     // #Importante
     // Agora vamos calcular a quantidade de mem�ria f�sica usada 
@@ -1559,7 +1616,10 @@ Entry_391:
     // Tem dma abaixo da marca de 16mb.
     // Tem dma que usa mem�ria virtual.
 
-    // Used.
+
+
+
+// Used.
     // #todo: mm_used_lfb ??
     memorysizeUsed = 
         (unsigned long) ( 
@@ -1575,8 +1635,17 @@ Entry_391:
         mm_used_frame_table 
         );
 
-    // Free.
-    memorysizeFree = memorysizeTotal - memorysizeUsed;
+// Free.
+    memorysizeFree = (memorysizeTotal - memorysizeUsed);
+
+
+// memorysizeFree  is the size in KB.
+// memorysizeTotal is the size in KB.
+// memorysizeUsed  is the size in KB.
+// #todo:
+// We need to change these names including KB at the end of them.
+// ex: memorysizeTotal_KB
+
 
 // ==============================================
 

@@ -555,13 +555,12 @@ int serviceInitializeNetwork(void)
  *     gns main routine.
  */
 
-int main (int argc, char **argv){
-
-
+int main (int argc, char **argv)
+{
     //=======================
     struct sockaddr server_address;
     socklen_t addrlen;
-    
+
     server_address.sa_family = AF_GRAMADO;
     server_address.sa_data[0] = 'n';
     server_address.sa_data[1] = 's';
@@ -572,7 +571,6 @@ int main (int argc, char **argv){
     int server_fd = -1; 
     int bind_status = -1;
 
-
     int i=0;
     int _status = -1;
      
@@ -580,24 +578,22 @@ int main (int argc, char **argv){
     //unsigned long h=0;
 
 
-    // Global flag for the loop.
+// Global flag for the loop.
     running = TRUE;
 
-
-    // Serial debug.
+// debug
     debug_print ("-----------------------\n");
     debug_print ("gnssrv: Initializing...\n");
     printf      ("gnssrv: Initializing...\n");
 
+//
+// Register
+//
 
-    //
-    // Register.
-    //
+// Register this process as the network server.
+// See: connect.c
 
-    // Register this process as the network server.
-    // See: connect.c
     _status = (int) register_ns();
-
     if (_status<0){
         debug_print ("gnssrv: Couldn't register the server \n");
              printf ("gnssrv: Couldn't register the server \n");
@@ -605,16 +601,13 @@ int main (int argc, char **argv){
     }
     debug_print ("gnssrv: Registration ok \n");
 
+//
+// socket
+//
 
-    //
-    // socket
-    //
-    
     // #debug
     printf ("gnssrv: Creating socket\n");
-
     server_fd = (int) socket (AF_GRAMADO, SOCK_STREAM, 0);
-    
     if (server_fd<0){
         printf("gnssrv: [FAIL] Couldn't create the server socket\n");
         exit(1);
@@ -622,48 +615,42 @@ int main (int argc, char **argv){
     ____saved_server_fd = server_fd;
 
 
-
 //
 // bind
 // 
- 
-    // #debug
+
+// #debug
     printf ("gnssrv: bind\n");
- 
     bind_status = bind ( 
                       server_fd, 
                       (struct sockaddr *) &server_address, 
                       addrlen );
-
     if (bind_status<0){
         printf("gnssrv: Couldn't bind to the socket\n");
         exit(1);
     }
 
+//
+// =======================================
+//
 
-    //
-    // =======================================
-    //
+//
+// Calling child.
+//
 
-
-    //
-    // Calling child.
-    //
-    
-    // #obs
-    // Suspended ...
-    // We are launching the server in background
-    // and calling the child via command interpreter.
-
+// #obs
+// Suspended ...
+// We are launching the server in background
+// and calling the child via command interpreter.
 
     //printf ("gnssrv: Calling child \n");
 
     rtl_clone_and_execute ("gns.bin"); 
 
 
-    //
-    // Wait
-    //
+//
+// Wait
+//
 
     printf ("gnssrv: [FIXME] yield \n");
 
@@ -671,34 +658,30 @@ int main (int argc, char **argv){
         gnssrv_yield();
     };
 
-
 //
 // == Accept =====================================
 //
 
+// Messages sent via sockets.
+// Mensagens enviadas pelos clientes via socket.
+// Inclusive a mensagem que pede para drenar input e 
+// via mensagens e repassar via socket. 
+
+
 // loop:
     debug_print ("gnssrv: Entering main loop.\n");
 
-
-    // Messages sended via sockets.
-    // Mensagens enviadas pelos clientes via socket.
-    // Inclusive a mensagem que pede para drenar input e 
-    // via mensagens e repassar via socket. 
-    
-
-    // clients.
+// Clients
     int newconn = -1;
     int curconn = ____saved_server_fd;
 
+// Accept connection from a client. 
 
-    // Accept connection from a client. 
-    
     while (1){
         newconn = accept ( 
                       ____saved_server_fd, 
                       (struct sockaddr *) &server_address, 
                       (socklen_t *) addrlen );
-
         if (newconn < 0){
             debug_print ("gnssrv: [FAIL] Error on accept\n");
             gnssrv_yield(); 
@@ -707,19 +690,14 @@ int main (int argc, char **argv){
         };
     };
 
+// =======================================
 
-
-    //
-    // =======================================
-    //
-
-    // Done.
-    
+// Done
     debug_print ("gnssrv: Bye\n");
          printf ("gnssrv: Bye\n");
-
     return 0; 
 }
+
 
 //
 // End

@@ -164,11 +164,18 @@ void memoryShowMemoryInfo (void){
             break;
     };
 
+//==================================
+// #todo:
+// Frame table
 
-    // Frame table
-    printf("Frame table start: %xH \n", FT.frame_table_start );
-
+    printf ("Frame Table:\n");
+    printf("start: %xH | end: %xH\n", 
+        FT.start_pa, 
+        FT.end_pa );
+    printf ("size: %d KB\n",FT.size_in_kb);
     // ...
+
+//==================================
 
 
     //#todo

@@ -388,8 +388,6 @@
 // Um sistema maior que 64MB já é considerado Medium.
 // Portando não pode mais ter definições de Small.
 
-#define FRAME_TABLE_START_PA  (0x04000000)   // 64 mb mark. 
-
 
 // #important: Segue-se bastaste espaço livre.
 // ...
@@ -399,38 +397,13 @@
 // == 128 MB =========================================================
 //
 
-// Um sistema maior que 128MB já é considerado Large.
-// Portando não pode mais ter definições de Medium ou Small.
+// Used by the frame table. (FT)
+// See: x64mm.h
 
-// 0x08000000
-// #available
-
-
-
-//
-// == 256 MB =========================================================
-//
-
-// 0x10000000
-// #available
-
-// Área de memória para uma frame table grande.
-// De onde pegaremos os frames para mapearmos.
-// É um heap grande de frames.
-// #perigo: Cuidado com a colisão com as próximas
-// entradas indicadas nessa lista.
-
-// A frame table começa aqui e vai até o fim da memória ram
-// disponível ou até um limite.
-
-
-//
-// == 512 MB =========================================================
-//
-
-// 0x20000000
-// #available
-
+#define __128MB_MARK_PA  (0x08000000)
+#define __256MB_MARK_PA  (0x10000000)
+#define __512MB_MARK_PA  (0x20000000)
+#define __1GB_MARK_PA    (0x40000000)
 
 //
 // == 1GB =========================================================
@@ -445,6 +418,7 @@
 // Provavelmente no limite de 1gb de tamanho.
 // #todo: 
 // Já podemos tentar isso na máquina real.
+
 
 #define BACKBUFFER_1GB  0x40000000
 

@@ -970,30 +970,41 @@ unsigned long mm_used_extraheap3;  // start = (0x01000000 + 0xC00000) size = 4MB
 unsigned long mm_used_frame_table;
 
 
-// #bugbug
-// Só pra lembrar que temos estruturas de bancos de memória.
-// eles deverão ser usados no futuro.
 
-// #importante
-// Como é uma tabela de bytes,
-// 0 pode indicar livre e um valor acima de zero
-// pode indicar o número de processos que
-// estão compartilhando a mesma página.
+// FT:
+// Frame table. 
+// Uma região grande da memória física que será usada para
+// pegar frames novos, jamais alocados.
+// Ela deve começar lego em seguida da última região
+// mapeada pela rotina mmSetupPaging e 
+// terminar no fim da memória física
+// indicada pelo bootblock.
 
 struct frame_table_d 
 {
-    unsigned char *frame_table;
-    int frame_table_status;
 
-    unsigned long frame_table_start; // 0x02000000 - 32mb mark. 
-    unsigned long frame_table_end;
-    unsigned long frame_table_size_in_bytes;
+// Flags que indica a validade da estrutura
+// e o status da inicialização da estrutura.
 
-    int total_frames;
-    int n_pages;
+    int used;
+    int magic;
 
-    int total_free;
-    int total_used;
+    int initialized;
+
+// no available ram
+
+
+// This is the address where the table starts.
+// It represent the point after the last mapped address.
+    unsigned long start_pa;
+// This is the address where the table ends.
+// It represents the last valid address of the RAM memory.
+    unsigned long end_pa;
+
+    unsigned long size_in_bytes;
+    unsigned long size_in_kb;
+    unsigned long size_in_mb;
+    unsigned long size_in_frames;
 };
 
 // frame table struct.
@@ -1160,7 +1171,11 @@ void *CloneKernelPD0(void);
 void *CloneKernelPML4 (void);
 void *clone_pml4 ( unsigned long pml4_va );
 
-int initialize_frame_table (void);
+
+
+int I_initialize_frame_table(void);
+
+
 
 int pEmpty (struct page_d *p);
 void freePage (struct page_d *p);
