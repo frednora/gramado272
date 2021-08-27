@@ -431,20 +431,22 @@ __paint_buttom_borders(
  */
 
 //1  - Tipo de janela (popup,normal,...) 
-//2  - Estado da janela. (poderia ter vários bits ??)
-//3  - (min, max ...)
-//4  - Título.
-//5  - Deslocamento em relação às margens do Desktop.
+//2  - style
+//3  - Estado da janela. (poderia ter vários bits ??)
+//4  - (min, max ...)
+//5  - Título.
 //6  - Deslocamento em relação às margens do Desktop.
-//7  - Largura da janela.
-//8  - Altura da janela.
-//9  - Endereço da estrutura da janela mãe.
-//10 - desktop ID. (# Para levarmos em conta as características de cada desktop).
-//11 - Client Area Color.
-//12 - color (bg) (para janela simples)
+//7  - Deslocamento em relação às margens do Desktop.
+//8  - Largura da janela.
+//9  - Altura da janela.
+//10  - Endereço da estrutura da janela mãe.
+//11 - desktop ID. (# Para levarmos em conta as características de cada desktop).
+//12 - Client Area Color.
+//13 - color (bg) (para janela simples)
 
 void *xxxCreateWindow ( 
     unsigned long type, 
+    unsigned long style,
     unsigned long status, 
     unsigned long view, 
     char *windowname, 
@@ -531,7 +533,12 @@ void *xxxCreateWindow (
 // The client rectangle.
 //
 
-    struct gws_rect_d *clientRect;
+// #todo
+// Isso é uma estrutura local para gerenciarmos o retangulo
+// da área de cliente.
+// Depois temos que copiar os valores para window->rcClient 
+
+    struct gws_rect_d   clientRect;
 
 //
 // Border
@@ -707,16 +714,12 @@ void *xxxCreateWindow (
 
     if ( (void *) window == NULL )
     {
-
         // #fixme
-
         debug_print ("xxxCreateWindow: [ERROR] window\n");
         printf      ("xxxCreateWindow: [ERROR] window\n");
-
         // #debug
-        gwssrv_show_backbuffer ();
+        gwssrv_show_backbuffer();
         while(1){}
-        
         // #todo
         // We need to return.
         //return NULL; 
@@ -725,11 +728,17 @@ void *xxxCreateWindow (
     memset( window, 0, sizeof(struct gws_window_d) );
 
 
+    window->used   = TRUE;
+    window->magic  = 1234;
 
-// Validate the window rectangle.
-// We will not flush it for now.
+    window->type  = (unsigned long) type;
+    window->style = (unsigned long) style;  // A lot of flags.
 
-    window->dirty = FALSE;
+    window->status = (int) (status & 0xFFFFFFFF );
+    window->view   = (int) view;
+    window->focus  = FALSE;
+    window->dirty  = FALSE;  // Validate
+    window->locked = FALSE;
 
 
     // We have a valid pointer.
@@ -747,10 +756,7 @@ void *xxxCreateWindow (
     // window->id = ?.
 
 
-// Validating the structure.
 
-    window->used  = TRUE;
-    window->magic = 1234;
 
 //
 // The window name
@@ -768,13 +774,7 @@ void *xxxCreateWindow (
 
     window->name  = (char *) windowname;
 
-//
-// Window type
-//
 
-    // Tipo é unsigned long pois poderá ser um conjunto de flags.
-
-    window->type = (unsigned long) type;
 
 
 //
@@ -801,16 +801,7 @@ void *xxxCreateWindow (
     //window->procedure = (unsigned long) &system_procedure;
     //window->wProcedure = NULL;  //Estrutura.
 
-//
-// View
-//
 
-    // Modo de exibição:
-    window->view = (int) view;
-
-    //Se não foi oferecido um modo de exibição, então temos um problema.
-    //?? Talvez devamos retornar um erro. 
-    //if( (int) view == VIEW_NULL ){ return NULL; };
 
 
 //
@@ -820,10 +811,8 @@ void *xxxCreateWindow (
     // Qual é o status da janela, se ela é a janela ativa ou não.
     //?? Devemos definir quais são os status possíveis da janela.
 
-    window->status = status;
-
     // Active 
-    if ( status == WINDOW_STATUS_ACTIVE )
+    if ( window->status == WINDOW_STATUS_ACTIVE )
     { 
         active_window = (int) window->id;  
         //set_active_window(window); 
@@ -849,11 +838,6 @@ void *xxxCreateWindow (
     }
 
 
-// Focus
-// Initialize the flag.
-
-    window->focus = FALSE;
-
 
 //
 // == Margins and dimensions ======================
@@ -870,6 +854,18 @@ void *xxxCreateWindow (
 // Dimensions
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
+
+    // A área de cliente é relativa à janela.
+    // #todo: Qual tipo de janela tem área de cliente?
+    // #todo: Qual é o tamanho da área de cliente?
+    // é o valor passado via argumentos? e o frame é extra?
+
+    // Local
+    clientRect.left   = 0;
+    clientRect.top    = 0;
+    clientRect.width  = (unsigned long) window->width;
+    clientRect.height = (unsigned long) window->height;
+
 
 // Deslocamento em relação a janela mãe.
     window->x = WindowX;
@@ -999,8 +995,6 @@ void *xxxCreateWindow (
     // em cima da área de cliente.
 
     window->client_window = NULL;  // window. 
-    window->rcClient      = NULL;  // rect. (#importante)
-
 
 //
 // Terminal window
@@ -1064,11 +1058,7 @@ void *xxxCreateWindow (
 		//window->desktop = NULL; //@todo: Definir à qual desktop a janela perence.
 		//window->process = NULL; //@todo: Definir à qual processo a janela perence.
 
-//
-// Locked
-//
 
-    window->locked = FALSE;
 
 
     // Linked list.
@@ -1579,6 +1569,13 @@ void *xxxCreateWindow (
                 window->bg_color, TRUE,
                 rop_flags );  //rop_flags
         }
+        
+        
+        // Saving the final version
+        window->rcClient.left   = clientRect.left;
+        window->rcClient.top    = clientRect.top;
+        window->rcClient.width  = clientRect.width;
+        window->rcClient.height = clientRect.height;
     }
 
     //#debug
@@ -1698,6 +1695,7 @@ void *xxxCreateWindow (
 
 // Invalidate rectangle?
 // Yes, but maybe the caller will build a frame for this window.
+// #todo: Mas se a janela estiver minimizada, então não precisa invalidar.
 
     window->dirty = TRUE;
 
@@ -1723,6 +1721,7 @@ void *xxxCreateWindow (
 // da api.
 
 // #todo: change name to 'const char *'
+// #todo: incluir o parametro 'unsigned long style'
 
 void *gwsCreateWindow ( 
     unsigned long type, 
@@ -1812,7 +1811,7 @@ void *gwsCreateWindow (
     if ( type == WT_OVERLAPPED )
     {
         __w = (void *) xxxCreateWindow ( 
-                           WT_SIMPLE, status, view, 
+                           WT_SIMPLE, 0, status, view, 
                            (char *) windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
@@ -1839,7 +1838,7 @@ void *gwsCreateWindow (
         
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
-                           WT_SIMPLE, status, view, 
+                           WT_SIMPLE, 0, status, view, 
                            (char *) windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
@@ -1868,7 +1867,7 @@ void *gwsCreateWindow (
         
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
-                           WT_BUTTON, status, view, 
+                           WT_BUTTON, 0, status, view, 
                            (char *) windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
@@ -1891,7 +1890,7 @@ void *gwsCreateWindow (
     if ( type == WT_SIMPLE )
     {
         __w = (void *) xxxCreateWindow ( 
-                           WT_SIMPLE, status, view, 
+                           WT_SIMPLE, 0, status, view, 
                            (char *) windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 

@@ -415,6 +415,17 @@ struct gws_window_d
     int used;
     int magic;
 
+    // style:
+    // Isso eh estilo de design ...
+    // Serao muitas flags descrevendo caracteristicas da janela.
+    // Qualquer janela pode ter vários estilos de design 
+    // ex: um editbox poderá ser de vários estilos.
+    // window style:
+    // WINDOW_STYLE_FLOATING (flutuante) 
+    // WINDOW_STYLE_DOCKING   (atracada em algum canto)
+
+    unsigned long style;
+
 
 // Used to invalidate the rectangle.
 // If the window is dirty, so the whole window rectangle
@@ -425,12 +436,10 @@ struct gws_window_d
 
     char *name;
 
-    // tipo? ... (editbox, normal, ...)  style???
+    // tipo? ... (editbox, normal, ...) 
+    // Isso pode ser 'int'
 
     unsigned long type;
-
-
-
 
     // Hierarquia. 
     // parent->level + 1;
@@ -443,6 +452,7 @@ struct gws_window_d
     // pode ficar nessa estrutura.
 
     struct gws_client_d  *client;
+
 
     // #todo
     // Para sabermos quem receberá o reply no caso
@@ -480,7 +490,7 @@ struct gws_window_d
     // Estado: (Full,Maximized,Minimized...)
     int view; 
     
-    // ?
+    // 
     int status;
 
 
@@ -653,7 +663,7 @@ struct gws_window_d
 
     unsigned int clientrect_bg_color;
     struct gws_window_d *client_window; 
-    struct gws_rect_d *rcClient;
+    struct gws_rect_d  rcClient;         // Client rect. Not a pointer.
     unsigned long clientwindow_height;
     int clientarea_style;
     int clientAreaUsed;
@@ -867,18 +877,6 @@ struct gws_window_d
     // Se for 0, então a janela está no desktop.
     
     int tab;
-
-
-    // style: 
-    // Isso poderia ser estilo de design ...
-    // Qualquer janela pode ter vários estilos de design 
-    // ex: um editbox poderá ser de vários estilos.
-    // window style:
-    // WINDOW_STYLE_FLOATING (flutuante) 
-    // WINDOW_STYLE_DOCKING   (atracada em algum canto)
-
-    int style;   
-
 
     // Again ??
     // This is a nice structure.
@@ -1408,6 +1406,7 @@ wmDrawFrame (
 
 void *xxxCreateWindow ( 
     unsigned long type, 
+    unsigned long style,
     unsigned long status, 
     unsigned long view, 
     char *windowname, 

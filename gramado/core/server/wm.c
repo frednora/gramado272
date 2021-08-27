@@ -155,7 +155,19 @@ wmDrawFrame (
 
     gwssrv_debug_print ("wmDrawFrame:\n");
 
- 
+
+// #todo
+// Se estamos minimizados ou a janela mãe está minimizada,
+// então não temos o que pintar.
+
+// #todo
+// O estilo de frame é diferente se estamos em full screen ou maximizados.
+// não teremos bordas laterais
+
+// #todo
+// Cada elemento da frame que incluimos, incrementa
+// o w.top do retângulo da área de cliente.
+
     // #todo
     // check parent;
     //if ( (void*) parent == NULL ){}
@@ -377,7 +389,7 @@ wmDrawFrame (
 
         // Title bar
         tbWindow = (void *) xxxCreateWindow ( 
-                                WT_SIMPLE, 1, 1, "Titlebar", 
+                                WT_SIMPLE, 0, 1, 1, "Titlebar", 
                                 border_size, border_size, 
                                 (window->width - border_size - border_size), window->titlebar_height, 
                                 (struct gws_window_d *) window, 
