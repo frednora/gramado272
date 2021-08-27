@@ -169,10 +169,11 @@ void memoryShowMemoryInfo (void){
 // Frame table
 
     printf ("Frame Table:\n");
-    printf("start: %xH | end: %xH\n", 
-        FT.start_pa, 
-        FT.end_pa );
-    printf ("size: %d KB\n",FT.size_in_kb);
+    printf("start: %xH | end: %xH\n", FT.start_pa, FT.end_pa );
+    printf ("size: %d KB\n", FT.size_in_kb );
+    printf ("total frames:     [%d]\n",    FT.size_in_frames );
+    printf ("used frames:      [%d]\n",    FT.number_of_used_frames );
+    printf ("reserved frames:  [%d]\n",    FT.number_of_reserved_frames );
     // ...
 
 //==================================

@@ -510,12 +510,12 @@ int I_initialize_frame_table (void)
 
     if( FT.start_pa == 0 ){
          debug_print("I_initialize_frame_table: FT.start_pa\n");
-         panic      ("I_initialize_frame_table: FT.start_pa\n");
+         x_panic      ("I_initialize_frame_table: FT.start_pa\n");
     }
 
     if( FT.end_pa == 0 ){
          debug_print("I_initialize_frame_table: FT.end_pa\n");
-         panic      ("I_initialize_frame_table: FT.end_pa\n");
+         x_panic      ("I_initialize_frame_table: FT.end_pa\n");
     }
 
 
@@ -533,6 +533,28 @@ int I_initialize_frame_table (void)
 // This is because each page has 4096 bytes.
     FT.size_in_frames = (FT.size_in_bytes/4096);
 
+
+    FT.number_of_system_frames = (unsigned long) FT_NUMBER_OF_SYSTEM_FRAMES;
+    FT.number_of_user_frames   = (unsigned long) FT_NUMBER_OF_USER_FRAMES;
+
+// Número de frames gerenciados por essa estrutura.
+    FT.number_of_used_frames = (unsigned long) FT_TOTAL_FRAMES;
+
+// Número de frames que sobraram na área alocável
+// e que poder ser usados por outro componente do sistema.
+    FT.number_of_reserved_frames = (unsigned long) (FT.size_in_frames - FT.number_of_used_frames);
+
+
+// O número de frames contidos na área alocável
+// não pode ser menor que a quantidade de frames gerenciados por
+// essa estrutura.
+
+    if ( FT.size_in_frames < FT.number_of_used_frames ){
+        debug_print("I_initialize_frame_table: FT.size_in_frames\n");
+        x_panic    ("I_initialize_frame_table: FT.size_in_frames\n");
+    }
+    
+
 //done:
     FT.used = TRUE;
     FT.magic = 1234;
@@ -542,13 +564,11 @@ int I_initialize_frame_table (void)
 }
 
 
-
-
-// Checar se a estrutura de p'agina � nula
+// Checar se a estrutura de página é nula
 // This is very ugly
 int pEmpty (struct page_d *p)
 {
-    return p == NULL ? 1 : 0;
+    return (p == NULL) ? TRUE : FALSE;
 }
 
 
@@ -562,7 +582,7 @@ void freePage (struct page_d *p)
     }
 
     // Free it!
-    if ( p->used == 1 && p->magic == 1234 ){ p->free = 1; }
+    if ( p->used == TRUE && p->magic == 1234 ){ p->free = TRUE; }
 }
 
 
@@ -1525,6 +1545,8 @@ Entry_391:
 // =================================================
 // Size in KB.
 // Se a RAM for maior ou igual à 1GB.
+// Então temos mais memória do que precisamos
+// e a frame table será limitada à marca de 1GB.
 
     if ( memorysizeTotal >= (1024*1024)  )
     {

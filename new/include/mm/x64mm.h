@@ -970,6 +970,39 @@ unsigned long mm_used_extraheap3;  // start = (0x01000000 + 0xC00000) size = 4MB
 unsigned long mm_used_frame_table;
 
 
+// ======================================================
+
+//
+// Frame structure.
+//
+
+// This structure is gonna handle a free frame.
+struct frame_d
+{
+    pid_t owner;
+
+// ?
+// Reference counter.
+    int count; 
+
+// ?
+// Reference time.
+    int age; 
+
+    unsigned long virtual_address;
+
+// O número da entrada na tabela FT.frame_table[entry_number].
+// Também é o índice que representa o offset de lba
+// no armazenamento secundário.
+
+    int entry_number;
+
+// Se esse frame está no disco.
+// Isso significa que o frame pode ser considerado livre.
+// The pointer is in the SWAPPED_FRAMES[] list.
+    int swapped;
+};
+
 
 // FT:
 // Frame table. 
@@ -979,6 +1012,14 @@ unsigned long mm_used_frame_table;
 // mapeada pela rotina mmSetupPaging e 
 // terminar no fim da memória física
 // indicada pelo bootblock.
+
+#define FT_NUMBER_OF_SYSTEM_FRAMES    512
+#define FT_NUMBER_OF_USER_FRAMES      512
+
+// A área total de frames não pode conter menos frames que isso.
+#define FT_TOTAL_FRAMES  (FT_NUMBER_OF_SYSTEM_FRAMES + FT_NUMBER_OF_USER_FRAMES)
+
+// Gerencia a área alocável total.
 
 struct frame_table_d 
 {
@@ -1004,43 +1045,30 @@ struct frame_table_d
     unsigned long size_in_bytes;
     unsigned long size_in_kb;
     unsigned long size_in_mb;
+
+// Quantidade total de frames possíveis 
+// nessa área alocável.
     unsigned long size_in_frames;
+
+// used frames
+
+    unsigned long number_of_system_frames;
+    struct frame_d system_frames[FT_NUMBER_OF_SYSTEM_FRAMES];
+
+    unsigned long number_of_user_frames;
+    struct frame_d user_frames[FT_NUMBER_OF_USER_FRAMES];
+
+// Número de frames gerenciados por essa estrutura.
+    unsigned long number_of_used_frames;
+// Número de frames que sobraram na área alocável
+// e que poder ser usados por outro componente do sistema.
+    unsigned long number_of_reserved_frames;
 };
 
 // frame table struct.
 struct frame_table_d FT;
 
-
-
-
-// #test
-
-//
-// Frame structure.
-//
-
-// This structure is gonna handle a free frame.
-struct frame_d
-{
-    pid_t owner;
-
-    int count; //reference count.
-
-    int age; //reference time.
-
-    unsigned long virtual_address;
-
-    // O número da entrada na tabela FT.frame_table[entry_number].
-    // Também é o índice que representa o offset de lba
-    // no armazenamento secundário.
-    int entry_number;
-    
-    // Se esse frame está no disco.
-    // Isso significa que o frame pode ser considerado livre.
-    // The pointer is in the SWAPPED_FRAMES[] list.
-    int swapped;
-};
-
+// ===================================================
 
 // O armazenamento secundário pode ser um arquivo
 // ou uma partição de swap.
