@@ -82,9 +82,13 @@
 // precisa ser inicializada.
 unsigned long windows_count;
 
-int active_window;
 
+
+
+int active_window;
 int window_with_focus;
+
+
 
 int top_window;
 

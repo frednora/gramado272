@@ -156,6 +156,13 @@ wmProcedure (
     sprintf (buffer,"My \x1b[8C string!!\n"); 
 
 
+// ===================================
+// Control:
+//     'Control + ?' belongs to the kernel.
+
+// ===================================
+// Shift:
+//     'Shift + ?' belongs to the window server.
 
 
 //
@@ -192,10 +199,15 @@ wmProcedure (
 
             default:
 
+                // Not console.
                 // Pois não queremos que algum aplicativo imprima na tela
                 // enquanto o console virtual está imprimindo.
                 if ( ShellFlag!=TRUE )
                 {
+                    // #test
+                    // Send it to the window server.
+                    wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
+
                     // #test
                     // Write into stdin
                     if ( UseSTDIN == TRUE )
@@ -208,6 +220,7 @@ wmProcedure (
                     }
                 }
 
+                // Console!
                 // O teclado vai colocar o char no prompt[]
                 // e exibir o char na tela somente se o prompt
                 // estiver acionado.
@@ -364,10 +377,10 @@ wmProcedure (
                         //wmSendInputToWindowManager(0,5,0,0);
                         //wmSendInputToWindowManager(0,6,0,0);
                         //wmSendInputToWindowManager(0,7,0,0);  //close
-                        //wmSendInputToWindowManager(0,8,0,0);
+                        wmSendInputToWindowManager(0,MSG_PAINT,0,0);
                         //wmSendInputToWindowManager(0,9,0,0);
                         //wmSendInputToWindowManager(0,10,0,0);
-                        wmSendInputToWindowManager(0,18,0,0);   //set focus
+                        //wmSendInputToWindowManager(0,18,0,0);   //set focus
                         //wmSendInputToWindowManager(0,19,0,0);   //get focus
 
                         //#oldtest
@@ -470,6 +483,8 @@ wmProcedure (
                         refresh_screen();
                     }
                     if (shift_status == TRUE){
+                        // Switch focus
+                        wmSendInputToWindowManager(0,9090,0,0);
                         //__kgwm_SendMessageToInitProcess(9219);  // sysmon
                     }
                     return 0;
@@ -480,6 +495,7 @@ wmProcedure (
                     return 0;
             
             }
+
         default:
             return 0;
             break;

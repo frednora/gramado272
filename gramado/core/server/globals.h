@@ -137,7 +137,8 @@
 #define GWS_DrainInput            8080
 // ...
 
-
+// #test
+#define GWS_SwitchFocus    9090
 
 
 // =====================================================

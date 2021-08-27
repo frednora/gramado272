@@ -678,6 +678,12 @@ wmProcedure(
     unsigned long long2 )
 {
 
+// draw char support.
+    unsigned char _string[4];
+
+// Switch focus support.
+    struct gws_window_d *next;
+
 // #debug
     //printf("wmProcedure: w=? m=%d l1=%d l2=%d\n", 
         //msg, long1, long2 );
@@ -758,7 +764,35 @@ wmProcedure(
          case GWS_GetFocus2:
              printf("wmProcedure: [19] GWS_GetFocus2\n");
              break;
+         
+         case GWS_KeyDown:
+             //printf("wmProcedure: [?] GWS_KeyDown\n");
+             //printf("[%c] ",long1); fflush(stdout);
+             
+              // #todo: It works ! :)
+             _string[0] = (unsigned char) long1;
+             _string[1] = 0;
+             dtextDrawText ( 
+                 (struct gws_window_d *) window,
+                  10, 10, COLOR_RED, (unsigned char *) &_string[0] );
+             // x,y,w,h
+             gws_refresh_rectangle ( 
+                 (window->left +10), (window->top  +10), 8, 8 );
+             
+             break;
 
+         case GWS_SysKeyDown:
+             printf("wmProcedure: [?] GWS_SysKeyDown\n");
+             break;
+         
+         //
+         case GWS_SwitchFocus:
+             printf("wmProcedure: [?] GWS_SwitchFocus\n");
+             //next = window->next;
+             //window->focus = TRUE;
+             //gwssrv_redraw_window(window,1);
+             
+             break;
     };
 
 
@@ -776,37 +810,31 @@ wmHandler(
     unsigned long arg4_rcx )
 {
 
-    struct gws_window_d *w;
+// Final message
+    struct gws_window_d  *w;
     int msg=0;
     unsigned long long1=0;
     unsigned long long2=0;
+
+
+    debug_print ("wmHandler:\n");
 
 // #debug
     //printf("wmHandler: %x %x %x %x\n", 
         //arg1_rdi, arg2_rsi, arg3_rdx, arg4_rcx );
 
 //
-// Window
+// wid
 //
 
-    int wid=-1;
-    
-    wid = (int) (arg1_rdi & 0xFFFF);
-    
-    if(wid<0)
-        return 0;
+// Ignoring this parameter
+// We ware called by the kernel, and the kernel has no information
+// about the windows. So, the messages sent by the kernel are able
+// to act on the active window, on the window with focus and
+// on the server itself.
 
-// #todo
-    //if(wid>=MAX)
-        //return 0;
-
-    w = windowList[wid];
-
-    if ( (void *)w == NULL )
-        return 0;
-
-    if ( w->used != TRUE || w->magic != 1234 )
-        return 0;
+    //int wid=-1;
+    //wid = (int) (arg1_rdi & 0xFFFF);
 
 //
 // Message
@@ -821,18 +849,58 @@ wmHandler(
     long1 = (unsigned long) arg3_rdx;
     long2 = (unsigned long) arg4_rcx;
 
+
+
 //
-// Window Manager procedure.
-// 
+// Calling wmProcedure()
+//
 
     unsigned long r=0;
-    
+
+    switch (msg){
+
+    // Mensagens de digitação. Atuam sobre a janela com foco de entrada.
+    case GWS_KeyDown:
+    case GWS_SwitchFocus:
+        w = windowList[window_with_focus];
+        goto do_send_message;
+        break;
+        
+    // Mensagens de sistema. Atuam sobre a jenela ativa.
+    case GWS_SysKeyDown:
+        w = windowList[active_window];
+        goto do_send_message;
+        break;
+
+    // Mensagens que atuam sobre o window server.
+    default:
+        printf("wmHandler: default message\n");
+        return 0;
+        break;
+    };
+
+
+do_send_message:
+
+    if ( (void *) w == NULL ){
+        printf ("wmHandler: GWS_KeyDown w\n");
+        return 0;
+    }
+
+    if ( w->used != TRUE || w->magic != 1234 )
+    {
+        printf ("wmHandler: w validation\n");
+        return 0;
+    }
+
     r = (unsigned long) wmProcedure(
                             (struct gws_window_d *) w,
                             (int) msg,
                             (unsigned long) long1,
                             (unsigned long) long2 ); 
 
+done:
+    debug_print ("wmHandler: done\n");
     return (unsigned long) r;
 }
 

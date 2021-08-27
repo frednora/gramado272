@@ -1266,8 +1266,8 @@ int consoleCompareStrings(void)
     {
         // See: swlib.asm
         // Setup parameters
-        wmData_RDI = 1; //magic
-        wmData_RSI = 2;
+        wmData_RDI = 0;
+        wmData_RSI = MSG_SYSKEYDOWN;  //MSG_KEYDOWN;
         wmData_RDX = 3;
         wmData_RCX = 4;
         // Trampoline
