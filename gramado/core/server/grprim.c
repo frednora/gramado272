@@ -405,9 +405,10 @@ grPlot0 (
     unsigned long zBaseX=0;
     unsigned long zBaseY=0;
 
-     // #bugbug
-     // Precisa ser 'int', nao podemos enviar 
-     // valores negativos para putpixel.
+// #bugbug
+// Precisa ser 'int', nao podemos enviar 
+// valores negativos para putpixel.
+
      int X=0;
      int Y=0;
 
@@ -470,14 +471,12 @@ grPlot0 (
         z = abs(z);
 
         // positivo, para direita.
-        // Desloca a base x para esquerda, onde fica o z negativo
         if (x >= 0 )
         {
             X = (unsigned long) ( (unsigned long)HotSpotX  + (unsigned long)x);
         }
 
         // negativo, para esquerda.
-        // Desloca a base x para esquerda, onde fica o z negativo
         if (x < 0 )
         {
             x = abs(x); 
@@ -485,14 +484,12 @@ grPlot0 (
         }
 
         // positivo, para cima.
-        // Desloca a base y para baixo, onde fica o z negativo
         if ( y >= 0 )
         {
             Y = (unsigned long) ( (unsigned long)HotSpotY - (unsigned long)y );
         }
 
         // negativo, para baixo
-        // Desloca a base y para baixo, onde fica o z negativo
         if ( y < 0 )
         {
             y = abs(y);
@@ -518,14 +515,12 @@ grPlot0 (
         // z é positivo para todos os casos onde z é maior igual a 0.
         
         // positivo, para direita.
-        // Desloca a base x para direita, onde fica o z positivo
         if (x >= 0 )
         {
             X = (unsigned long) ( (unsigned long) HotSpotX + (unsigned long) x );
         }
-        
+
         // negativo, para esquerda.
-        // Desloca a base x para direita, onde fica o z positivo
         if (x < 0 )
         {
             x = abs(x);   
@@ -533,14 +528,12 @@ grPlot0 (
         }
 
         // positivo, para cima.
-        // Desloca a base y para cima, onde fica o z positivo
         if ( y >= 0 )
         {
             Y = (unsigned long) ( (unsigned long)HotSpotY - (unsigned long)y );
         }
 
         // negativo, para baixo
-        // Desloca a base y para cima, onde fica o z positivo
         if ( y < 0 )
         {
             y = abs(y);

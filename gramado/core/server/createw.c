@@ -1753,9 +1753,12 @@ void *gwsCreateWindow (
     gwssrv_debug_print ("gwsCreateWindow: :)\n");
 
 
+// See:
+// config.h, main.c
     if(config_use_transparency==TRUE)
     {
         __rop_flags = 12;
+        //__rop_flags = 22;  // This is a test yet.
     }
 
 

@@ -148,7 +148,7 @@ backbuffer_putpixel (
 //
 
 // a cor no framebuffer
-    char b2, g2, r2, a2;
+    unsigned char b2, g2, r2, a2;
 
 // get
     b2 = where[offset];
@@ -159,7 +159,7 @@ backbuffer_putpixel (
 
 // A cor transformada.
 // A cor a ser gravada.
-    char b3, g3, r3, a3;
+    unsigned char b3, g3, r3, a3;
 
 // The first byte;
 // 0 ~ FF
@@ -251,6 +251,26 @@ backbuffer_putpixel (
         b3 = (b2 & 0xFF);
         a3 = a2;
     }
+
+// luminosity
+// Gray: luminosity = R*0.3 + G*0.59 + B *0.11
+
+/*
+ // #test
+ // This is a test yet.
+    unsigned char common_gray=0;
+    if ( operation == 22 )
+    {
+        r3 = ((r2 * 30 )/100);
+        g3 = ((g2 * 59 )/100);
+        b3 = ((b2 * 11 )/100);
+        common_gray = (unsigned char) (r3+g3+b3);
+        r3=(unsigned char)common_gray;
+        g3=(unsigned char)common_gray;
+        b3=(unsigned char)common_gray;
+        a3 = a2;
+    }
+*/
 
 
 //
