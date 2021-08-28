@@ -1141,6 +1141,7 @@ void destroy_window (struct gws_window_d *window)
  * serviceCreateWindow:
  *
  *     Create a window.
+ *     Service: GWS_CreateWindow.
  *     It's a wrapper.
  *     Chamaremos a função que cria a janela com base 
  * nos argumentos que estão no buffer, que é uma variável global 
@@ -1177,6 +1178,13 @@ int serviceCreateWindow (void){
     unsigned long type=0;
 
 
+// Device context
+    unsigned long deviceLeft   = 0;
+    unsigned long deviceTop    = 0;
+    unsigned long deviceWidth  = (__device_width  & 0xFFFF );
+    unsigned long deviceHeight = (__device_height & 0xFFFF );
+
+
     // tid da control thread do cliente.
     int ClientPID = -1;
     int ClientTID = -1;
@@ -1210,7 +1218,17 @@ int serviceCreateWindow (void){
     y = (y & 0xFFFF);
     w = (w & 0xFFFF);
     h = (h & 0xFFFF);
-   
+
+
+
+// Final Limits
+
+    //if( x >= deviceWidth )
+        //return -1;
+
+    //if( y >= deviceHeight )
+        //return -1;
+
 
     // #debug
     //printf ("serviceCreateWindow: pid=%d tid=%d *breakpoint\n", 

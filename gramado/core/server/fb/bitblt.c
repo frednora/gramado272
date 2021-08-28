@@ -70,18 +70,31 @@ grBackBufferPutpixel (
 // We will need a lot of parameters in this kind of function
 // Including the address of the backbuffer.
 
+
+// Clipping against the device limits
+
+// #todo
+// rop_flags   ... raster operations
+// See the same routine in the kernel side.
+
 int 
 fb_BackBufferPutpixel ( 
     unsigned int color, 
     int x, 
     int y,
-    unsigned long flags )
+    unsigned long flags )  // #todo: Change to 'rop_flags'
 {
 
     //debug_print("Pixel\n");
 
     unsigned char *where = (unsigned char *) ____BACKBUFFER_VA;
 
+
+// Device context
+    unsigned long deviceLeft   = 0;
+    unsigned long deviceTop    = 0;
+    unsigned long deviceWidth  = (__device_width  & 0xFFFF );
+    unsigned long deviceHeight = (__device_height & 0xFFFF );
     // #todo
     // Precismos considerar o limite do backbuffer.
     // Então teremos um Offset máximo.
@@ -96,13 +109,14 @@ fb_BackBufferPutpixel (
     // unsigned long rop;
 
 
-    // 4MB limit
-    // #bubug: Não fazer multilicações
-    //MaxOffset = (int) (1024*10124*4);
-    //MaxOffset = (int) 0x00400000;
-    MaxOffset = (int) 0x00200000;   // 2mb limit for 64bit full pagetable.
-    
-    int width=0;
+// 2MB limit
+// Our buffer size.
+// 2mb is the limit for 64bit full pagetable.
+// #bubug: Não fazer multilicações
+//MaxOffset = (int) (1024*10124*4);
+//MaxOffset = (int) 0x00400000;
+    MaxOffset = (int) 0x00200000;
+
 
     char b, g, r, a;
     b = (color & 0xFF);
@@ -114,45 +128,68 @@ fb_BackBufferPutpixel (
     int bytes_count=0;
 
 
+
+//
+// Clipping
+//
+
+// Clipping against the device limits
+
     if (x<0){ goto fail; }
     if (y<0){ goto fail; }
+    if ( x >= deviceWidth ) { goto fail; }
+    if ( y >= deviceHeight ){ goto fail; }
 
 
-    //
-    // bpp
-    //
-    
-    // #danger
-    // Esse valor foi herdado do bootloader.
+// Purify
+    x = ( x & 0xFFFF);
+    y = ( y & 0xFFFF);
+
+
+//
+// bpp
+//
+
+// #danger
+// Esse valor foi herdado do bootloader.
 
     switch (SavedBPP){
-
         case 32:  bytes_count = 4;  break;
         case 24:  bytes_count = 3;  break;
         //case 16:  bytes_count = 2;  break;
         //case 8:   bytes_count = 1;  break;
-        
         default:
             printf("grBackBufferPutpixel: [ERROR] SavedBPP\n");
             goto fail;
             break;
     };
 
+// #importante
+// Pegamos a largura do dispositivo.
 
+    //width = (int) SavedX; 
+
+
+// unsigned long
+// Nao pode ser maior que 2MB.
+// Que eh o tamanho do buffer que temos ate agora.
+    unsigned long pitch=0; 
     
 
-	// #importante
-	// Pegamos a largura do dispositivo.
+    if (bytes_count!=3 && bytes_count!=4 )
+        return -1;
 
-    //int width = (int) SavedX; 
-    
-    width = (int) SavedX; 
+    if (bytes_count==3)
+    {
+        pitch = (unsigned long) (deviceWidth*bytes_count);
+        tmpOffset = (unsigned long) ( (pitch*y) + (x*bytes_count) );
+    }
 
-
-    // unsigned long
-    // Nao pode ser maior que 4 MB.
-    
-    tmpOffset = (unsigned long) ( (bytes_count*width*y) + (bytes_count*x) );
+    if (bytes_count==4)
+    {
+        pitch = (unsigned long) (deviceWidth<<2);
+        tmpOffset = (unsigned long) ( (pitch*y) + (x<<2) );
+    }
 
     if( tmpOffset >= MaxOffset )
     {
@@ -183,6 +220,13 @@ fb_BackBufferPutpixel (
     
     // #bugbug
     // Escrever fora do backbuffer pode gerar PF.
+
+
+
+// #todo
+// The rop_flags will give us some informations.
+// the lsb is the operation code.
+// See the same routine in the kernel side.
 
 
 /*

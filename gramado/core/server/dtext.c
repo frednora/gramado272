@@ -26,16 +26,28 @@ int serviceDrawText (void)
     unsigned long color;     // index 7
 
 
+// Device context
+    unsigned long deviceLeft   = 0;
+    unsigned long deviceTop    = 0;
+    unsigned long deviceWidth  = (__device_width  & 0xFFFF );
+    unsigned long deviceHeight = (__device_height & 0xFFFF );
+
+
     // #debug
     gwssrv_debug_print ("gwssrv: serviceDrawText\n");
 
 
-    // Get
+// Get values.
 
-    window_id = (int) message_address[4];
+    window_id = (int)           message_address[4];
     x         = (unsigned long) message_address[5];
     y         = (unsigned long) message_address[6]; 
     color     = (unsigned long) message_address[7];
+
+
+    window_id = (window_id & 0xFFFF);
+    x         = (x         & 0xFFFF);
+    y         = (y         & 0xFFFF);
 
 
     /*
@@ -52,9 +64,19 @@ int serviceDrawText (void)
     */
 
 
-   //
-   // == Draw ==========================================
-   //
+// Limits
+// O texto começa fora dos limites da tela do dispositivo.
+
+    //if( x >= deviceWidth )
+        //return -1;
+
+    //if( y >= deviceHeight )
+        //return -1;
+
+
+//
+// == Draw ==========================================
+//
 
 
     //#todo
@@ -63,9 +85,11 @@ int serviceDrawText (void)
     
     //#test
     // Usando a janela screen por enquanto.
-    
-    // OK. string funcionou.
-        
+
+// ==================================
+// Get string from message
+// OK. string funcionou.
+
     unsigned char buf[256+1];
     int i=0;
     int string_off=8;
@@ -75,11 +99,11 @@ int serviceDrawText (void)
          string_off++;
     }
     buf[i] = 0;
-    
-    
-    //
-    // == Draw ===============================================
-    //
+// ==================================
+
+//
+// == Draw ===============================================
+//
     
     //#todo
     //switch (alignment) {  ... }
@@ -89,42 +113,43 @@ int serviceDrawText (void)
         //x, y, color, buf ); 
 
 
-    if (window_id>0 && window_id < WINDOW_COUNT_MAX)
+// ok
+// Se a janela alvo tem um índice fora dos limites
+
+    if ( window_id < 0 ){ return -1; }
+    if ( window_id > WINDOW_COUNT_MAX )
+        return -1;
+
+// ok
+// Se a janela alvo tem um índice dentro dos limites.
+
+    if ( window_id > 0 && 
+         window_id < WINDOW_COUNT_MAX )
     {
-
         window = (struct gws_window_d *) windowList[window_id];
-        
-        if ((void*)window!=NULL){
-            dtextDrawText ( (struct gws_window_d *) window,
-                x, y, color, buf );
-        
-            gws_show_window_rect(window);
-        }
-    
-    //#debug
-    }else{
 
-        if ( (void*) gui->screen_window != NULL ){
-            
-            dtextDrawText ( 
-                (struct gws_window_d *) gui->screen_window,
-                x, y, color, buf ); 
-            
-            // #bugbug
-            //  Mostrando sempre. Isso eh lento.
-            gws_show_window_rect(gui->screen_window);
-         }
-    };
+        // Bad index. Invalid pointer.
+        if ( (void*) window == NULL ){ return -1; }
 
+        // Bad index. Invalid pointer.
+        if (window->magic != 1234)   { return -1; }
 
-   // #debug
-   // We are refreshing the whole screen for now.
-   // #todo: let's try to refresh only the window.
-   // or each char maybe.
-   
-   //gws_show_backbuffer(); 
-   
-   return 0;
+        // Good window. Let's paint on it.
+        dtextDrawText ( 
+            (struct gws_window_d *) window,
+            x, y, color, buf );
+
+        // Flush the window into the framebuffer.
+        // #todo: invalidate, not show.
+        gws_show_window_rect(window);
+
+        // ok
+        return 0;
+    }
+
+crazy_fail:
+    debug_print("serviceDrawText: [ERROR] crazy_fail\n");
+    return -1;
 }
 
 
@@ -134,6 +159,8 @@ int serviceDrawText (void)
  * grDrawString:
  *     Draw a string on the screen. 
  */
+
+// No clipping
 
 void 
 grDrawString ( 
