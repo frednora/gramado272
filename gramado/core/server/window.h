@@ -1431,11 +1431,12 @@ void *xxxCreateWindow (
 
 
 // Essa será a função que atenderá a interrupção
-//esse é o serviço de criação da janela.
+// esse é o serviço de criação da janela.
 // talvez ampliaremos o número de argumentos
 
 void *gwsCreateWindow ( 
-    unsigned long type, 
+    unsigned long type,
+    unsigned long style, 
     unsigned long status, 
     unsigned long view, 
     char *windowname, 

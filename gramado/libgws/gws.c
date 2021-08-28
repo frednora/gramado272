@@ -104,6 +104,7 @@ __gws_createwindow_request (
     unsigned long height,
     unsigned int bg_color,
     unsigned long type,
+    unsigned long style,
     unsigned long parent,
     char *name );
 int __gws_createwindow_response(int fd);
@@ -1945,6 +1946,8 @@ process_event:
 
 
 // Request.
+// #todo
+// Describe all the parameter.
 int 
 __gws_createwindow_request (
     int fd,
@@ -1954,6 +1957,7 @@ __gws_createwindow_request (
     unsigned long height,
     unsigned int bg_color,
     unsigned long type,
+    unsigned long style,
     unsigned long parent,
     char *name )
 {
@@ -1999,19 +2003,40 @@ __gws_createwindow_request (
 
 // The rest of the parameters.
 
+
+// standard
     message_buffer[0]  = 0;                 // window 
     message_buffer[1]  = GWS_CreateWindow;  // msg. Create window REQUEST!
     message_buffer[2]  = 0;                 // long1
     message_buffer[3]  = 0;                 // long2
+
+//  l,t,w,h
     message_buffer[4]  = (unsigned long)(left   & 0xFFFF);
     message_buffer[5]  = (unsigned long)(top    & 0xFFFF);
     message_buffer[6]  = (unsigned long)(width  & 0xFFFF);
     message_buffer[7]  = (unsigned long)(height & 0xFFFF);
+
+// background color
     message_buffer[8]  = (unsigned long)(bg_color & 0xFFFFFFFF);
+
+// type
     message_buffer[9]  = (unsigned long)(type & 0xFFFF);
+
+// parent window id.
     message_buffer[10] = parent; 
-    message_buffer[11] = 0;
+
+// #test
+// style
+// 0x0001 maximized
+// 0x0002 minimized
+// 0x0004 fullscreen
+// ...
+    message_buffer[11] = style;
+
+// Client pid
     message_buffer[12] = client_pid;  // pid
+
+// Client tid
     message_buffer[13] = client_tid;  // tid
 
 
@@ -2748,9 +2773,9 @@ gws_create_window (
     unsigned long width,       //7, Largura da janela.
     unsigned long height,      //8, Altura da janela.
     int parentwindow,          //9, Endereço da estrutura da janela mãe.
-    unsigned long onde,        //10, Ambiente.( Est� no desktop, barra, cliente ...)
-    unsigned int clientcolor, //11, Cor da área de cliente
-    unsigned int color )      //12, Color (bg) (para janela simples).
+    unsigned long style,       //10. style
+    unsigned int clientcolor,  //11, Cor da área de cliente
+    unsigned int color )       //12, Color (bg) (para janela simples).
  
 {
     int value=0;
@@ -2789,7 +2814,7 @@ gws_create_window (
     __gws_createwindow_request ( 
         fd, 
         x, y, width, height, 
-        color, type, parentwindow, Name );
+        color, type, style, parentwindow, Name );
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 

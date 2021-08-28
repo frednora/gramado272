@@ -926,7 +926,9 @@ int main ( int argc, char *argv[] ){
                       client_fd,
                       WT_OVERLAPPED, 1, 1, "Browser",
                       viewwindowx, viewwindowy, w_width, w_height,
-                      0, 0, COLOR_GRAY, COLOR_GRAY );
+                      0, 
+                      0x0001,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      COLOR_GRAY, COLOR_GRAY );
 
     if ( main_window < 0 ){
         debug_print("browser: main_window fail\n"); 
@@ -988,9 +990,19 @@ int main ( int argc, char *argv[] ){
 
     gws_refresh_window( client_fd, main_window );
 
-    //
-    // Loop.
-    //
+
+// ============================================
+// focus
+    gws_async_command(
+         client_fd,
+         9,             // set focus
+         client_window,
+         client_window );
+
+
+//
+// Loop.
+//
  
     while(1){}
         

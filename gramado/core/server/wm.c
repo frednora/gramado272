@@ -1193,33 +1193,71 @@ int serviceCreateWindow (void){
     gwssrv_debug_print ("serviceCreateWindow:\n");
     //printf ("serviceCreateWindow:\n");
 
+//
+// Get the arguments.
+//
 
-    // #todo
-    // Check all the header.
 
-    // Get the arguments.
+// #todo
+// Check all the header.
+// 0,1,2,3
 
+
+// l,t,w,h
     x     = message_address[4];
     y     = message_address[5];
     w     = message_address[6];
     h     = message_address[7];
+
+// Background color.
     color = message_address[8];
+
+// type
     type  = message_address[9];
 
-    // Parent window ID.
+// Parent window ID.
     pw = message_address[10]; 
 
-    // ? = message_address[11];  //#todo
+//#test
+    unsigned long my_style=0;
+    my_style = message_address[11];  
+
+// Client pid
     ClientPID = message_address[12];  // client pid
+
+// Client caller tid
     ClientTID = message_address[13];  // client tid
 
+// 14:
+// This is the start of the string passed via message.
+// Copy 256 bytes of given string.
+// Do we ha a limit?
 
+//++
+// String support 
+    int string_off = 14; 
+    for (i=0; i<256; ++i){
+        name_buffer[i] = message_address[string_off];
+        string_off++;
+    };
+    name_buffer[i] = 0;
+//--
+
+// ========================================
+
+    // #debug
+    //printf ("serviceCreateWindow: pid=%d tid=%d *breakpoint\n", 
+    //    ClientPID, ClientTID );
+    //while(1){}
+
+
+//
+// Purify
+//
     x = (x & 0xFFFF);
     y = (y & 0xFFFF);
     w = (w & 0xFFFF);
     h = (h & 0xFFFF);
-
-
 
 // Final Limits
 
@@ -1228,23 +1266,6 @@ int serviceCreateWindow (void){
 
     //if( y >= deviceHeight )
         //return -1;
-
-
-    // #debug
-    //printf ("serviceCreateWindow: pid=%d tid=%d *breakpoint\n", 
-    //    ClientPID, ClientTID );
-    //while(1){}
-
-
-    //++
-    // String support 
-    int string_off = 14; 
-    for (i=0; i<256; ++i){
-        name_buffer[i] = message_address[string_off];
-        string_off++;
-    };
-    name_buffer[i] = 0;
-    //--
 
 
     //#debug
@@ -1297,7 +1318,11 @@ int serviceCreateWindow (void){
 // createw.c
 
     Window = (struct gws_window_d *) gwsCreateWindow ( 
-                                         type, 1, 1, name_buffer, 
+                                         type, 
+                                         my_style,     // style
+                                         1,     // status 
+                                         1,     // view
+                                         name_buffer, 
                                          x, y, w, h, 
                                          Parent, 0, 
                                          COLOR_PINK, color ); 
@@ -2557,7 +2582,11 @@ struct gwsssrv_menu_d *gwssrv_create_menu (
 
 
     window = (struct gws_window_d *) gwsCreateWindow ( 
-                                         WT_SIMPLE, 1, 1, "menu-bg",  
+                                         WT_SIMPLE, 
+                                         0,  //style
+                                         1,  //status
+                                         1,  //view
+                                         "menu-bg",  
                                          menu->x, menu->y, 
                                          menu->width, menu->height,   
                                          (struct gws_window_d *) parent, 0, 
@@ -2621,7 +2650,10 @@ struct gwsssrv_menu_item_d *gwssrv_create_menu_item (
     {
         window = (struct gws_window_d *) gwsCreateWindow ( 
                                              WT_BUTTON,
-                                             1, 1, (char *) label,  
+                                             0, //style
+                                             1, //status 
+                                             1, //view 
+                                             (char *) label,  
                                              item->x, item->y, item->width, item->height,   
                                              menu->window, 0, 
                                              COLOR_GRAY, COLOR_GRAY );    

@@ -270,8 +270,9 @@ void demoTerry(void)
 
      gwsCreateWindow ( 
          WT_SIMPLE, 
-         1, 
-         1, 
+         0,  //style
+         1,  //status
+         1,  //view
          "terry0",  
          40-8, 40-8, 200+8+8, 320+8+8,   
          gui->screen_window, 0, 
@@ -281,8 +282,9 @@ void demoTerry(void)
      struct gws_window_d *terry;
      terry = (struct gws_window_d *) gwsCreateWindow ( 
          WT_SIMPLE, 
-         1, 
-         1, 
+         0,  //style
+         1,  //status
+         1,  //view
          "terry",  
          40, 40, 200, 320,   
          gui->screen_window, 0, 
@@ -479,14 +481,10 @@ void *xxxCreateWindow (
     // We need to know the parent's bg color.
     int Transparent = FALSE;
 
-    //unsigned long parent_bg_color;
 
-
-	// (min, max ...).
-	//int View;
-
-    int Maximized;  //??
-    int Minimized;  //
+    int Maximized=0;
+    int Minimized=0;
+    int Fullscreen=0;
 
 	// Bars.
     int TitleBar  = FALSE;
@@ -559,6 +557,14 @@ void *xxxCreateWindow (
 
     unsigned int __tmp_color=0;
 
+
+
+// Device context
+    unsigned long deviceLeft   = 0;
+    unsigned long deviceTop    = 0;
+    unsigned long deviceWidth  = (__device_width  & 0xFFFF );
+    unsigned long deviceHeight = (__device_height & 0xFFFF );
+
 //
 // Position and dimension.
 //
@@ -581,11 +587,19 @@ void *xxxCreateWindow (
 // #bugbug
 // left and top needs to be '0'?
 
+/*
     unsigned long fullWindowX      = (unsigned long) (WindowX + border_size);
     unsigned long fullWindowY      = (unsigned long) (WindowY + border_size);
     unsigned long fullWindowWidth  = (unsigned long) WindowWidth;
     unsigned long fullWindowHeight = (unsigned long) WindowHeight;
     // #todo: right and bottom.
+*/
+
+// Fullscreen support
+    unsigned long fullWindowX      = (unsigned long) deviceLeft;
+    unsigned long fullWindowY      = (unsigned long) deviceTop;
+    unsigned long fullWindowWidth  = (unsigned long) deviceWidth;
+    unsigned long fullWindowHeight = (unsigned long) deviceHeight;
 
 
 //
@@ -601,6 +615,35 @@ void *xxxCreateWindow (
     unsigned int buttonBorder_outercolor=0;  //Essa cor muda de acordo com o foco 
 
     debug_print ("xxxCreateWindow:\n");
+
+
+
+//
+// Max Min
+//
+
+// Maximized
+    if ( style & 0x0001 ){
+        Fullscreen = FALSE;
+        Minimized = FALSE;
+        Maximized = TRUE;  //:)
+    }
+
+// Minimized
+    if ( style & 0x0002 ){
+        Fullscreen = FALSE;
+        Maximized = FALSE;
+        Minimized = TRUE;  //:)
+    }
+
+//
+// Fullscreen
+//
+    if ( style & 0x0004 ){
+        Maximized = FALSE;
+        Minimized = FALSE;
+        Fullscreen = TRUE;  //:)
+    }
 
 
 	//salvar para depois restaurar os valores originais no fim da rotina.
@@ -882,15 +925,39 @@ void *xxxCreateWindow (
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
 
-    window->width_in_bytes  = (unsigned long) (window->width / 8);
-    window->height_in_bytes = (unsigned long) (window->height / 8);
 
-    // A área de cliente é relativa à janela.
-    // #todo: Qual tipo de janela tem área de cliente?
-    // #todo: Qual é o tamanho da área de cliente?
-    // é o valor passado via argumentos? e o frame é extra?
+// Maximized ?
+    if ( Maximized == TRUE )
+    {
+        window->left   = deviceLeft;
+        window->top    = deviceTop;
+        window->width  = deviceWidth;
+        window->height = (deviceHeight - 40); //menos a barra
+    }
 
-    // Local
+// Fullscreen
+    if ( Fullscreen == TRUE )
+    {
+        window->left   = fullWindowX;
+        window->top    = fullWindowY;
+        window->width  = deviceWidth;
+        window->height = deviceHeight; 
+    }
+
+    window->width_in_bytes  = (unsigned long) (window->width / 8);  //>>3
+    window->height_in_bytes = (unsigned long) (window->height / 8); //>>3
+
+ 
+// #todo
+// Os valores da área de cliente são elaborados
+// no decorrer da construção da janela.
+// Inicialmente ela é do tamanho da janela.
+// A área de cliente é relativa à janela.
+// #todo: Qual tipo de janela tem área de cliente?
+// #todo: Qual é o tamanho da área de cliente?
+// é o valor passado via argumentos? e o frame é extra?
+// Local
+
     clientRect.left   = 0;
     clientRect.top    = 0;
     clientRect.width  = (unsigned long) window->width;
@@ -901,9 +968,9 @@ void *xxxCreateWindow (
     window->x = WindowX;
     window->y = WindowY;
 
-    //++
-    // Margens.
-    // Deslocamento em relação a tela. (Screen)
+//++
+// Margens.
+// Deslocamento em relação a tela. (Screen)
     if ( window->parent != NULL ){
         window->left = (window->parent->left + window->x); //x; 
         window->top  = (window->parent->top  + window->y); //y;
@@ -915,8 +982,13 @@ void *xxxCreateWindow (
     };
     window->right  = (unsigned long) ( window->left + window->width );
     window->bottom = (unsigned long) ( window->top  + window->height ); 
-    //--
+//--
 
+    if ( Maximized == TRUE || Fullscreen == TRUE )
+    {
+        window->left = deviceLeft;
+        window->top  = deviceTop;
+    }
 
 // Full ?
 // Margins and dimensions for fullscreen mode.
@@ -945,7 +1017,6 @@ void *xxxCreateWindow (
 
 
 
-		
 		//@todo: As outras características do cursor.
 		//Características.
 		
@@ -1594,15 +1665,42 @@ void *xxxCreateWindow (
         }
         
         
-        // Saving the final version
-        window->rcClient.left   = clientRect.left;
-        window->rcClient.top    = clientRect.top;
-        window->rcClient.width  = clientRect.width;
-        window->rcClient.height = clientRect.height;
     }
 
     //#debug
     //asm ("int $3");
+
+
+// Client area
+
+    if( ClientArea == TRUE )
+    {
+        // Saving the final version
+        window->rcClient.left   = clientRect.left; // 
+        window->rcClient.top    = clientRect.top;  // 
+        window->rcClient.width  = clientRect.width;   // menos as bordas
+        window->rcClient.height = clientRect.height;  // menos as bordas e menos a barra de titulos.
+
+        if ( (unsigned long) type == WT_OVERLAPPED )
+        {
+            gwssrv_debug_print ("xxxCreateWindow: Client area for overlapped window\n"); 
+            
+            /*
+             // #todo
+            rectBackbufferDrawRectangle ( 
+                (window->left   + window->rcClient.left ), 
+                (window->top    + window->rcClient.top  ), 
+                (window->width  + window->rcClient.width ),  //
+                (window->height + window->rcClient.height ), //
+                window->clientrect_bg_color, 
+                TRUE,
+                rop_flags );  //rop_flags
+           */
+
+        }
+    }
+
+
 
 //
 // == Button ====================
@@ -1744,10 +1842,10 @@ void *xxxCreateWindow (
 // da api.
 
 // #todo: change name to 'const char *'
-// #todo: incluir o parametro 'unsigned long style'
 
 void *gwsCreateWindow ( 
     unsigned long type, 
+    unsigned long style,
     unsigned long status, 
     unsigned long view, 
     char *windowname, 
@@ -1837,11 +1935,16 @@ void *gwsCreateWindow (
     if ( type == WT_OVERLAPPED )
     {
         __w = (void *) xxxCreateWindow ( 
-                           WT_SIMPLE, 0, status, view, 
+                           WT_SIMPLE, 
+                           style, 
+                           status, 
+                           view, 
                            (char *) windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
-                           desktopid, clientcolor, color, __rop_flags ); 
+                           desktopid, 
+                           clientcolor, color, 
+                           __rop_flags ); 
 
          if ( (void *) __w == NULL ){
              gwssrv_debug_print ("gwsCreateWindow: xxxCreateWindow fail \n");
@@ -2080,7 +2183,11 @@ struct gws_window_d *createwCreateRootWindow(void)
     // #bugbug: EStamos usado device info sem checar.
     
     w = (struct gws_window_d *) gwsCreateWindow ( 
-                                    rootwindow_valid_type,  1, 1, "RootWindow",  
+                                    rootwindow_valid_type,  
+                                    0, //style
+                                    1, //status
+                                    1, //view
+                                    "RootWindow",  
                                     left, top, width, height,
                                     NULL, 0, rootwindow_color, rootwindow_color );
     if ( (void*) w == NULL)

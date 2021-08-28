@@ -1015,8 +1015,8 @@ int main ( int argc, char *argv[] ){
     //int button=0;
 
     // a janela eh a metade da tela.
-    unsigned long w_width  = (w/2);
-    unsigned long w_height = (h/2); 
+    unsigned long w_width  = (w>>1);
+    unsigned long w_height = (h>>1);
 
     // original: 
     unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
@@ -1025,6 +1025,14 @@ int main ( int argc, char *argv[] ){
     // test1: Erro de posicionamento.
     //unsigned long viewwindowx = 580;
     //unsigned long viewwindowy = ( ( h - w_height) >> 1 ); 
+
+    // test2: Erro de posicionamento.
+    //unsigned long viewwindowx = ( ( w - w_width ) >> 1 );
+    //unsigned long viewwindowy = 400; 
+
+    // test3: top/left
+    //unsigned long viewwindowx = 0;
+    //unsigned long viewwindowy = 0; 
 
 
     // #hackhack
@@ -1058,7 +1066,10 @@ int main ( int argc, char *argv[] ){
                       client_fd,
                       WT_OVERLAPPED, 1, 1, "Editor", 
                       viewwindowx, viewwindowy, w_width, w_height,
-                      0, 0, COLOR_GRAY, COLOR_GRAY );
+                      0, 
+                      0x0000,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      COLOR_RED,   // #todo: client bg. Not implemented. 
+                      COLOR_GRAY );
 
     if ( main_window < 0 ){   
         debug_print("Editor: main_window fail\n"); 
@@ -1177,7 +1188,6 @@ int main ( int argc, char *argv[] ){
 
 
 // ============================================
-
 // focus
     gws_async_command(
          client_fd,

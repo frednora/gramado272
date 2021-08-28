@@ -285,7 +285,7 @@ gws_create_window (
     unsigned long width,       //7, Largura da janela.
     unsigned long height,      //8, Altura da janela.
     int parentwindow,          //9, Endereço da estrutura da janela mãe.
-    unsigned long onde,        //10, Ambiente.( Está no desktop, barra, cliente ...)
+    unsigned long style,        //10, Ambiente.( Está no desktop, barra, cliente ...)
     unsigned int clientcolor, //11, Cor da área de cliente
     unsigned int color );     //12, Color (bg) (para janela simples).
 

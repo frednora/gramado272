@@ -756,7 +756,9 @@ int main ( int argc, char *argv[] ){
                       client_fd,
                       WT_OVERLAPPED, 1, 1, "Fileman",
                       wLeft, wTop, wWidth, wHeight,
-                      0, 0, COLOR_GRAY, COLOR_GRAY );
+                      0, 
+                      0x0000,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      COLOR_GRAY, COLOR_GRAY );
 
     if ( main_window < 0 ){
         debug_print("fileman: main_window fail\n");
@@ -866,7 +868,18 @@ int main ( int argc, char *argv[] ){
     }
     */
     
-    
+
+
+// ============================================
+// focus
+    gws_async_command(
+         client_fd,
+         9,             // set focus
+         client_window,
+         client_window );
+
+
+
     //
     // Loop
     //

@@ -241,7 +241,11 @@ void demoSA1(void)
     if ( useClippingWindow == TRUE )
     {
         w = (struct gws_window_d *) gwsCreateWindow ( 
-                                    WT_SIMPLE, 1, 1, "Window", 
+                                    WT_SIMPLE, 
+                                    0,  //style
+                                    1,  //status
+                                    1,  //view
+                                    "Window", 
                                     100, 120, 100, 100, 
                                     __root_window, 0, 
                                     COLOR_PINK, COLOR_YELLOW ); 

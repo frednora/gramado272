@@ -576,7 +576,7 @@ int main ( int argc, char *argv[] )
 
 
     //===============================
-    gws_debug_print ("gws.bin: 1 Creating main window \n");
+    gws_debug_print ("gws.bin:  Creating  window \n");
     //printf          ("gws.bin: Creating main window \n");
     int tmp1;
     tmp1 = gws_create_window (client_fd,

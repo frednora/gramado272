@@ -1159,7 +1159,10 @@ void create_background (void)
 
     __root_window = (struct gws_window_d *) gwsCreateWindow ( 
                                             WT_SIMPLE, 
-                                            1, 1, "gwssrv-bg",  
+                                            0, //style
+                                            1, //status 
+                                            1, //view
+                                            "gwssrv-bg",  
                                             0, 0, w, h,   
                                             gui->screen_window, 0, 
                                             COLOR_BACKGROUND, COLOR_BACKGROUND );    

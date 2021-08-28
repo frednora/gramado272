@@ -2406,10 +2406,14 @@ int main ( int argc, char *argv[] )
 // main window.
 //
 
-    main_window = gws_create_window (client_fd,
+    main_window = gws_create_window (
+                      client_fd,
                       WT_OVERLAPPED, 1, 1, "Terminal",
                       mwLeft, mwTop, mwWidth, mwHeight,
-                      0,0,mwColor,mwColor);
+                      0,
+                      0x0000,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      mwColor, 
+                      mwColor );
 
 //
 // Client area window
@@ -2486,6 +2490,14 @@ int main ( int argc, char *argv[] )
     // Write something in the standard stream and call shell.bin.
     // test_standard_stream(client_fd);
 
+
+// ============================================
+// focus
+    gws_async_command(
+         client_fd,
+         9,             // set focus
+         terminal_window,
+         terminal_window );
 
 
 //
