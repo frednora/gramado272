@@ -321,7 +321,6 @@ typedef enum {
 } gws_ip_device_t;
 
 
-
 //
 // frame control
 //
@@ -557,19 +556,25 @@ struct gws_window_d
     // Esta ligado?
     int ip_on;
     
-    // Qual eh o dispositivo de input.
+// Qual eh o dispositivo de input.
     gws_ip_device_t ip_device;
 
-    // para input do typo teclado
+// para input do tipo teclado
     unsigned long ip_x;
     unsigned long ip_y;
     unsigned long ip_color;
-    unsigned long ip_type;
+
+    unsigned long width_in_bytes;
+    unsigned long height_in_bytes;
+
+    //unsigned long ip_type; //?? algum estilo especifico de cursor?
+    //unsigned long ip_style;
     // ...
 
-    // para input do typo teclado
+// para input do tipo teclado
     unsigned long ip_pixel_x;
     unsigned long ip_pixel_y;
+
 
 // 
 //==================================================

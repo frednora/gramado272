@@ -461,6 +461,11 @@ void *xxxCreateWindow (
     unsigned long rop_flags ) 
 {
 
+    // #todo
+    // Essa função deve chamar helpers que pintem sem criar objetos
+    // gráficos que alocam memória. Dessa forma eles
+    // poderão serem reusados nas funções de 'redraw'.
+
 	// #todo: 
 	// O argumento style está faltando.
 	// Cada tipo de tanela poderá ter vários estilos.
@@ -731,6 +736,28 @@ void *xxxCreateWindow (
     window->used   = TRUE;
     window->magic  = 1234;
 
+// ===================================
+// Input device
+
+    window->ip_device = IP_DEVICE_NULL;
+    window->ip_on = FALSE;  // desligado
+
+// For keyboard
+    window->ip_x = 0;       // in chars
+    window->ip_y = 0;       // in chars
+    window->ip_color = COLOR_BLACK;
+
+    //window->ip_type = 0;    // #bugbug #todo
+    //window->ip_style = 0;
+
+// For mouse
+// In pixel, for mouse pointer ip device.
+    window->ip_pixel_x = 0;
+    window->ip_pixel_y = 0;
+// ===================================
+
+
+
     window->type  = (unsigned long) type;
     window->style = (unsigned long) style;  // A lot of flags.
 
@@ -855,6 +882,9 @@ void *xxxCreateWindow (
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
 
+    window->width_in_bytes  = (unsigned long) (window->width / 8);
+    window->height_in_bytes = (unsigned long) (window->height / 8);
+
     // A área de cliente é relativa à janela.
     // #todo: Qual tipo de janela tem área de cliente?
     // #todo: Qual é o tamanho da área de cliente?
@@ -913,21 +943,6 @@ void *xxxCreateWindow (
 // Client area rectangle
     window->clientrect_bg_color = (unsigned int) clientcolor;
 
-
-//
-// Input pointer
-//
-
-    window->ip_on = FALSE;  // desligado
-    window->ip_device = IP_DEVICE_NULL;
-    window->ip_x = 0;       // in chars
-    window->ip_y = 0;       // in chars
-    window->ip_color = COLOR_BLACK;
-    window->ip_type = 0;    // #bugbug #todo
-
-    // In pixel, for mouse pointer ip device.
-    window->ip_pixel_x = 0;
-    window->ip_pixel_y = 0;
 
 
 		
@@ -1153,6 +1168,7 @@ void *xxxCreateWindow (
 
         // Simple window. (Sem barra de títulos).
         case WT_SIMPLE:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
@@ -1162,6 +1178,7 @@ void *xxxCreateWindow (
         // Edit box. (Simples + borda preta).
         // Editbox não tem sombra, tem bordas. 
         case WT_EDITBOX:
+            window->ip_device = IP_DEVICE_KEYBOARD;
             window->frame.used = TRUE;
             Background = TRUE;
             Border     = TRUE;
@@ -1173,6 +1190,7 @@ void *xxxCreateWindow (
         // Sombra, bg, título + borda, cliente area ...
         // #obs: Teremos recursividade para desenhar outras partes.
         case WT_OVERLAPPED:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = TRUE;
             Shadow         = TRUE;
             Background     = TRUE;
@@ -1191,6 +1209,7 @@ void *xxxCreateWindow (
 
         // Popup. (um tipo de overlapped mais simples).
         case WT_POPUP:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = FALSE;
             Shadow     = TRUE;
             Background = TRUE;
@@ -1203,6 +1222,7 @@ void *xxxCreateWindow (
         // Caixa de seleção. Caixa de verificação. Quadradinho.
         // #todo: checkbox has borders.
         case WT_CHECKBOX:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = FALSE;
             Background = TRUE;
             Border     = TRUE;
@@ -1218,6 +1238,7 @@ void *xxxCreateWindow (
         // Only the bg for now.
         // #todo: Button has borders.
         case WT_BUTTON:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = TRUE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
@@ -1227,6 +1248,7 @@ void *xxxCreateWindow (
         // Status bar.
         // #todo: checkbox has borders sometimes.
         case WT_STATUSBAR:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;
@@ -1236,6 +1258,7 @@ void *xxxCreateWindow (
         // Ícone da área de trabalho.
         // #todo: icons has borders sometimes.
         case WT_ICON:
+            window->ip_device = IP_DEVICE_NULL;
             window->frame.used = FALSE;
             Background = TRUE;
             window->backgroundUsed = TRUE;

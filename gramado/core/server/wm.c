@@ -669,6 +669,124 @@ void wmCompositor(void)
 }   
 
 
+// Local worker
+void 
+__draw_char_into_the_window(
+    struct gws_window_d *window, 
+    int ch )
+{
+// draw char support.
+    unsigned char _string[4];
+
+
+    if( (void*)window == NULL)
+        return;
+    if(window->magic!=1234)
+        return;
+
+   _string[0] = (unsigned char) ch;
+   _string[1] = 0;
+
+
+// types
+
+    if( window->type == WT_OVERLAPPED )
+        return;
+
+    if( window->type == WT_SCROLLBAR )
+        return;
+
+    if( window->type == WT_STATUSBAR )
+        return;
+
+    if( window->type == WT_CHECKBOX )
+        return;
+
+    if( window->type == WT_BUTTON )
+        return;
+
+    // Isso pode receber char se tiver em modo de edição
+    if( window->type == WT_ICON )
+        return;
+
+    if( window->type == WT_EDITBOX ||
+        window->type == WT_EDITBOX_MULTIPLE_LINES )
+    {
+        dtextDrawText ( 
+            (struct gws_window_d *) window,
+            (window->ip_x*8), (window->ip_y*8), 
+            COLOR_RED, (unsigned char *) &_string[0] );
+
+        // x,y,w,h
+        gws_refresh_rectangle ( 
+            (window->left + (window->ip_x*8)), 
+            (window->top  + (window->ip_y*8)), 
+            8, 
+            8 );
+
+        window->ip_x++;
+        if(window->ip_x >= window->width_in_bytes)
+        {
+            window->ip_y++; 
+            window->ip_x=0;
+        }   
+   }
+}
+
+
+// Local worker
+void __switch_focus(void)
+{
+// Switch focus support.
+    struct gws_window_d *next;
+
+    if( window_with_focus < 0 )
+    {
+        window_with_focus=0;
+        goto do_select;
+    }
+
+// Walk
+    window_with_focus++;
+
+    if ( window_with_focus >= WINDOW_COUNT_MAX )
+    { 
+        window_with_focus=0; 
+    }
+
+do_select: 
+
+    next = (struct gws_window_d *) windowList[window_with_focus];
+
+    if( (void*) next == NULL )
+    {
+        window_with_focus = 0;  //root
+        next = __root_window;
+    }
+
+    if( (void*) next == NULL )
+        return;
+
+    if( next->magic != 1234 )
+        return;
+
+do_redraw: 
+
+    gwssrv_redraw_window(next,TRUE);
+
+    // Activate app window
+    if( next->type == WT_OVERLAPPED )
+    {
+        active_window = next->id;
+        return;
+    }
+
+    // focus
+    next->focus = TRUE;
+}
+
+
+
 
 unsigned long 
 wmProcedure(
@@ -678,11 +796,6 @@ wmProcedure(
     unsigned long long2 )
 {
 
-// draw char support.
-    unsigned char _string[4];
-
-// Switch focus support.
-    struct gws_window_d *next;
 
 // #debug
     //printf("wmProcedure: w=? m=%d l1=%d l2=%d\n", 
@@ -765,20 +878,11 @@ wmProcedure(
              printf("wmProcedure: [19] GWS_GetFocus2\n");
              break;
          
+         // #todo: A rotina aqui pode virar uma funçao
          case GWS_KeyDown:
              //printf("wmProcedure: [?] GWS_KeyDown\n");
              //printf("[%c] ",long1); fflush(stdout);
-             
-              // #todo: It works ! :)
-             _string[0] = (unsigned char) long1;
-             _string[1] = 0;
-             dtextDrawText ( 
-                 (struct gws_window_d *) window,
-                  10, 10, COLOR_RED, (unsigned char *) &_string[0] );
-             // x,y,w,h
-             gws_refresh_rectangle ( 
-                 (window->left +10), (window->top  +10), 8, 8 );
-             
+             __draw_char_into_the_window(window,(int)long1);
              break;
 
          case GWS_SysKeyDown:
@@ -787,7 +891,9 @@ wmProcedure(
          
          //
          case GWS_SwitchFocus:
-             printf("wmProcedure: [?] GWS_SwitchFocus\n");
+             printf("Switch "); fflush(stdout);
+             __switch_focus();
+             //printf("wmProcedure: [?] GWS_SwitchFocus\n");
              //next = window->next;
              //window->focus = TRUE;
              //gwssrv_redraw_window(window,1);
@@ -1608,11 +1714,7 @@ gwssrv_redraw_window (
 
     gwssrv_debug_print ("gwssrv_redraw_window:\n");
 
-    if ( (void *) window == NULL ){
-        gwssrv_debug_print ("gwssrv_redraw_window: [FAIL] window\n");
-        return -1; 
-    }
-
+    if ( (void *) window == NULL ){ return -1; }
 
     if (window->used!=TRUE || window->magic!=1234)
         return -1;
@@ -1879,11 +1981,9 @@ draw_frame:
          window->type == WT_EDITBOX || 
          window->type == WT_BUTTON )
     {
-        wmDrawFrame ( 
-            (struct gws_window_d *) window->parent,  //parent.
-            (struct gws_window_d *) window,          //bg do botão em relação à sua parent. 
-            0, 0, window->width, window->height, 
-            1 );                                     //style
+        // #todo
+        // Precisamos de uma rotina que redesenhe o frame,
+        // sem alocar criar objetos novos.
     }
 
     if (flags == 1){

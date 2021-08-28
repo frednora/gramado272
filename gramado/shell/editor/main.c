@@ -1173,9 +1173,20 @@ int main ( int argc, char *argv[] ){
 
 // ============================================
 
+// focus
+    gws_async_command(
+         client_fd,
+         9,             // set focus
+         client_window,
+         client_window );
+
 //
 // Input
 //
+
+    while(1){
+        //
+    };
 
 
     int C=0;
