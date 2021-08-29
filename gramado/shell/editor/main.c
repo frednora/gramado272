@@ -1062,12 +1062,19 @@ int main ( int argc, char *argv[] ){
 // main window
 //
 
+// style: 
+// 0x0001=maximized 
+// 0x0002=minimized 
+// 0x0004=fullscreen
+// 0x0008 = use statusbar
+// ...
+
     main_window = gws_create_window (
                       client_fd,
                       WT_OVERLAPPED, 1, 1, "Editor", 
                       viewwindowx, viewwindowy, w_width, w_height,
                       0, 
-                      0x0000,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      0x0008,  
                       COLOR_RED,   // #todo: client bg. Not implemented. 
                       COLOR_GRAY );
 
@@ -1128,11 +1135,14 @@ int main ( int argc, char *argv[] ){
 //
 
 // client window (White)
+// Lembre-se que temos uma status bar.
     client_window = gws_create_window ( 
                         client_fd,
                         WT_EDITBOX,1,1,"Client",
-                        4, 32 +40, 
-                        (w_width -4 -4), ( w_height -32 - 40 -4 ),
+                        4,                             // left 
+                        32 +40,                        // top 
+                        ( w_width -4 -4),              // width
+                        ( w_height -32 - 40 -4 -32 ),  // height
                         main_window,0,COLOR_WHITE,COLOR_WHITE );
 
     if ( client_window < 0 ) 

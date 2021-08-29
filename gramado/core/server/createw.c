@@ -490,7 +490,7 @@ void *xxxCreateWindow (
     int TitleBar  = FALSE;
     int MenuBar   = FALSE;
     int ToolBar   = FALSE;
-    int StatusBar = FALSE;
+    //int StatusBar = FALSE;
     int ScrollBar = FALSE;
     // ...
 
@@ -507,9 +507,11 @@ void *xxxCreateWindow (
     int ButtonDown    = FALSE; 
     int ButtonUp      = FALSE;  // ??
     int ButtonSysMenu = FALSE;  // system menu na barra de títulos.
-    int Border        = FALSE;  // New !!! usado no edit box.
-	// ...
-	
+    int Border        = FALSE;  // usado no edit box.
+    //int StatusBar     = FALSE;  // Only for maximized/full screen overlapped window.
+    // ...
+
+
     // Desktop support.
     int ParentWindowDesktopId;    //Id do desktop da parent window.
     int WindowDesktopId;          //Id do desktop da janela a ser criada.
@@ -1276,6 +1278,7 @@ void *xxxCreateWindow (
             window->controlsUsed   = TRUE;
             window->clientAreaUsed = TRUE;
             window->background_style = 0;
+            //if(Fullscreen==TRUE){StatusBar=TRUE;}
             break;
 
         // Popup. (um tipo de overlapped mais simples).
@@ -1810,6 +1813,8 @@ void *xxxCreateWindow (
     
     } //button
 
+
+    //if (StatusBar==TRUE){}
 
 
 //done:

@@ -132,9 +132,16 @@ wmDrawFrame (
 // não estão sendo usados.
 
 
-    // Overlapped.
-    // Janela de aplicativos.
+// Overlapped.
+// Janela de aplicativos.
+
+// Title bar.
     struct gws_window_d  *tbWindow;
+// Status bar.
+    struct gws_window_d  *sbWindow;
+
+
+    int id=-1;  //usado pra registrar janelas filhas.
 
     int Type=0;
 
@@ -299,8 +306,8 @@ wmDrawFrame (
     }
 
 
-    // ===============================================
-    // overlapped
+// ===============================================
+// overlapped
 
     // string at center?
     size_t tmp_size = (size_t) strlen ( (const char *) window->name );
@@ -384,26 +391,63 @@ wmDrawFrame (
         // Um tamanho fixo pode fica muito fino em uma resolução alta
         // e muito largo em uma resolução muito baixa.
         
+        // Title bar
+        // #todo: Essa janela foi registrada?
         window->titlebar_height = 32;
         window->titlebar_color = TitleBarColor;
 
-        // Title bar
         tbWindow = (void *) xxxCreateWindow ( 
                                 WT_SIMPLE, 0, 1, 1, "Titlebar", 
                                 border_size, border_size, 
                                 (window->width - border_size - border_size), window->titlebar_height, 
                                 (struct gws_window_d *) window, 
-                                0, TitleBarColor, TitleBarColor, 
-                                12 );   // rop_flags  
+                                0, window->titlebar_color, window->titlebar_color, 
+                                0 );   // rop_flags  
 
         if ( (void *) tbWindow == NULL ){
             gwssrv_debug_print ("wmDrawFrame: tbWindow fail \n");
             return -1;
         }
-
         tbWindow->type = WT_SIMPLE;
-
         window->titlebar = tbWindow;
+        // Register window
+        id = gwsRegisterWindow(tbWindow);
+        if (id<0){
+            gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
+            return -1;
+        }
+
+
+        // Status bar
+        // Se for maximized ou fullscreen
+        // #todo: Essa janela foi registrada?
+        if ( window->style & 0x0008 )
+        {
+            window->statusbar_height = 32;
+            window->statusbar_color = 0x00AC81;
+
+            sbWindow = (void *) xxxCreateWindow ( 
+                                WT_SIMPLE, 0, 1, 1, "Statusbar", 
+                                border_size,                                                //left
+                                (window->height - window->statusbar_height - border_size),  //top
+                                (window->width - border_size - border_size),  //width 
+                                window->statusbar_height,                     //height
+                                (struct gws_window_d *) window, 
+                                0, window->statusbar_color, window->statusbar_color, 
+                                0 );   // rop_flags  
+            if ( (void *) sbWindow == NULL ){
+                gwssrv_debug_print ("wmDrawFrame: sbWindow fail \n");
+                return -1;
+            }
+            sbWindow->type = WT_SIMPLE;
+            window->statusbar = sbWindow;
+            // Register window
+            id = gwsRegisterWindow(tbWindow);
+            if (id<0){
+                gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
+                return -1;
+            }
+        }
 
 
         // Ornamento:
@@ -1334,9 +1378,8 @@ int serviceCreateWindow (void){
        return -1;
     }
 
-    // Register window
+// Register window
     id = gwsRegisterWindow(Window);
-
     if (id<0){
         gwssrv_debug_print ("gwssrv: serviceCreateWindow Couldn't register window\n");
         next_response[1] = 0;  // msg code.
