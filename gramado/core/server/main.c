@@ -912,7 +912,20 @@ gwsProcedure (
         //}
         //break;
 
-
+    // #todo
+    // Isso poderia significar que existe uma estrutura
+    // de request no mesmo estilo do X presente no
+    // final do buffer de mensage, por exemplo
+    // no offset 400
+    // Mesma coisa aconteceria com as respostas.
+    // A biblioteca client side pode conter um wrapper
+    // com o protocolo X, colocando a estrutura de request 
+    // do final do buffer da mensagem e sinalizar no header do
+    // buffer que esse buffer contem uma mensagem que segue o
+    // protocolo X.
+    // #todo: Criar o arquivo Xproto.h ... xproto.h
+    // GWS_X_Request:
+         //break;
 
     // ===========================
     // Here starts the gws requests
@@ -2333,14 +2346,20 @@ int main (int argc, char **argv)
 // poderao ser longos ou pequenos.
 // >>>>>>> ou ainda esses handler pode receber apenas algumas mensagens,
 // principalmente as mensagens relativas ao window manager.
+// It also enable the kernel for calling our compositor.
 // See the callback in wm.c
 
+// adiamos essa rotina
+// assim o kernel somente chamara o ws quando as coisas
+// estiverem inicializadas por aqui.
+
+/*
     gramado_system_call( 
         101234, 
         (unsigned long) &wmHandler, 
         (unsigned long) &wmHandler, 
         (unsigned long) &wmHandler );
-
+*/
 
 
 
@@ -2790,6 +2809,14 @@ int main (int argc, char **argv)
     fps = 0;
  
  
+ 
+
+    gramado_system_call( 
+        101234, 
+        (unsigned long) &wmHandler, 
+        (unsigned long) &wmHandler, 
+        (unsigned long) &wmHandler );
+
  
 //
 // Focus

@@ -1264,6 +1264,9 @@ int consoleCompareStrings(void)
 
     if ( strncmp( prompt, "wm", 2 ) == 0 )
     {
+        if( gUseWMCallbacks != TRUE)
+            goto exit_cmp;
+
         // See: swlib.asm
         // Setup parameters
         wmData_RDI = 0;

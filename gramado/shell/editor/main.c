@@ -1074,7 +1074,7 @@ int main ( int argc, char *argv[] ){
                       WT_OVERLAPPED, 1, 1, "Editor", 
                       viewwindowx, viewwindowy, w_width, w_height,
                       0, 
-                      0x0008,  
+                      0x0000,  
                       COLOR_RED,   // #todo: client bg. Not implemented. 
                       COLOR_GRAY );
 

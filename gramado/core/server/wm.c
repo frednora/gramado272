@@ -1,14 +1,18 @@
 /*
- * File: window.c 
- * 
- *     Draw windows.
- * 
+ * File: wm.c 
+ *
+ *     The Window Manager.
+ *
  * History:
  *     2020 - Create by Fred Nora.
  */
 
 
 #include <gws.h>
+
+
+#define WM_DEFAULT_BACKGROUND_COLOR   COLOR_GRAY
+
 
 
 
@@ -675,6 +679,11 @@ void wmCompositor(void)
             {
                 if ( tmp->used == TRUE && tmp->magic == 1234 )
                 {
+                    if ( tmp->dirty == TRUE ){
+                        gws_show_window_rect(tmp);
+                        tmp->dirty = FALSE;
+                    }
+                    
                     //if ( tmp->type == WT_OVERLAPPED )
                     //{
                         
@@ -683,11 +692,11 @@ void wmCompositor(void)
                     //}
                     
                     // draw and invalidate.
-                    if (  tmp != __root_window )
-                    {
+                    //if (  tmp != __root_window )
+                    //{
                         //gwssrv_redraw_window(tmp,FALSE);  //bugbug
                         //invalidate_window(tmp);
-                    }
+                    //}
                     
                     //if( tmp->id == window_with_focus ) 
                     //{
@@ -969,6 +978,7 @@ wmHandler(
 
     debug_print ("wmHandler:\n");
 
+
 // #debug
     //printf("wmHandler: %x %x %x %x\n", 
         //arg1_rdi, arg2_rsi, arg3_rdx, arg4_rcx );
@@ -991,6 +1001,11 @@ wmHandler(
 //
 
     msg = (int) (arg2_rsi & 0xFFFF);
+
+    if ( msg == 9091){
+        wmCompositor();
+        return 0;  //important
+    }
 
 //
 // Data
@@ -1021,6 +1036,11 @@ wmHandler(
         w = windowList[active_window];
         goto do_send_message;
         break;
+    
+    //case 9091:
+        //wmCompositor();
+        //return 0;  //important
+        //break;
 
     // Mensagens que atuam sobre o window server.
     default:
@@ -1198,7 +1218,15 @@ void destroy_window (struct gws_window_d *window)
 // Receive the tid of the client in the request packet.
 // Save it as an argument of the window structure.
 
-int serviceCreateWindow (void){
+int serviceCreateWindow (void)
+{
+
+
+// #test
+// The structure for the standard request.
+
+    gReq r;
+
 
     //loop
     register int i=0;
@@ -1211,14 +1239,13 @@ int serviceCreateWindow (void){
     int pw=0;
 
     int id = -1;
-    unsigned char name_buffer[256+1];
 
     // Arguments.
     unsigned long x=0;
     unsigned long y=0;
     unsigned long w=0;
     unsigned long h=0;
-    unsigned long color=0;
+    unsigned int color=0;
     unsigned long type=0;
 
 
@@ -1242,36 +1269,53 @@ int serviceCreateWindow (void){
 //
 
 
-// #todo
-// Check all the header.
+// The header.
 // 0,1,2,3
 
+    r.wid  = message_address[0];  // window id
+    r.code = message_address[1];  // message code
+    r.ul2  = message_address[2];  // data1
+    r.ul3  = message_address[3];  // data2
 
 // l,t,w,h
-    x     = message_address[4];
-    y     = message_address[5];
-    w     = message_address[6];
-    h     = message_address[7];
+
+    r.ul4 = message_address[4];
+    r.ul5 = message_address[5];
+    r.ul6 = message_address[6];
+    r.ul7 = message_address[7];
+
+    x = (unsigned long) (r.ul4 & 0xFFFF);
+    y = (unsigned long) (r.ul5 & 0xFFFF);
+    w = (unsigned long) (r.ul6 & 0xFFFF);
+    h = (unsigned long) (r.ul7 & 0xFFFF);
 
 // Background color.
-    color = message_address[8];
+    r.ul8 = message_address[8];
+    color = (unsigned int) (r.ul8 & 0x00FFFFFF );
 
 // type
-    type  = message_address[9];
+    r.ul9 = message_address[9];
+    type = (unsigned long) (r.ul9 & 0xFFFF);
+
 
 // Parent window ID.
-    pw = message_address[10]; 
+    r.ul10 = message_address[10]; 
+    pw = (int) (r.ul10 & 0xFFFF); 
 
 //#test
     unsigned long my_style=0;
-    my_style = message_address[11];  
+    r.ul11 = message_address[11];  
+    my_style = (unsigned long) r.ul11;  // 8 bytes  
 
 // Client pid
-    ClientPID = message_address[12];  // client pid
+    r.ul12 = message_address[12];  // client pid
+    ClientPID = (int) (r.ul12 & 0xFFFF);
 
 // Client caller tid
-    ClientTID = message_address[13];  // client tid
+    r.ul13 = message_address[13];  // client tid
+    ClientTID = (int) (r.ul13 & 0xFFFF);
 
+//========
 // 14:
 // This is the start of the string passed via message.
 // Copy 256 bytes of given string.
@@ -1279,12 +1323,14 @@ int serviceCreateWindow (void){
 
 //++
 // String support 
+// Copiando para nossa estrutura local.
     int string_off = 14; 
-    for (i=0; i<256; ++i){
-        name_buffer[i] = message_address[string_off];
+    for (i=0; i<256; ++i)
+    {
+        r.data[i] = message_address[string_off];
         string_off++;
     };
-    name_buffer[i] = 0;
+    r.data[i] = 0;
 //--
 
 // ========================================
@@ -1366,7 +1412,7 @@ int serviceCreateWindow (void){
                                          my_style,     // style
                                          1,     // status 
                                          1,     // view
-                                         name_buffer, 
+                                         r.data, 
                                          x, y, w, h, 
                                          Parent, 0, 
                                          COLOR_PINK, color ); 
@@ -2425,7 +2471,83 @@ struct gws_window_d *gws_window_from_id (int id)
     return (struct gws_window_d *) w;
 }
 */
- 
+
+
+// Create root window
+// Called by gwsInit in gws.c.
+
+struct gws_window_d *createwCreateRootWindow(void)
+{
+    struct gws_window_d *w;
+
+    // It's because we need a window for drawind a frame.
+    // WT_OVERLAPPED needs a window and WT_SIMPLE don't.
+    unsigned long rootwindow_valid_type = WT_SIMPLE;
+
+    unsigned int rootwindow_color = WM_DEFAULT_BACKGROUND_COLOR;
+
+    unsigned long left   = 0;
+    unsigned long top    = 0;
+    unsigned long width  = (__device_width  & 0xFFFF );
+    unsigned long height = (__device_height & 0xFFFF );
+
+
+// Begin paint
+    asm("cli");
+
+    debug_print("createwCreateRootWindow:\n");
+
+    // (root window)
+    // #bugbug: EStamos usado device info sem checar.
+    
+    w = (struct gws_window_d *) gwsCreateWindow ( 
+                                    rootwindow_valid_type,  
+                                    0, //style
+                                    1, //status
+                                    1, //view
+                                    "RootWindow",  
+                                    left, top, width, height,
+                                    NULL, 0, rootwindow_color, rootwindow_color );
+    if ( (void*) w == NULL)
+    {
+        debug_print("createwCreateRootWindow: [FAIL] w\n");
+        printf     ("createwCreateRootWindow: [FAIL] w\n");
+        exit(1);
+    }
+    
+// Setup the surface in ring0
+    setup_surface_retangle(left,top,width,height);
+
+// invalidate the surface in ring0.
+    invalidate_surface_retangle();
+
+// Invalidate again.
+
+    w->dirty = TRUE;
+
+    w->used  = TRUE;
+    w->magic = 1234;
+
+    // Register.
+    // WindowId = gwsRegisterWindow (__root_window);
+
+    // if (WindowId<0){
+    // gwssrv_debug_print ("create_background: Couldn't register window\n");
+    //return;
+    //}
+
+    // Root window
+    gwsDefineInitialRootWindow (w);
+
+// End paint
+    asm("sti");
+
+    debug_print("createwCreateRootWindow: done\n");
+
+    return (struct gws_window_d *) w;
+}
+
+
 
 int gwsDefineInitialRootWindow ( struct gws_window_d *window )
 {

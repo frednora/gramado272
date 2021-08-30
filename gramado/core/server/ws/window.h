@@ -778,11 +778,13 @@ struct gws_window_d
     int desktop_id;
 	//struct desktop_d *desktop;   //suspenso.
 
-// 
 
+// Locked
+// We can't resize or move the window.
+// This is good for a maximized root overlapped window.
+// If locked we can't change a simple thing. 
+// It must affect the input events for the specified window.
 
-	// If locked we can't change a simple thing. 
-	// It must affect the input events for the specified window.
     int locked; 
 
 

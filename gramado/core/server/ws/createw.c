@@ -35,6 +35,16 @@
 #include <gws.h>
 
 
+#define OVERLAPPED_MIN_WIDTH    80
+#define OVERLAPPED_MIN_HEIGHT   80
+
+#define EDITBOX_MIN_WIDTH    8
+#define EDITBOX_MIN_HEIGHT   8
+
+#define BUTTON_MIN_WIDTH    8
+#define BUTTON_MIN_HEIGHT   8
+
+
 static int config_use_transparency=FALSE;
 
 
@@ -647,6 +657,7 @@ void *xxxCreateWindow (
         Fullscreen = TRUE;  //:)
     }
 
+    
 
 	//salvar para depois restaurar os valores originais no fim da rotina.
 	//unsigned long saveLeft;
@@ -780,6 +791,17 @@ void *xxxCreateWindow (
 
     window->used   = TRUE;
     window->magic  = 1234;
+
+
+//
+// Locked
+//
+
+    window->locked = FALSE;
+    if ( style & 0x8000 ){
+        window->locked = TRUE;
+    }
+
 
 // ===================================
 // Input device
@@ -1939,6 +1961,9 @@ void *gwsCreateWindow (
     // Overlapped
     if ( type == WT_OVERLAPPED )
     {
+        if ( width < OVERLAPPED_MIN_WIDTH ) { width=OVERLAPPED_MIN_WIDTH; }
+        if ( height < OVERLAPPED_MIN_HEIGHT ){ height=OVERLAPPED_MIN_HEIGHT; }
+
         __w = (void *) xxxCreateWindow ( 
                            WT_SIMPLE, 
                            style, 
@@ -1969,7 +1994,10 @@ void *gwsCreateWindow (
     if ( type == WT_EDITBOX )
     {
         //if ( (void*) pWindow == NULL ){ return NULL; }
-        
+
+        if ( width < EDITBOX_MIN_WIDTH )  { width=EDITBOX_MIN_WIDTH; }
+        if ( height < EDITBOX_MIN_HEIGHT ){ height=EDITBOX_MIN_HEIGHT; }
+
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
                            WT_SIMPLE, 0, status, view, 
@@ -1998,7 +2026,10 @@ void *gwsCreateWindow (
         gwssrv_debug_print ("[DEBUG]: gwsCreateWindow WT_BUTTON\n");
       
         //if ( (void*) pWindow == NULL ){ return NULL; }
-        
+
+        if ( width < BUTTON_MIN_WIDTH )  { width=BUTTON_MIN_WIDTH; }
+        if ( height < BUTTON_MIN_HEIGHT ){ height=BUTTON_MIN_HEIGHT; }
+
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
                            WT_BUTTON, 0, status, view, 
@@ -2159,80 +2190,6 @@ draw_frame:
 }
 
 
-
-// Create root window
-// Called by gwsInit in gws.c.
-
-struct gws_window_d *createwCreateRootWindow(void)
-{
-    struct gws_window_d *w;
-
-    // It's because we need a window for drawind a frame.
-    // WT_OVERLAPPED needs a window and WT_SIMPLE don't.
-    unsigned long rootwindow_valid_type = WT_SIMPLE;
-
-    unsigned int rootwindow_color = COLOR_GRAY;
-
-    unsigned long left   = 0;
-    unsigned long top    = 0;
-    unsigned long width  = (__device_width  & 0xFFFF );
-    unsigned long height = (__device_height & 0xFFFF );
-
-
-// Begin paint
-    asm("cli");
-
-    debug_print("createwCreateRootWindow:\n");
-
-    // (root window)
-    // #bugbug: EStamos usado device info sem checar.
-    
-    w = (struct gws_window_d *) gwsCreateWindow ( 
-                                    rootwindow_valid_type,  
-                                    0, //style
-                                    1, //status
-                                    1, //view
-                                    "RootWindow",  
-                                    left, top, width, height,
-                                    NULL, 0, rootwindow_color, rootwindow_color );
-    if ( (void*) w == NULL)
-    {
-        debug_print("createwCreateRootWindow: [FAIL] w\n");
-        printf     ("createwCreateRootWindow: [FAIL] w\n");
-        exit(1);
-    }
-    
-// Setup the surface in ring0
-    setup_surface_retangle(left,top,width,height);
-
-// invalidate the surface in ring0.
-    invalidate_surface_retangle();
-
-// Invalidate again.
-
-    w->dirty = TRUE;
-
-    w->used  = TRUE;
-    w->magic = 1234;
-
-    // Register.
-    // WindowId = gwsRegisterWindow (__root_window);
-
-    // if (WindowId<0){
-    // gwssrv_debug_print ("create_background: Couldn't register window\n");
-    //return;
-    //}
-
-    // Root window
-    gwsDefineInitialRootWindow (w);
-
-// End paint
-    asm("sti");
-
-    debug_print("createwCreateRootWindow: done\n");
-
-    return (struct gws_window_d *) w;
-}
 
 
 

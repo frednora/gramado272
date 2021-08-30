@@ -43,6 +43,9 @@ wmRegisterWSCallbacks(
 
     printf("wmRegisterWSCallbacks:\n");
 
+
+    gUseWMCallbacks = TRUE;
+
     // Save callbacks
     // See: swlib.asm
     wmData_Callback0 = (unsigned long) callback0;
@@ -78,6 +81,11 @@ unsigned long wmSendInputToWindowManager(
     unsigned long long1,
     unsigned long long2)
 {
+
+    
+    if( gUseWMCallbacks != TRUE)
+        return 0;
+
     //asm("call *%0" : : "r"(wsCallbacks[0]));
 
 // Setup parameters
@@ -862,7 +870,19 @@ void schedulerUpdateScreen(void)
 
    // refresh_screen();
 
-// #test
+
+
+//
+//
+//
+
+// Calling the window manager inside the window server
+// at gwssrv.bin
+//9091 = message code for calling the compositor.
+
+    if( gUseWMCallbacks == TRUE)
+        wmSendInputToWindowManager(0,9091,0,0);
+
 
 //
 // Fake bar

@@ -744,20 +744,24 @@ int main ( int argc, char *argv[] ){
 
     unsigned long wLeft   = 0;
     unsigned long wTop    = 0;
-    unsigned long wWidth  = (w >> 1);
+    unsigned long wWidth  = w;  //(w >> 1);
     unsigned long wHeight = h;
 
     if (current_mode == GRAMADO_JAIL ){
         wLeft=0;  wTop=0;  wWidth=w;  wHeight=h;
     }
 
-    // main window
+// main window
+// Locked and maximized.
+// style: 0x8000=locked
+// style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+
     main_window = gws_create_window ( 
                       client_fd,
-                      WT_OVERLAPPED, 1, 1, "Fileman",
+                      WT_OVERLAPPED, 1, 1, "Gramado Shell",
                       wLeft, wTop, wWidth, wHeight,
                       0, 
-                      0x0000,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      0x8008,
                       COLOR_GRAY, COLOR_GRAY );
 
     if ( main_window < 0 ){
@@ -824,14 +828,20 @@ int main ( int argc, char *argv[] ){
     unsigned long cwLeft   = 4;
     unsigned long cwTop    = titlebarHeight + 40;
     unsigned long cwWidth  = (wWidth-8);
-    unsigned long cwHeight = (wHeight - cwTop -4);
+    unsigned long cwHeight = (wHeight - cwTop -4 -titlebarHeight);
 
     // client window (White)
     client_window = gws_create_window ( 
                         client_fd,
-                        WT_SIMPLE, 1, 1, "Client",
+                        WT_SIMPLE, 
+                        1, 
+                        1, 
+                        "Client",
                         cwLeft, cwTop, cwWidth, cwHeight,
-                        main_window, 0, COLOR_WHITE, COLOR_WHITE );
+                        main_window, 
+                        0x0001,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen 
+                        COLOR_WHITE, 
+                        COLOR_WHITE );
 
     if ( client_window < 0 ){
         debug_print("fileman: client_window fail\n"); 

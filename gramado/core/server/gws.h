@@ -1,8 +1,6 @@
 // gws.h 
 
 
-// Current protocol version
-#define GWS_PROTOCOL  1
 
 
 
@@ -32,39 +30,42 @@ int current_mode;
 #include <rtl/gramado.h>
 
 
-#include "globals.h"
+#include "ws/protocol.h"
+#include "ws/globals.h"
 
+#include "ws/r_render.h"
+#include "ws/colors.h"
 
-//
-// view
-//
-
-#include "r_render.h"
-#include "colors.h"
 #include "fb/bitblt.h"
-#include "char.h"
-#include "dtext.h"
-#include "line.h"
-#include "vk.h"       // # view input events
-#include "wt.h"
-#include "menu.h"
-#include "xxxinput.h"   //#test
-#include "window.h"
-#include "bmp.h"
+
+#include "ws/char.h"
+#include "ws/dtext.h"
+#include "ws/line.h"
+
+#include "ws/vk.h"       // # view input events
+#include "ws/wt.h"
+
+#include "ws/menu.h"
+#include "ws/xxxinput.h"   //#test
+#include "ws/window.h"
+#include "ws/bmp.h"
+
 // h:0.0
-#include "screen.h"   // X-like
-#include "display.h"  // X-like
-#include "host.h"     // X-like h:0.0
+#include "ws/screen.h"   // X-like
+#include "ws/display.h"  // X-like
+#include "ws/host.h"     // X-like h:0.0
+
 // Teremos isso aqui no window server,
 // kgws é outro ws par ao ambiente de setup e tera 
 // seu próprio gerenciamento.
-#include "security.h"
-#include "gui.h"
-#include "comp.h"
-#include "event.h"    // view inputs
-#include "grprim.h"
-#include "sprite.h"
-#include "demos.h"
+#include "ws/security.h"
+#include "ws/gui.h"
+#include "ws/comp.h"
+#include "ws/event.h"    // view inputs
+
+#include "ws/grprim.h"
+#include "ws/sprite.h"
+#include "ws/demos.h"
 
 
 //
@@ -72,29 +73,31 @@ int current_mode;
 //
 
 // # data model
-#include "packet.h"
+#include "ws/packet.h"
+
+
 // # model. business logic
 // #todo:
 // We can put this thing in the library. (libgws)
 // or (libcon)
-#include "connect.h"
-#include "nc2.h"   //nelson cole 2 font. 8x8
-#include "lt8x8.h"
-#include "font.h"
+#include "os/connect.h"
+
+#include "ws/nc2.h"   //nelson cole 2 font. 8x8
+#include "ws/lt8x8.h"
+#include "ws/font.h"
+
 // Client structure.
 // O proprio servidor poderia ser o cliente 0??
-#include "client.h"
+#include "ws/client.h"
 // # model. business logic
-#include "services.h"
-
-
+#include "ws/services.h"
 
 // Device Context.
 // This is the structure that is gonna be used by the
 // drawing routines.
 // 'dc->something'
  
-#include "dc.h"
+#include "ws/dc.h"
 
 struct gws_graphics_d
 {

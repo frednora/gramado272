@@ -1,6 +1,7 @@
 // kernel.h
 // proting from Gramado.
 
+int gUseWMCallbacks;
 
 //
 // == gramado modes =========================

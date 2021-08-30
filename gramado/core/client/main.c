@@ -924,7 +924,15 @@ int main ( int argc, char *argv[] )
 // Client
 //
 
-    gws_clone_and_execute("editor.bin");
+// #todo
+// Podemos nesse momento ler alguma configuração
+// que nos diga qual interface devemos inicializar.
+
+// Interface 1: File manager.
+    gws_clone_and_execute("fileman.bin");
+
+// Interface 1: Test app.
+    //gws_clone_and_execute("editor.bin");
 
 
 //
@@ -958,6 +966,8 @@ int main ( int argc, char *argv[] )
     while (1){
         if ( rtl_get_event() == TRUE )
         {
+            //if( RTLEventBuffer[1] == MSG_QUIT ){ break; }
+
             gwsProcedure ( 
                 client_fd,
                 (void*) RTLEventBuffer[0], 
