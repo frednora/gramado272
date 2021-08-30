@@ -157,6 +157,34 @@ __invalidate_surface_rectangle(void)
 }
 
 
+// #test
+// Changing the window server's quantum. 
+// The purpose here is boosting it when it is trying to register itself.
+void
+__maximize_process_quantum(pid_t ws_pid)
+{
+    struct process_d *p;
+    struct thread_d *t;
+
+    if(ws_pid<=0 || ws_pid >= PROCESS_COUNT_MAX)
+        return;
+    p = (struct process_d *) processList[ws_pid];
+    if((void*)p==NULL)
+        return;
+    if(p->used!=TRUE)
+        return;
+    if(p->magic!=1234)
+        return;
+
+    t = (struct thread_d *) p->control;
+    if ( (void*) t == NULL ){ return; }
+    if ( t->magic != 1234 ) { return; }
+
+// quantum
+    t->quantum = QUANTUM_MAX;
+}
+
+
 // Services abouve 256.
 // Helper function called by sci0().
 void *gde_extra_services ( 
@@ -405,6 +433,11 @@ void *gde_extra_services (
                 // What is the process listen to the port 11.
                 // use this one: socket_set_gramado_port(...)
                 gramado_ports[GRAMADO_WS_PORT] = (int) current_process;
+                
+                
+                // #test
+                // QUANTUM
+                __maximize_process_quantum(arg3);
                 
                 //#todo
                 //WindowServer.desktop = (struct desktop_d *) __desktop;

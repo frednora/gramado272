@@ -190,8 +190,9 @@ int kernel_main(int arch_type)
     //presence_level = (1000/2);     //level 500;   // 2  fps
     //presence_level = (1000/1);     //level 1000;  // 1  fps
 
-    set_update_screen_frequency(30);
-    //set_update_screen_frequency(10);
+    //set_update_screen_frequency(30);
+    set_update_screen_frequency(60);
+    //set_update_screen_frequency(120);
 
 // ==================
 
