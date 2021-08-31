@@ -279,6 +279,17 @@ void gwssrv_yield(void);
 
 void serviceExitGWS(void);
 
+
+// Worker
+// There is a vetor with values for the next response.
+// Called by dispatcher().
+int __send_response(int fd, int is_error);
+
+// Get client's request from socket.
+void dispacher (int fd);
+
+
+
 //
 // End.
 //

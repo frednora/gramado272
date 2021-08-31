@@ -14,6 +14,40 @@
 #define WM_DEFAULT_BACKGROUND_COLOR   COLOR_GRAY
 
 
+// Local structure
+
+struct wm_d
+{
+
+// Background
+    unsigned int default_background_color;
+    int has_custom_background_color;
+    unsigned int custom_background_color;
+    // image?
+
+// Wallpaper
+    int has_wallpaper;
+
+// Window stack
+// Quando uma janela foi invalidada, significa que ela foi pintada e que
+// precisa receber o refesh, mas também pode significar
+// que outras janelas foram afetadas pelo pintura da janela.
+// Nesse caso precisado repintar a janelas.
+// Se tiver uma janela em fullscreen então pintamos, invalidamos
+// seu retângulo e validamos todos os outros.
+
+    // struct gws_window_d *fullscreen_window;
+
+// #test
+// z-order for all the layers.
+// linked list
+    //struct gws_window_d *layer1_list;
+    //struct gws_window_d *layer2_list;
+    //struct gws_window_d *layer3_list;
+    //struct gws_window_d *layer4_list;
+};
+
+struct wm_d  WindowManager;
 
 
 //#todo
@@ -23,6 +57,48 @@
 
 static unsigned long ____old_time=0;
 static unsigned long ____new_time=0;
+
+
+
+void __set_default_background_color( int color )
+{
+    WindowManager.default_background_color = (unsigned int) color;
+}
+
+unsigned int __get_default_background_color(void)
+{
+    return (unsigned int) WindowManager.default_background_color;
+}
+
+
+void __set_custom_background_color( int color )
+{
+    WindowManager.custom_background_color = (unsigned int) color;
+    WindowManager.has_custom_background_color = TRUE;
+}
+
+unsigned int __get_custom_background_color(void)
+{
+    return (unsigned int) WindowManager.custom_background_color;
+}
+
+int __has_custom_background_color(void)
+{
+    if ( WindowManager.has_custom_background_color == TRUE )
+        return TRUE;
+
+    return FALSE;
+}
+
+int __has_wallpaper(void)
+{
+    if ( WindowManager.has_wallpaper == TRUE )
+        return TRUE;
+
+    return FALSE;
+}
+
+
 
 // Internal
 // Called by wm_process_windows().
@@ -670,6 +746,9 @@ void wmCompositor(void)
 
     if(UpdateScreenFlag == TRUE)
     {
+
+        // z-order ...
+        //outra opção é lista encadeada ... see: WindowManager->layer1_list;
         for (i=0; i<ZORDER_MAX; ++i)
         {
             //tmp = (struct gws_window_d  *) zList[i];
@@ -711,6 +790,10 @@ void wmCompositor(void)
     }
 
 
+//flush all the screens?
+//Do we have more than one monitor?
+    //for( ...
+    //gws_show_backbuffer();
 
     // #todo
     // call a helper function for that.
@@ -2484,12 +2567,21 @@ struct gws_window_d *createwCreateRootWindow(void)
     // WT_OVERLAPPED needs a window and WT_SIMPLE don't.
     unsigned long rootwindow_valid_type = WT_SIMPLE;
 
-    unsigned int rootwindow_color = WM_DEFAULT_BACKGROUND_COLOR;
-
     unsigned long left   = 0;
     unsigned long top    = 0;
     unsigned long width  = (__device_width  & 0xFFFF );
     unsigned long height = (__device_height & 0xFFFF );
+
+
+// background color.
+    unsigned int rootwindow_color;
+
+    // default.
+    __set_default_background_color( WM_DEFAULT_BACKGROUND_COLOR );
+    rootwindow_color = (unsigned int) __get_default_background_color();
+
+    // custom.
+    __set_custom_background_color(WM_DEFAULT_BACKGROUND_COLOR);
 
 
 // Begin paint

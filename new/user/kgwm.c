@@ -741,34 +741,24 @@ void schedulerUpdateScreen(void)
         panic       ("schedulerUpdateScreen: w h\n");
     }
 
+// Atualizado pelo timer.
     if( UpdateScreenFlag != TRUE )
         return;
-
 
     deviceWidth  = (deviceWidth & 0xFFFF);
     deviceHeight = (deviceHeight & 0xFFFF);
 
 
 // ============================
+// Redraw and flush stuff.
 
-    /*
-    struct rect_d RectTest;
-    RectTest.left = 0;
-    RectTest.top = 0;
-    RectTest.width = 28;
-    RectTest.height = 28;
-    RectTest.used = TRUE;
-    RectTest.magic = 1234;
-    RectTest.ready_to_refresh = TRUE;
+// Calling the window manager inside the window server
+// at gwssrv.bin
+// 9091 = message code for calling the compositor.
 
-    if ( (void*) InitThread != NULL )
-    {
-        if ( InitThread->used == TRUE && InitThread->magic == 1234 ){
-            InitThread->surface = (struct rect_d *) &RectTest;
-        }
-    }
-    */
-    
+    if( gUseWMCallbacks == TRUE)
+        wmSendInputToWindowManager(0,9091,0,0);
+
 // ============================
 
     // Precisamos apenas validar todos retangulos
@@ -804,7 +794,6 @@ void schedulerUpdateScreen(void)
     refresh_rectangle ( 0, 0, deviceWidth, 24 );
 //=========================
 */
-
 
 
 //
@@ -868,32 +857,11 @@ void schedulerUpdateScreen(void)
         DemoFlag=FALSE;
     }
 
-   // refresh_screen();
 
-
-
-//
-//
-//
-
-// Calling the window manager inside the window server
-// at gwssrv.bin
-//9091 = message code for calling the compositor.
-
-    if( gUseWMCallbacks == TRUE)
-        wmSendInputToWindowManager(0,9091,0,0);
-
-
-//
-// Fake bar
-//
-
-    //drawDataRectangle( 0, 0, deviceWidth, 28, COLOR_BLUE );
-    //draw_string(8,8,COLOR_YELLOW," Compositor ");
-    //refresh_screen();
-    
+// Atualizado pelo timer.
     UpdateScreenFlag = FALSE;
 }
+
 
 
 

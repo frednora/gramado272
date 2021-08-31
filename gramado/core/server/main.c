@@ -112,8 +112,7 @@ int connection_status = 0;
 
 // Get system message from the thread's queue.
 void xxxHandleNextSystemMessage (void);
-// Get client's request from socket.
-void xxxHandleNextClientRequest (int fd);
+
 
 int
 gwsProcedure (
@@ -398,9 +397,140 @@ __again:
 */
 
 
+// Worker
+// There is a vetor with values for the next response.
+// Called by dispatcher().
+int __send_response(int fd, int is_error)
+{
+// Reusing the same buffer from the request.
+    unsigned long *message_buffer = (unsigned long *) &__buffer[0];
+
+    int n_writes = 0;  // For responses.
+
+    int Status=0;
+
+    //gwssrv_debug_print ("Sending response ...\n");  
+
+//# it works.
+    char *m = (char *) (&__buffer[0] + 16);
+    sprintf( m, "~ Response from gwssrv \n");
+
+    // Primeiros longs do buffer.
+    message_buffer[0] = next_response[0];         // Window ID.
+
+// Normal rsponse.
+    message_buffer[1] = SERVER_PACKET_TYPE_REPLY;
+
+// Error.
+    if (is_error == TRUE)
+        message_buffer[1] = SERVER_PACKET_TYPE_ERROR;
+
+    message_buffer[2] = next_response[2];         // Return value (long1)
+    message_buffer[3] = next_response[3];         // Return value (long2)
+
+//__again:
+
+//
+// == Response ============================
+//
+
+    gwssrv_debug_print ("dispacher: Sending response ...\n");
+
+    // #todo:
+    // while(1){...}
+
+    /*
+    // Is current client connected.
+    if (currentClient->is_connected == 0)
+    {
+        // [FAIL] Not connected.
+        // close?
+    }
+    */
+
+
+    if(fd<0){
+        Status = -1;
+        goto exit2;
+    }
+
+// Sync
+// set response
+
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REPLY );
+
+//
+// Send
+//
+
+    n_writes = write ( fd, __buffer, sizeof(__buffer) );
+    //n_writes = send ( fd, __buffer, sizeof(__buffer), 0 );
+
+    // limpa.
+    // se a resposta der certo ou se der errado.
+
+    // Cleaning
+    message_buffer[0] = 0;
+    message_buffer[1] = 0;
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+    register int b=0;
+    for (b=0; b<MSG_BUFFER_SIZE; ++b){
+        __buffer[b] = 0;
+    };
+
+
+    // Cleaning
+    // 32. #todo 512.
+    register int c=0;
+    for (c=0; c<NEXTRESPONSE_BUFFER_SIZE; ++c){
+        next_response[c] = 0;
+    };
+
+
+
+    // No. We couldn't send a response.
+    // O que acontece se nao conseguirmos enviar uma resposta?
+    // Certamente o cliente tentara ler e tera problemas.
+    // Deveriamos fechar a conexao?
+    // Deveriamos enviar um alerta
+    
+    if (n_writes<=0){
+        gwssrv_debug_print ("__send_response: response fail\n");
+        printf             ("__send_response: Couldn't send reply\n");
+        //close(fd);
+        Status=-1;
+        goto exit2;
+    }
+
+    // YES, We sent a response.
+    if (n_writes>0){
+        gwssrv_debug_print ("__send_response: Response sent\n");
+        Status=0;
+        goto exit0;
+    }
+
+    // ??
+
+exit2:
+    message_buffer[0] = 0;
+    message_buffer[1] = 0;
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+    message_buffer[4] = 0;
+    message_buffer[5] = 0;
+exit1:
+    gwssrv_yield();
+exit0:
+    return (int) Status;
+}
+
+
+
+
 /*
  ****************************
- * xxxGetNextClientRequest:
+ * dispacher:
  *
  */
 
@@ -413,13 +543,15 @@ __again:
 // No loop precisamos de accept() read() e write();
 // Get client's request from socket.
 
-void xxxHandleNextClientRequest (int fd)
+void dispacher (int fd)
 {
     // Isso permite ler a mensagem na forma de longs.
     unsigned long *message_buffer = (unsigned long *) &__buffer[0];
 
     int n_reads  = 0;  // For requests.
-    int n_writes = 0;  // For responses.
+
+    int Status=-1;
+    int SendErrorResponse=FALSE;
 
     // #todo:
     // No loop precisamos de accept() read() e write();
@@ -430,11 +562,11 @@ void xxxHandleNextClientRequest (int fd)
     // para assim obtermos um novo da próxima vez.
 
 
-    gwssrv_debug_print ("xxxHandleNextClientRequest: \n");
+    gwssrv_debug_print ("dispacher: \n");
 
     // Fail, cleaning.
     if (fd<0){
-        gwssrv_debug_print ("xxxHandleNextClientRequest: xxxHandleNextClientRequest fd\n");
+        gwssrv_debug_print ("dispacher: fd\n");
         goto exit2;
     }
 
@@ -468,107 +600,63 @@ void xxxHandleNextClientRequest (int fd)
     // Drop it!
 
     int value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
-
     if ( value != ACTION_REQUEST ){
-        gwssrv_yield();
-        goto exit0;
+        goto exit2;
     }
 
-    // #todo
-    // Devemos escrever em nosso próprio
-    // socket e o kernel copia??
-    // o kernel copia para aquele arquivo ao qual esse estivere conectado.
-    // olhando em accept[0]
+// #todo
+// Devemos escrever em nosso próprio
+// socket e o kernel copia??
+// o kernel copia para aquele arquivo ao qual esse estivere conectado.
+// olhando em accept[0]
+// Precisamos fechar o client e yield se a leitura der errado?
 
-    //
-    // Recv.
-    //
-  
+//
+// Recv
+//
+
     n_reads = read ( fd, __buffer, sizeof(__buffer) );
-    //n_reads = recv ( fd, __buffer, sizeof(__buffer), 0 );
 
-
-    // Precisamos fechar o client e yield.
-    // Cleaning
     if (n_reads <= 0){
-        gwssrv_debug_print ("xxxHandleNextClientRequest: read fail\n");
+        gwssrv_debug_print ("dispacher: read fail\n");
         goto exit2;
     }
 
-    // Nesse momento lemos alguma coisa.   
- 
-    //
-    // == Processing the request =============================
-    //
- 
-    // Invalid request. Yield and clean.
+//
+// == Processing the request =============================
+//
+
+// Invalid request. 
+// Clean and yield.
+
     if (message_buffer[1] == 0 ){
-        gwssrv_debug_print ("xxxHandleNextClientRequest: Invalid request!\n");
+        gwssrv_debug_print ("dispacher: Invalid request\n");
         goto exit2;
     }
 
+// Process request.
+// Do the service.
 
-    // #test
-    // Input solicitado por um cliente
-    // Isso deve acontecer quando o cliente chama alguma função
-    // do tipo: gws_get_next_event() da libgws.
-    // Em outro caso, no loop principal, esse servidor 
-    // deve pegar os inputs vindos do sistema e colocar 
-    // na fila de entrada do cliente com o foco de entrada.
-    // o cliente com o foco de entrada possui a janela com 
-    // o foco de entrada.
+    debug_print ("dispacher: Process request\n");
 
-
-    //
-    // == Got a request! ============
-    //
-
-    debug_print ("xxxHandleNextClientRequest: Got a request!\n");
-    debug_print ("xxxHandleNextClientRequest: Calling window procedure\n");
-
-    // #todo
-    // Dependendo do tipo de request, então construiremos
-    // a resposta ou prestatemos os serviço.
-    // Para cada tipo de request o servidor precisa construir
-    // uma resposta diferente.
-    // O request afeta os campos da mensagem.
-    // Esses campos estão em um buffer, mas poderiam estar
-    // em um arquivo json.
-
-    // Types:
-    // + Null: fail.
-    // + Identify: The server needs to identify itself.
-    // + Get all objects:
-    // + Set inspected object:
-    // + Set property: Probably setting a property of an object.
-    // + Disconnect:
-    // ...
-
-    // #debug: para a máquina real.
-    // printf ("gws: got a message!\n");
-    // printf ("gws: xxxGetNextClientRequest: calling window procedure \n");
- 
-    // Realiza o serviço.
-
-    gwsProcedure (
+    Status = gwsProcedure (
        (struct gws_window_d *) message_buffer[0], 
        (int)                   message_buffer[1], 
        (unsigned long)         message_buffer[2], 
        (unsigned long)         message_buffer[3] );
 
-    // #todo
-    // Se o request foi um request de evento,
-    // significa que o cliente deseja receber o próximo evento da 
-    // lista de eventos.
-    // podemos passar mensagens recebidas pelo gws para o cliente.
+// Como o serviço não pode ser prestado corretamente.
+// Então logo abaixo mandaremos uma resposta de erro
+// e não uma resposta normal.
 
-    // ??
-    // espera ate conseguir enviar a resposta.
-    // o kernel precisa copiar para aquele conectado em accept[]
+    if( Status < 0){
+         SendErrorResponse = TRUE;
+    }
 
-    //
-    // == Sending reply =======================================
-    //
+
+//
+// == Sending reply =======================================
+//
 
     // Alguns requests nao exigem resposta,
     // Entao precisamos modificar a flag de sincronizaçao.
@@ -580,88 +668,25 @@ void xxxHandleNextClientRequest (int fd)
         goto exit0;
     }
 
-    //gwssrv_debug_print ("Sending response ...\n");  
 
-    //# it works.
-    char *m = (char *) (&__buffer[0] + 16);
-    sprintf( m, "~ Response from gwssrv \n");
+// == reponse ====================================================
 
-    // Primeiros longs do buffer.
-    message_buffer[0] = next_response[0];         // Window ID.
-    message_buffer[1] = SERVER_PACKET_TYPE_REPLY; // next_response[1] 
-    message_buffer[2] = next_response[2];         // Return value (long1)
-    message_buffer[3] = next_response[3];         // Return value (long2)
+// IN: 
+// fd, error or not.
 
-//__again:
+// Se o serviço não pode ser prestado corretamente.
+    if( SendErrorResponse == TRUE )
+        Status = (int) __send_response(fd,TRUE);
 
-    //
-    // == Response ============================
-    //
+// Se o serviço foi prestado corretamente.
+    if( SendErrorResponse != TRUE )
+        Status = (int) __send_response(fd,FALSE);
 
-    gwssrv_debug_print ("xxxHandleNextClientRequest: Sending response ...\n");
-
-    // #todo:
-    // while(1){...}
-
-    /*
-    // Is current client connected.
-    if (currentClient->is_connected == 0)
-    {
-        // [FAIL] Not connected.
-        // close?
-    }
-    */
-
-    // set response
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REPLY );
-
-    //
-    // Send
-    //
-
-    n_writes = write ( fd, __buffer, sizeof(__buffer) );
-    //n_writes = send ( fd, __buffer, sizeof(__buffer), 0 );
-
-    // limpa.
-    // se a resposta der certo ou se der errado.
-
-    // Cleaning
-    message_buffer[0] = 0;
-    message_buffer[1] = 0;
-    message_buffer[2] = 0;
-    message_buffer[3] = 0;
-    register int b=0;
-    for (b=0; b<MSG_BUFFER_SIZE; ++b){
-        __buffer[b] = 0;
-    };
-
-    // Cleaning
-    // 32. #todo 512.
-    register int c=0;
-    for (c=0; c<NEXTRESPONSE_BUFFER_SIZE; ++c){
-        next_response[c] = 0;
-    };
-
-    // No. We couldn't send a response.
-    // O que acontece se nao conseguirmos enviar uma resposta?
-    // Certamente o cliente tentara ler e tera problemas.
-    // Deveriamos fechar a conexao?
-    // Deveriamos enviar um alerta
-    
-    if (n_writes<=0){
-        gwssrv_debug_print ("xxxHandleNextClientRequest:  response fail\n");
-        printf("gwssrv-xxxHandleNextClientRequest: Couldn't send reply\n");
-        //close(fd);
-        goto exit2;
-    }
-
-    // YES, We sent a response.
-    if (n_writes>0){
-       gwssrv_debug_print ("xxxHandleNextClientRequest: Response sent\n");
+// A resposta foi enviada com sucesso?
+    if(Status==0)
         goto exit0;
-    }
 
-    // ??
+// Fall
 
 exit2:
     message_buffer[0] = 0;
@@ -837,7 +862,25 @@ done:
  *     Main dialog.
  */
 
-// Called by xxxHandleNextClientRequest.
+// Called by dispacher.
+
+    // #todo
+    // Dependendo do tipo de request, então construiremos
+    // a resposta ou prestatemos os serviço.
+    // Para cada tipo de request o servidor precisa construir
+    // uma resposta diferente.
+    // O request afeta os campos da mensagem.
+    // Esses campos estão em um buffer, mas poderiam estar
+    // em um arquivo json.
+
+    // Types:
+    // + Null: fail.
+    // + Identify: The server needs to identify itself.
+    // + Get all objects:
+    // + Set inspected object:
+    // + Set property: Probably setting a property of an object.
+    // + Disconnect:
+    // ...
 
 int
 gwsProcedure ( 
@@ -846,6 +889,8 @@ gwsProcedure (
     unsigned long long1, 
     unsigned long long2 )
 {
+
+    int Status=0;  //ok
 
     int my_pid = -1;
 
@@ -1137,13 +1182,18 @@ gwsProcedure (
         gwssrv_debug_print ("gwssrv: Default message number\n");
         //printf ("msg=%d ",msg);
         // NoReply = TRUE; //#todo
+        Status = -1;  // Not ok.
         break;
     }
 
-    // NoReply = TRUE; //#todo
+//#todo ???
+// NoReply = TRUE; 
 
-    return 0;
+//done:
+    return (int) Status;
 }
+
+
 
 
 
@@ -2878,7 +2928,7 @@ int main (int argc, char **argv)
             if (newconn>0)
             {
                 gwssrv_debug_print("gwssrv: accept returned OK\n");
-                xxxHandleNextClientRequest (newconn);
+                dispacher(newconn);
       
                 // #??
                 // Entao nos lemos o socket e escrevemos no socket.

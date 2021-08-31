@@ -303,13 +303,11 @@ int __gws_refresh_window_reponse ( int fd )
     //int y=0;
     //for(y=0; y<15; y++){ gws_yield(); }
 
-
 //
 // read
 //
 
     gws_debug_print ("__gws_refresh_window_reponse: Reading ...\n"); 
-
 
     n_reads = recv ( 
                   fd, 
@@ -414,9 +412,11 @@ __gws_redraw_window_reponse ( int fd )
     // #debug
     gws_debug_print ("__gws_redraw_window_reponse: Waiting ...\n");      
 
-    int y=0;
-    for(y=0; y<15; y++)
-        gws_yield();   // See: libgws/
+
+    //int y=0;
+    //for(y=0; y<15; y++)
+        //gws_yield();   // See: libgws/
+
 
     // #todo
     // Podemos checar antes se o fd 
@@ -474,32 +474,20 @@ response_loop:
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_redraw_window_reponse: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
-    
+
+
 //
 // Process reply.
 //
@@ -600,9 +588,9 @@ __gws_change_window_position_reponse ( int fd )
     // #debug
     gws_debug_print ("__gws_change_window_position_reponse: Waiting ...\n");      
 
-    int y=0;
-    for(y=0; y<15; y++)
-        gws_yield();   // See: libgws/
+    //int y=0;
+    //for(y=0; y<15; y++)
+        //gws_yield();   // See: libgws/
 
 
     // #todo
@@ -662,29 +650,16 @@ response_loop:
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST: 
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_change_window_position_reponse: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
     
@@ -790,9 +765,11 @@ __gws_resize_window_reponse ( int fd )
     // #debug
     gws_debug_print ("__gws_resize_window_reponse: Waiting ...\n");      
 
-    int y=0;
-    for(y=0; y<15; y++)
-        gws_yield();   // See: libgws/
+
+    //int y=0;
+    //for(y=0; y<15; y++)
+        //gws_yield();   // See: libgws/
+
 
     // #todo
     // Podemos checar antes se o fd 
@@ -840,43 +817,30 @@ response_loop:
         exit (1);
     }
 
+//
+// The msg index.
+//
 
-    //
-    // The msg index.
-    //
-    
     // Get the message sended by the server.
 
     int msg = (int) message_buffer[1];
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_resize_window_reponse: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
-    
+
+
 //
 // Process reply.
 //
@@ -993,9 +957,9 @@ int __gws_plot0_response (int fd)
     // #debug
     gws_debug_print ("__gws_plot0_response: Waiting ...\n");      
 
-    int y=0;
-    for(y=0; y<15; y++)
-        gws_yield();   // See: libgws/
+    //int y=0;
+    //for(y=0; y<15; y++)
+        //gws_yield();   // See: libgws/
 
 
     // #todo
@@ -1045,42 +1009,29 @@ response_loop:
     //    exit (1);
     //}
 
+//
+// The msg index.
+//
 
-    //
-    // The msg index.
-    //
-    
     // Get the message sended by the server.
 
     int msg = (int) message_buffer[1];
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
-        case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_plot0_response: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
+        case GWS_SERVER_PACKET_TYPE_ERROR: 
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
+
 
 //
 // Process reply.
@@ -1239,11 +1190,12 @@ int __gws_plotcube_response (int fd)
     // #debug
     gws_debug_print ("__gws_plotcube_response: Waiting ...\n");      
 
-    int y=0;
 
-    for(y=0; y<15; y++){
-        gws_yield();
-    };
+    //int y=0;
+    //for(y=0; y<15; y++){
+        //gws_yield();
+    //};
+
 
     // #todo
     // Podemos checar antes se o fd 
@@ -1290,29 +1242,16 @@ response_loop:
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_plotcube_response: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
 
@@ -1462,10 +1401,11 @@ int __gws_plotrectangle_response (int fd)
     // #debug
     gws_debug_print ("__gws_plotrectangle_response: Waiting ...\n");      
 
-    int y=0;
-    for(y=0; y<15; y++){
-        gws_yield();
-    };
+    //int y=0;
+    //for(y=0; y<15; y++){
+        //gws_yield();
+    //};
+
 
     // #todo
     // Podemos checar antes se o fd 
@@ -1524,31 +1464,19 @@ response_loop:
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
         case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("__gws_plotrectangle_response: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
+
 
 //
 // Process reply.
@@ -1825,10 +1753,10 @@ int __gws_drawtext_response(int fd)
     // #debug
     gws_debug_print ("gws_drawtext_response: Waiting ...\n");      
 
-    int y=0;
-    for (y=0; y<15; y++){
-        gws_yield();
-    };
+    //int y=0;
+    //for (y=0; y<15; y++){
+        //gws_yield();
+    //};
 
 
     // #todo
@@ -1889,29 +1817,16 @@ response_loop:
     
     switch (msg){
 
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-            gws_yield ();
-            goto response_loop;
-            break;
-            
         // Reply!
         case GWS_SERVER_PACKET_TYPE_REPLY:
             goto process_reply;
             break;
-            
-        case GWS_SERVER_PACKET_TYPE_EVENT:
-            goto process_event;
-            //goto response_loop;
-            break;
-            
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
+        case GWS_SERVER_PACKET_TYPE_EVENT:            
         case GWS_SERVER_PACKET_TYPE_ERROR:
-            gws_debug_print ("gws_drawtext_response: SERVER_PACKET_TYPE_ERROR\n");
-            goto response_loop;
-            //exit (-1);
-            break;
-        
         default:
-            goto response_loop;
+            return -1;
             break; 
     };
 
@@ -2067,11 +1982,11 @@ int __gws_createwindow_response(int fd)
 {
     unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
     int n_reads = 0;    // For receiving responses.
-    int y=0;
+    //int y=0;
 
-    //
-    // Waiting for response. ==================
-    //
+//
+// Waiting for response. ==================
+//
 
     // Espera para ler a resposta. 
     // Esperando com yield como teste.
@@ -2083,8 +1998,9 @@ int __gws_createwindow_response(int fd)
     //gws_debug_print ("__gws_createwindow_response: Waiting ...\n");      
 
 
-// Entramos nessa rotina depos da sincronização dizer que
+// Entramos nessa rotina depois da sincronização dizer que
 // ja temos um reply.
+// Então não precis esperar por respostas.
 
     //for (y=0; y<15; y++){  gws_yield();  };
 
