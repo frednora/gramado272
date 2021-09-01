@@ -226,20 +226,6 @@ void gwssrv_exit_critical_section (void)
 
 
 
-// Copy the backbuffer in the frontbuffer(lfb).
-// #??
-// It uses the embedded window server in the kernel.
-void gwssrv_show_backbuffer (void)
-{
-    // #todo
-    // trocar o nome dessa systemcall.
-    // refresh screen será associado à refresh all windows.
-
-    //#define	SYSTEMCALL_REFRESHSCREEN        11
-
-    gramado_system_call ( 11, //SYSTEMCALL_REFRESHSCREEN, 
-        0, 0, 0 );
-}
 
 //
 // =============================================================
@@ -2900,8 +2886,15 @@ int main (int argc, char **argv)
             // dos retângulos.
             // See comp.c
             
-            if (UseCompositor==TRUE){  wmCompositor();  }
-
+            // #test
+            // Essa é a terceira vez que acontece o refresh de retângulos.
+            // uma vez no kernel, outra vez quando o kernel chama diretamente
+            //o ws, e agora quando o ws esta em seu tempo de processamento.
+            // Talvez possamos cancelar essa daqui para melhorar o desempenho do ws.
+            
+            //if (UseCompositor==TRUE){  wmCompositor();  }
+            //if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
+            
             //process_events(); //todo
 
             //if (isTimeToQuit == 1) { break; };
@@ -2917,30 +2910,23 @@ int main (int argc, char **argv)
                       (struct sockaddr *) &server_address, 
                       (socklen_t *) addrlen );
             
-            //gwssrv_debug_print("gwssrv: accept returned\n");
-            //printf ("gwssrv: newconn %d\n",newconn);
+        //gwssrv_debug_print("gwssrv: accept returned\n");
+        //printf ("gwssrv: newconn %d\n",newconn);
 
-            if (newconn<=0){
-                gwssrv_debug_print("gwssrv: accept returned FAIL\n");
-            }
+        if (newconn<=0){
+            gwssrv_debug_print("gwssrv: accept returned FAIL\n");
+                
+            // Vamos fazer refrsh de retângulos sujos 
+            // quando não temos requests. Isso é melhor do que dormir.
+            if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
+        }
 
-            // if (newconn>0 && AcceptingConnections)
-            if (newconn>0)
-            {
-                gwssrv_debug_print("gwssrv: accept returned OK\n");
-                dispacher(newconn);
-      
-                // #??
-                // Entao nos lemos o socket e escrevemos no socket.
-                // precisamos dar um tempo para o cliente ler,
-                // e nao simplesmente aceitarmos a proxima conexao pendente.
-                
-                //gwssrv_yield();
-                //gwssrv_yield();
-                //gwssrv_yield();
-                //gwssrv_yield();
-                
-                //close(newconn);
+        // if (newconn>0 && AcceptingConnections)
+        if (newconn>0)
+        {
+            gwssrv_debug_print("gwssrv: accept returned OK\n");
+            dispacher(newconn);
+            //close(newconn);
         }
     };
 

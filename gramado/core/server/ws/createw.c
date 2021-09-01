@@ -496,21 +496,18 @@ void *xxxCreateWindow (
     int Minimized=0;
     int Fullscreen=0;
 
-	// Bars.
-    int TitleBar  = FALSE;
-    int MenuBar   = FALSE;
-    int ToolBar   = FALSE;
-    //int StatusBar = FALSE;
-    int ScrollBar = FALSE;
-    // ...
 
-	// Title bar buttons. [v] [X] 
+// Bars
+// A title bar é criadas pela função
+// que cria o frame.
+
+    // Title bar buttons. [v] [^] [X] 
     int MinimizeButton = FALSE;
     int MaximizeButton = FALSE;
     int CloseButton    = FALSE;
     // ...
 
-	// Items.
+    // Items.
     int Background    = FALSE;
     int ClientArea    = FALSE;
     int Shadow        = FALSE;
@@ -518,7 +515,6 @@ void *xxxCreateWindow (
     int ButtonUp      = FALSE;  // ??
     int ButtonSysMenu = FALSE;  // system menu na barra de títulos.
     int Border        = FALSE;  // usado no edit box.
-    //int StatusBar     = FALSE;  // Only for maximized/full screen overlapped window.
     // ...
 
 
@@ -870,19 +866,20 @@ void *xxxCreateWindow (
 
 
 
+// ===================================
+// #test
 
 //
 // Parent window
 //
 
-    // #test
     if ( (void*) pWindow == NULL ){
         debug_print ("xxxCreateWindow: [CHECK THIS] Invalid parent window\n");
     }
-
     Parent = (void *) pWindow;
-    
     window->parent = Parent;
+
+// ===================================
 
 
     //#todo: 
@@ -995,12 +992,16 @@ void *xxxCreateWindow (
 //++
 // Margens.
 // Deslocamento em relação a tela. (Screen)
-    if ( window->parent != NULL ){
-        window->left = (window->parent->left + window->x); //x; 
-        window->top  = (window->parent->top  + window->y); //y;
-        
-    // No caso da primeira janela de todas.
-    }else{
+// Vai depender do deslocamento da janela mãe.
+    if ( window->parent != NULL )
+    {
+        window->left = (window->parent->left + window->x); 
+        window->top  = (window->parent->top  + window->y);
+
+// No caso da primeira janela de todas.
+    }
+    else
+    {
         window->left = window->x;
         window->top  = window->y; 
     };
@@ -1289,7 +1290,6 @@ void *xxxCreateWindow (
             window->frame.used = TRUE;
             Shadow         = TRUE;
             Background     = TRUE;
-            TitleBar       = TRUE;
             ClientArea     = TRUE;
             MinimizeButton = TRUE;
             MaximizeButton = TRUE;
@@ -1300,7 +1300,6 @@ void *xxxCreateWindow (
             window->controlsUsed   = TRUE;
             window->clientAreaUsed = TRUE;
             window->background_style = 0;
-            //if(Fullscreen==TRUE){StatusBar=TRUE;}
             break;
 
         // Popup. (um tipo de overlapped mais simples).
@@ -1518,48 +1517,6 @@ void *xxxCreateWindow (
 	}
     */
 
-	//
-	// == ## draw ## ===========================
-	//
-
-    //  # FULL SCREEN #
-
-	//??
-	//entrar no modo full screen deve ser sempre uma iniciativa do usuário.
-	//apenas um comando do usuário pode colocar uma janela no modo full screen.
-	
-    //View = 0;
-	//View = (int) is_window_full(window);
-    //if(View == 1){
-	//	//...
-	//}
-	
-	//Se estivermos em full screen, mudaremos algumas caracteríticas.
-	// Não usaremos frame: nem borda nem barra de títulos.
-	//if( window->view == VIEW_FULL )
-	//{
-    //    Shadow = 0;
-	//	TitleBar = 0;
-		
-        //Dimensões:
-		//??@todo: deveríamos chamar métodos que peguem
-		//a métrica do dispositivo. ex getmetricsDeviceWidth();
-	//	window->left = 0; 
-	//	window->top = 0; 
-	//	window->width = 800;  //@todo: getmetricsDeviceWidth();
-	//	window->height = 600;
-						           
-	//	window->titlebarUsed = 0;
-	//}
-	
-
-	// Color:
-	// Obs: @todo: Isso foi definido acima, foi passado por argumento e
-	// colocado na estrutura. Fiacrá assim somente por teste,
-	// depois deletaremos essa definição aqui.
-	//*Importante: Devemos utilizar a cor que foi passada via argumento?!
-	// senão todas as janelas terão a mesma cor.
-
 
 // =================================
 //  # Shadow
@@ -1664,6 +1621,21 @@ void *xxxCreateWindow (
                 break;
         };
 
+        // Se a janela for edibox, vamos colocar ela 
+        // dentro da área de cliente da janela mãe.
+        // Editbox só pode existir dentro da área de cliente.
+        if(type==WT_EDITBOX)
+        {
+            // agora seu posicionamento em relação a tela
+            // também leva em conta o posicionamento 
+            // da área de cliente da janela mãe
+            if( (void*) window->parent != NULL ){
+            window->left = (window->left + window->parent->rcClient.left);
+            window->top  = (window->top  + window->parent->rcClient.top);
+            }
+        }
+
+
         // Draw 
 
         //#bugbug
@@ -1688,8 +1660,6 @@ void *xxxCreateWindow (
                 window->bg_color, TRUE,
                 rop_flags );  //rop_flags
         }
-        
-        
     }
 
     //#debug
@@ -1700,31 +1670,40 @@ void *xxxCreateWindow (
 
     if( ClientArea == TRUE )
     {
-        // Saving the final version
-        window->rcClient.left   = clientRect.left; // 
-        window->rcClient.top    = clientRect.top;  // 
-        window->rcClient.width  = clientRect.width;   // menos as bordas
-        window->rcClient.height = clientRect.height;  // menos as bordas e menos a barra de titulos.
+        // The original values. They are the same os the window.
+        window->rcClient.left   = clientRect.left;    // window left
+        window->rcClient.top    = clientRect.top;     // window top
+        window->rcClient.width  = clientRect.width;   // window width
+        window->rcClient.height = clientRect.height;  // window height
 
-        if ( (unsigned long) type == WT_OVERLAPPED )
-        {
-            gwssrv_debug_print ("xxxCreateWindow: Client area for overlapped window\n"); 
-            
-            /*
-             // #todo
-            rectBackbufferDrawRectangle ( 
-                (window->left   + window->rcClient.left ), 
-                (window->top    + window->rcClient.top  ), 
-                (window->width  + window->rcClient.width ),  //
-                (window->height + window->rcClient.height ), //
-                window->clientrect_bg_color, 
-                TRUE,
-                rop_flags );  //rop_flags
-           */
+        // Now we will change the client area values
+        // for reflecting the size of the overlapped window components.
+        //if ( (unsigned long) type == WT_OVERLAPPED )
+        //{
+            // Se não estamos maximizados,
+            // então temos uma title bar.
+            //if( (window->style & 0x0001) == 0 )
+            //{
+                //window->rcClient.left   = clientRect.left;         // window left
+                //window->rcClient.top    = clientRect.top + 32;     // window top + title bar
+                //window->rcClient.width  = clientRect.width;        // window width
+                //window->rcClient.height = clientRect.height - 32;  // window height - title bar
 
-        }
+                // #debug
+                //rectBackbufferDrawRectangle ( 
+                   // window->rcClient.left, 
+                   // window->rcClient.top, 
+                   // window->rcClient.width, 
+                   // window->rcClient.height, 
+                   // COLOR_RED, 
+                   // TRUE,
+                   // 0 );  //rop_flags
+                
+                //asm("cli");
+                //asm("hlt");
+            //}
+        //}
     }
-
 
 
 //
@@ -1835,8 +1814,6 @@ void *xxxCreateWindow (
     
     } //button
 
-
-    //if (StatusBar==TRUE){}
 
 
 //done:
@@ -1983,6 +1960,32 @@ void *gwsCreateWindow (
 
         // Pintamos simples, mas a tipagem será overlapped.
         __w->type = WT_OVERLAPPED;   
+
+        // #todo: use a worker for that routine. 
+        
+        // Se essa for a primeira janela da lista.
+        // Não usaremos a rootwindow, pois não é overlapped.
+        if ( (void*) last_window == NULL )
+        {
+            first_window = (struct gws_window_d *) __w;
+            last_window  = (struct gws_window_d *) __w;
+            
+            //activate.
+            set_active_window(__w->id);
+            goto draw_frame;
+        }
+
+        // Não é a primeira.
+        if ( (void*) last_window != NULL )
+        {
+            last_window->next = (struct gws_window_d *) __w;
+            last_window = (struct gws_window_d *)last_window->next;
+            last_window->next = NULL;
+            
+            //activate.
+            set_active_window(__w->id);
+        }
+        
         goto draw_frame;
     }
 
@@ -2110,29 +2113,22 @@ draw_frame:
 
         // See: wm.c
 
+// METRICS_BORDER_SIZE
+
         if ( (void*) __w != NULL )
         {
             wmDrawFrame ( 
                 (struct gws_window_d *) pWindow,  //parent.
                 (struct gws_window_d *) __w,      //bg do botão em relação à sua parent. 
-                0, 0, width, height, 
+                METRICS_BORDER_SIZE,       //border size
+                (unsigned int)COLOR_BLACK, //border color 1
+                (unsigned int)COLOR_BLACK, //border color 2
+                (unsigned int)COLOR_BLACK, //border color 3
+                (unsigned int)COLOR_BLACK, //ornament color 1
+                (unsigned int)COLOR_BLACK, //ornament color 2
                 1 );  //style
         }
     }
-
-
-//draw_menubar:
-// ...
-
-//draw_toolbar:
-// ...
-
-//draw_h_scrollbar:
-// ...
-
-//draw_v_scrollbar:
-// ...
-
 
 
 //

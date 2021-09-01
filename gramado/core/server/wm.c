@@ -197,12 +197,21 @@ int
 wmDrawFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
-    unsigned long x,
-    unsigned long y,
-    unsigned long width,
-    unsigned long height,
+    unsigned long border_size,
+    unsigned int border_color1,
+    unsigned int border_color2,
+    unsigned int border_color3,
+    unsigned int ornament_color1,
+    unsigned int ornament_color2,
     int style ) 
 {
+
+    int useFrame       = FALSE;
+    int useTitleBar    = FALSE;
+    int useTitleString = FALSE;
+    int useBorder      = FALSE;
+    int useIcon        = FALSE;
+    // ...
 
 
 // #bugbug
@@ -225,8 +234,16 @@ wmDrawFrame (
 
     int Type=0;
 
-    unsigned long border_size = 0;
-    unsigned int border_color = 0;
+    unsigned long BorderSize = (border_size & 0xFFFF);
+
+    unsigned int  BorderColor1 = border_color1;
+    unsigned int  BorderColor2 = border_color2;
+    unsigned int  BorderColor3 = border_color3;
+ 
+    unsigned int  BorderColor = border_color1;
+
+    unsigned int OrnamentColor1 = ornament_color1;
+    unsigned int OrnamentColor2 = ornament_color2;
 
 
     unsigned int TitleBarColor = COLOR_BLUE1;   // Light blue (Um pouco fosco) 
@@ -274,9 +291,9 @@ wmDrawFrame (
 // #bugbug
 // Estamos mascarando pois os valores anda corrompendo.
 
-    window->left = (window->left & 0xFFFF);
-    window->top  = (window->top  & 0xFFFF);
-    window->width  = (window->width & 0xFFFF);
+    window->left   = (window->left   & 0xFFFF);
+    window->top    = (window->top    & 0xFFFF);
+    window->width  = (window->width  & 0xFFFF);
     window->height = (window->height & 0xFFFF);
 
 
@@ -288,17 +305,14 @@ wmDrawFrame (
     // EDITBOX NÃO PRECISA DE BARRA DE TÍTULOS.
     // MAS PRECISA DE FRAME ... QUE SERÃO AS BORDAS.
     
-    //
-    // Type
-    //
-    
-    Type = window->type;
+//
+// Type
+//
 
-    int useFrame=FALSE;
-    int useIcon=FALSE;
-    int useTitleString=FALSE;
-    int useBorder=FALSE;
-    // ...
+// Qual é o tipo da janela em qual precisamos
+// criar o frame. Isso indica o tipo de frame.
+
+    Type = window->type;
 
     switch (Type){
     
@@ -311,6 +325,9 @@ wmDrawFrame (
     case WT_OVERLAPPED:  
         useFrame=TRUE; 
         useIcon=TRUE;
+        useTitleBar=TRUE;  // Normalmente uma janela tem a barra de t[itulos.
+        if ( window->style & 0x0001 ){ useTitleBar=FALSE; }    //maximized
+        //if ( window->style & 0x0004 ){ useTitleBar=FALSE; }  //fullscreen
         useTitleString=TRUE;
         useBorder=TRUE;
         break;
@@ -340,22 +357,20 @@ wmDrawFrame (
 
         // Se tiver o foco.
         if ( window->focus == TRUE ){
-            border_color = COLOR_BLUE;
-            border_size = 4;
+            BorderColor = COLOR_BLUE;
+            BorderSize = 4;
         }else{
-            border_color = COLOR_BLACK;  // COLOR_INACTIVEBORDER;
-            border_size = 2;
+            BorderColor = COLOR_BLACK;  // COLOR_INACTIVEBORDER;
+            BorderSize = 2;
         };
         
         window->border_size = 0;
         window->borderUsed = FALSE;
         if (useBorder==TRUE){
-            window->border_color = border_color;
-            window->border_size  = border_size;
+            window->border_color = BorderColor;
+            window->border_size  = BorderSize;
             window->borderUsed   = TRUE;
         }
-        
-        
 
         // Draw the border of an edit box.
 
@@ -372,7 +387,7 @@ wmDrawFrame (
 
         // board2, borda direita e baixo.
         rectBackbufferDrawRectangle( 
-            (window->left + window->width - border_size), window->top,  
+            (window->left + window->width - BorderSize), window->top,  
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
@@ -401,7 +416,7 @@ wmDrawFrame (
         // Maybe we nned border size and padding size.
         
         // Consistente para overlapped.
-        border_size = METRICS_BORDER_SIZE;
+        BorderSize = METRICS_BORDER_SIZE;
         // ...
         
         // #todo
@@ -411,16 +426,16 @@ wmDrawFrame (
 
         // Se tiver o foco.
         if ( window->focus == TRUE ){
-            border_color = COLOR_BLUE1;
+            BorderColor = COLOR_BLUE1;
         }else{
-            border_color = COLOR_INACTIVEBORDER;
+            BorderColor = COLOR_INACTIVEBORDER;
         };
 
         window->border_size = 0;
         window->borderUsed = FALSE;
         if (useBorder==TRUE){
-            window->border_color = border_color;
-            window->border_size  = border_size;
+            window->border_color = BorderColor;
+            window->border_size  = BorderSize;
             window->borderUsed   = TRUE;
         }
 
@@ -450,7 +465,7 @@ wmDrawFrame (
             window->border_color, TRUE,0 );
 
         //
-        // Title bar.
+        // Title bar
         //
 
         // #todo
@@ -473,32 +488,40 @@ wmDrawFrame (
         
         // Title bar
         // #todo: Essa janela foi registrada?
-        window->titlebar_height = 32;
-        window->titlebar_color = TitleBarColor;
+        if (useTitleBar == TRUE)
+        {
+            window->titlebar_height = 32;
+            window->titlebar_color = TitleBarColor; //0x00AC81
 
-        tbWindow = (void *) xxxCreateWindow ( 
-                                WT_SIMPLE, 0, 1, 1, "Titlebar", 
-                                border_size, border_size, 
-                                (window->width - border_size - border_size), window->titlebar_height, 
-                                (struct gws_window_d *) window, 
-                                0, window->titlebar_color, window->titlebar_color, 
-                                0 );   // rop_flags  
+            tbWindow = (void *) xxxCreateWindow ( 
+                                    WT_SIMPLE, 0, 1, 1, "Titlebar", 
+                                    BorderSize, 
+                                    BorderSize, 
+                                    (window->width - BorderSize - BorderSize), 
+                                    window->titlebar_height, 
+                                    (struct gws_window_d *) window, 
+                                    0, window->titlebar_color, window->titlebar_color, 
+                                    0 );   // rop_flags  
 
-        if ( (void *) tbWindow == NULL ){
-            gwssrv_debug_print ("wmDrawFrame: tbWindow fail \n");
-            return -1;
+            if ( (void *) tbWindow == NULL ){
+                gwssrv_debug_print ("wmDrawFrame: tbWindow fail \n");
+                return -1;
+            }
+            tbWindow->type = WT_SIMPLE;
+            window->titlebar = tbWindow;
+            // Register window
+            id = gwsRegisterWindow(tbWindow);
+            if (id<0){
+                gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
+                return -1;
+            }
         }
-        tbWindow->type = WT_SIMPLE;
-        window->titlebar = tbWindow;
-        // Register window
-        id = gwsRegisterWindow(tbWindow);
-        if (id<0){
-            gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
-            return -1;
-        }
+        
 
-
+        //
         // Status bar
+        // 
+        
         // Se for maximized ou fullscreen
         // #todo: Essa janela foi registrada?
         if ( window->style & 0x0008 )
@@ -508,10 +531,10 @@ wmDrawFrame (
 
             sbWindow = (void *) xxxCreateWindow ( 
                                 WT_SIMPLE, 0, 1, 1, "Statusbar", 
-                                border_size,                                                //left
-                                (window->height - window->statusbar_height - border_size),  //top
-                                (window->width - border_size - border_size),  //width 
-                                window->statusbar_height,                     //height
+                                BorderSize,                                                //left
+                                (window->height - window->statusbar_height - BorderSize),  //top
+                                (window->width - BorderSize - BorderSize),                 //width 
+                                window->statusbar_height,                                  //height
                                 (struct gws_window_d *) window, 
                                 0, window->statusbar_color, window->statusbar_color, 
                                 0 );   // rop_flags  
@@ -537,13 +560,13 @@ wmDrawFrame (
         // área da janela de aplicativo.
         // Usado somente por overlapped window.
         
-        window->frame.ornament_color1 = COLOR_BLACK;
-        window->titlebar_ornament_color = COLOR_BLACK;
+        window->frame.ornament_color1   = OrnamentColor1;  //COLOR_BLACK;
+        window->titlebar_ornament_color = OrnamentColor1;  //COLOR_BLACK;
         
         rectBackbufferDrawRectangle ( 
             tbWindow->left, ( (tbWindow->top) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
             tbWindow->width, METRICS_TITLEBAR_ORNAMENT_SIZE, 
-            COLOR_BLACK, TRUE,
+            OrnamentColor1, TRUE,
             0 );  // rop_flags
 
         //
@@ -621,32 +644,79 @@ wmDrawFrame (
 }
 
 
+
+// =====================================
+// The worker for compositor()
+// + repinta as janelas.
+// + rasterization.
+// + raytracing.
+// + Invalida todos os retângulos pintados bo backbuffer,
+//   para que as rotinas de refresh façam o flush deles 
+//   para o lfb no próximo passo. 
+
+// called by compositor()
+void wmCompositor(void)
+{
+    gwssrv_debug_print("wmCompositor: #todo\n");
+}
+
+
+
+void wm_flush_rectangle(struct gws_rect_d *rect)
+{
+    if( (void*) rect != NULL )
+        gwssrv_refresh_this_rect(rect);
+}
+
+void wm_flush_window(struct gws_window_d *window)
+{
+    if( (void*) window != NULL )
+        gws_show_window_rect(window);
+}
+
+
+void wm_flush_screen(void)
+{
+    gwssrv_show_backbuffer();
+}
+
+
+// Refresh screen via kernel.
+// Copy the backbuffer in the frontbuffer(lfb).
+// #??
+// It uses the embedded window server in the kernel.
+//#define	SYSTEMCALL_REFRESHSCREEN        11
+// #todo
+// trocar o nome dessa systemcall.
+// refresh screen será associado à refresh all windows.
+
+void gwssrv_show_backbuffer (void)
+{
+    gramado_system_call(11,0,0,0);
+}
+
+
 /*
  *************************************************************** 
- * wm_process_windows: 
- *
- *     This is the compositor. !!!
- * 
- *     O objetivo eh repintar todas as janelas de tras para frente e
- *     chamar um loop para dar refresh em todos os retangulos sujos.
- *     Dependendo do modo, vamos dar refresh na tela toda. Por exemplo,
- *     se estivermos usando graficos em full screen.
+ * wmRefreshDirtyRectangles: 
+ *     X times per second.
  */
 
-// Called by compositor().
+// O compositor deve ser chamado para compor um frame 
+// logo após uma intervenção do painter, que reaje às
+// ações do usuário.
+// Ele não deve ser chamado X vezes por segundo.
+// Quem deve ser chamado X vezes por segundo é a rotina 
+// de refresh, que vai efetuar refresh dos retângulos sujos e
+// dependendo da ação do compositor, o refresh pode ser da tela toda.
 
-
-void wmCompositor(void)
+void wmRefreshDirtyRectangles(void)
 {
     int __Dirty = -1;
     int background_status = -1;
 
-
-    // #debug
-    //invalidate();
-
-
-    gwssrv_debug_print("wm_process_windows:\n");
+// #debug
+    //gwssrv_debug_print("wmRefreshDirtyRectangles:\n");
 
 //
 // == Check frame validation  ===========================
@@ -740,7 +810,7 @@ void wmCompositor(void)
     */
 
 
-// Is it time to update the whole widnows?
+// Is it time to update all the windows?
 
     int UpdateScreenFlag= FALSE;
 
@@ -804,6 +874,117 @@ void wmCompositor(void)
     validate();
 }   
 
+
+void flush_frame(void)
+{
+    wm_flush_screen();
+}
+
+
+// #danger: Not tested yet.
+// Repinda todas as janelas seguindo a ordem da lista
+// que está em last_window.
+void wm_update_desktop(void)
+{
+    struct gws_window_d *w;
+
+    w = (struct gws_window_d *) first_window;
+
+    while(1){
+        
+        if((void*)w==NULL){ break; }
+
+        // Just draw, don't show.
+        if( (void*) w != NULL )
+        {
+            gwssrv_redraw_window(w,FALSE);
+            invalidate_window(w);
+        }
+        
+        w = (struct gws_window_d *) w->next; 
+    }; 
+}
+
+
+// not tested yet
+void wm_add_window_into_the_list( struct gws_window_d *window)
+{
+
+    if( (void*) window == NULL )
+        return;
+
+    if ( window->used != TRUE )
+        return;
+
+    if ( window->magic != 1234 )
+        return;
+
+    if ( window->type != WT_OVERLAPPED )
+        return;
+
+// Se essa for a primeira janela da lista.
+// Não usaremos a rootwindow, pois não é overlapped.
+    if ( (void*) last_window == NULL )
+    {
+        first_window = (struct gws_window_d *) window;
+        last_window  = (struct gws_window_d *) window;
+        //activate
+        set_active_window(window->id);
+        return;
+    }
+
+// Não é a primeira.
+    if ( (void*) last_window != NULL )
+    {
+        last_window->next = (struct gws_window_d *) window;
+        last_window = (struct gws_window_d *)last_window->next;
+        last_window->next = NULL;
+        //activate
+        set_active_window(window->id);
+    }
+}
+
+
+// not tested yet
+void wm_remove_window_from_list_and_kill( struct gws_window_d *window)
+{
+    struct gws_window_d *w;
+    struct gws_window_d *pick_this_one;
+
+    if( (void*) window == NULL )
+        return;
+
+    w = (struct gws_window_d *) first_window;
+
+    if( (void*) w == NULL )
+        return;
+
+    while(1)
+    {
+
+        if( (void*) w == NULL )
+            break;
+
+        if(w==window)
+        {
+            // remove
+            pick_this_one = (struct gws_window_d *) w;
+            
+            // Glue the list.
+            w = w->next;
+            
+            // Kill
+            pick_this_one->used = FALSE;
+            pick_this_one->magic = 0;
+            pick_this_one = NULL;
+            break;
+        }
+        w = w->next;
+    };
+}
+
+
+// ====================
 
 // Local worker
 void 
@@ -869,6 +1050,13 @@ __draw_char_into_the_window(
    }
 }
 
+
+/*
+//local worker
+void __switch_window(void)
+{
+}
+*/
 
 // Local worker
 void __switch_focus(void)
@@ -1023,6 +1211,8 @@ wmProcedure(
 
          case GWS_SysKeyDown:
              printf("wmProcedure: [?] GWS_SysKeyDown\n");
+             //#test
+             //wm_update_desktop(); // 
              break;
          
          //
@@ -1086,9 +1276,10 @@ wmHandler(
     msg = (int) (arg2_rsi & 0xFFFF);
 
     if ( msg == 9091){
-        wmCompositor();
-        return 0;  //important
+        wmRefreshDirtyRectangles();
+        return 0;  //important: We need to return.
     }
+
 
 //
 // Data
@@ -2616,6 +2807,8 @@ struct gws_window_d *createwCreateRootWindow(void)
 // Invalidate again.
 
     w->dirty = TRUE;
+
+    w->locked = TRUE;
 
     w->used  = TRUE;
     w->magic = 1234;

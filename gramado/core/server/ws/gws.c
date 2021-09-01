@@ -597,11 +597,11 @@ int gwsInit(void)
 //
 // == Root window ===============================================
 //
-    
-    // See:
-    // createw.c
 
-    struct gws_window_d *tmpRootWindow;
+// See:
+// createw.c
+
+    struct gws_window_d  *tmpRootWindow;
     
     tmpRootWindow = (struct gws_window_d *) createwCreateRootWindow();
 
@@ -618,6 +618,12 @@ int gwsInit(void)
         printf     ("gwsInit: tmpRootWindow validation\n");
         exit(1);
     }
+
+//
+// Let's start our z-order list;
+//
+
+    last_window = NULL;
 
 
     //#debug

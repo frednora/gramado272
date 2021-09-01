@@ -754,14 +754,14 @@ int main ( int argc, char *argv[] ){
 // main window
 // Locked and maximized.
 // style: 0x8000=locked
-// style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+// style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008=statusbar?
 
     main_window = gws_create_window ( 
                       client_fd,
                       WT_OVERLAPPED, 1, 1, "Gramado Shell",
                       wLeft, wTop, wWidth, wHeight,
                       0, 
-                      0x8008,
+                      0x8008,//0x8009, // locked, status bar, maximized. 
                       COLOR_GRAY, COLOR_GRAY );
 
     if ( main_window < 0 ){
@@ -775,9 +775,9 @@ int main ( int argc, char *argv[] ){
 // == Address bar =========================
 //
 
-    // #bugbug
-    // The window server needs to fix the client area.
-    // So 0,0 needs to mean the top/left of the client area.
+// #bugbug
+// The window server needs to fix the client area.
+// So 0,0 needs to mean the top/left of the client area.
 
     // address bar
     addressbar_window = gws_create_window ( 

@@ -10,6 +10,13 @@
 #define ____WINDOW_H    1
 
 
+// z-order ?
+// But we can use multiple layers.
+// ex-wayland: background, bottom, top, overlay.
+struct gws_window_d *first_window;
+struct gws_window_d *last_window;
+
+
 #define IS_OPAQUE       1000
 #define IS_TRANSPARENT  2000
 #define IS_ICON         3000
@@ -1184,6 +1191,25 @@ struct gws_surface_d *xxxCreateSurface(
 
 void wmCompositor(void);
 
+void wm_flush_rectangle(struct gws_rect_d *rect);
+void wm_flush_window(struct gws_window_d *window);
+void wm_flush_screen(void);
+
+void wmRefreshDirtyRectangles(void);
+
+void flush_frame(void);
+
+// #danger: Not tested yet.
+void wm_update_desktop(void);
+
+
+// list support
+// not tested yet
+void wm_add_window_into_the_list( struct gws_window_d *window);
+void wm_remove_window_from_list_and_kill( struct gws_window_d *window);
+
+
+
 unsigned long 
 wmProcedure(
     struct gws_window_d *window,
@@ -1408,10 +1434,12 @@ int
 wmDrawFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
-    unsigned long x,
-    unsigned long y,
-    unsigned long width,
-    unsigned long height,
+    unsigned long border_size,
+    unsigned int border_color1,
+    unsigned int border_color2,
+    unsigned int border_color3,
+    unsigned int ornament_color1,
+    unsigned int ornament_color2,
     int style );
 
 
