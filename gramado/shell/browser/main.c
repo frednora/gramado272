@@ -1006,7 +1006,36 @@ int main ( int argc, char *argv[] ){
 //
 // Loop.
 //
- 
+
+// #test
+// pegando um evento com o ws.
+// See: libgws/
+
+
+
+    struct gws_event_d lEvent;
+    lEvent.used = FALSE;
+    lEvent.magic = 0;
+
+    struct gws_event_d *e;
+
+    while(1){
+        e = (struct gws_event_d *) gws_get_next_event(client_fd, (struct gws_event_d *) &lEvent);
+        
+        //#debug
+        if( (void*) e == NULL )
+            printf("."); fflush(stdout);
+            
+        if( (void*) e != NULL )
+        {
+            if (e->magic != 1234 )
+                printf ("browser: e struct\n");
+            
+            //if( e->msg == SERVER_PACKET_TYPE_REPLY )
+                printf ("event: %d\n",e->long1);
+        }
+    };
+
     while(1){}
         
     // browser_loop(client_fd);

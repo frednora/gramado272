@@ -32,6 +32,10 @@ struct gws_window_event_d
 
 struct gws_event_d
 {
+
+    int used;
+    int magic;
+
     //standard msg block
     int wid;    // window id.
     int msg;    // msg. (event type).

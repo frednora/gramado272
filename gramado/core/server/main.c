@@ -440,11 +440,6 @@ int __send_response(int fd, int is_error)
         goto exit2;
     }
 
-// Sync
-// set response
-
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REPLY );
-
 //
 // Send
 //
@@ -472,7 +467,6 @@ int __send_response(int fd, int is_error)
     for (c=0; c<NEXTRESPONSE_BUFFER_SIZE; ++c){
         next_response[c] = 0;
     };
-
 
 
     // No. We couldn't send a response.
@@ -508,6 +502,11 @@ exit2:
 exit1:
     gwssrv_yield();
 exit0:
+
+// Sync
+// set response
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REPLY );
+
     return (int) Status;
 }
 
@@ -1097,11 +1096,11 @@ gwsProcedure (
         //NoReply = FALSE;  // #todo
         break;
 
-    // When a client get the next event from it's own queue.
+// The server will return an event from the its client's event queue.
     case GWS_GetNextEvent:
         gwssrv_debug_print ("gwssrv: [2031] serviceNextEvent\n");
-        //serviceNextEvent();
-        //NoReply = FALSE;
+        serviceNextEvent();
+        NoReply = FALSE;
         break;
 
     // See: grprim.c
@@ -1151,16 +1150,13 @@ gwsProcedure (
         NoReply = FALSE;
         break;
 
-    // Se o cliente enviar essa mensagem, significa
-    // que ele quer que drenemos o input que o
-    // ws recebe via mensagens tradicionais e passemos
-    // pra ele via socket.
+
+// Let's get one event from the client's event queue.
+// Send it as a response.
     case GWS_DrainInput:
-        // #bugbug
-        // Actually the client is getting the hardwre input.
         gwssrv_debug_print("gwssrv: gwsProcedure 8080\n");
-        // service_drain_input();
         break;
+
 
     // ...
 
@@ -1996,6 +1992,7 @@ int serviceClientEvent(void)
 
 
 // When a client get the next event from it's own queue.
+// The parameters 
 int serviceNextEvent (void)
 {
     //O buffer é uma global nesse documento.
@@ -2015,6 +2012,7 @@ int serviceNextEvent (void)
 
     //printf ("serviceNextEvent: \n");
 
+// Getting the parameters.
     window  = message_address[0]; 
     msg     = message_address[1]; 
     long1   = message_address[2]; 
@@ -2028,8 +2026,18 @@ int serviceNextEvent (void)
 
     // ...
 
-    return -1;
+// fake response.
+// This is a test #test
+    next_response[0] = 1234;        // window
+    next_response[1] = SERVER_PACKET_TYPE_REPLY;  // msg code
+    next_response[2] = 1234;
+    next_response[3] = 1234;
+
+// ok
+    return 0;
 }
+
+
 
 
 // #todo

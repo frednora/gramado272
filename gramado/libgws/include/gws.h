@@ -34,11 +34,16 @@
 #define GWS_RefreshScreen         2020
 #define GWS_RefreshRectangle      2021
 //#define GWS_GetSendEvent          2030  // send event #
+
+// The server will return an event from the its client's event queue.
 #define GWS_GetNextEvent          2031
+
 #define GWS_GrPlot0               2040
 #define GWS_GrCubeZ               2041
 #define GWS_GrRectangle           2042
 #define GWS_AsyncCommand          2222
+
+
 #define GWS_DrainInput            8080
 // ...
 
@@ -81,8 +86,7 @@
 // menu
 #include "window/menu.h"
 
-
-// Events.
+// Events
 #include "io/events.h"
 
 
@@ -241,6 +245,10 @@ gws_redraw_window (
     int window, 
     unsigned long flags );
 
+
+// The server will return an event from the its client's event queue.
+struct gws_event_d *gws_get_next_event(int fd, struct gws_event_d *event);
+
 // Refresh a window.
 int gws_refresh_window (int fd, int window );
 
@@ -372,7 +380,7 @@ gws_send_event (
     struct gws_event_d *event );
 
 
-unsigned long gws_explode_byte (unsigned char data);
+unsigned int gws_explode_byte_32 (unsigned char data);
 
 
 

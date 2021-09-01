@@ -63,6 +63,13 @@ char __gws_message_buffer[512];
 //
 
 
+
+// == get next event ==========================
+int 
+__gws_get_next_event_request ( int fd );
+struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *event );
+
+
 // == Change window position ==========================
 int 
 __gws_change_window_position_request ( 
@@ -206,6 +213,7 @@ void gws_debug_print (char *string)
         (unsigned long) string );
 }
 
+//====================================================
 
 /*
  ******************************** 
@@ -246,6 +254,124 @@ int gws_initialize_library (void)
 //
 // == Helper functions ====================================================
 //
+
+
+
+// == get next event ==========================
+int 
+__gws_get_next_event_request ( int fd )
+{
+    // Isso permite ler a mensagem na forma de longs.
+    unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
+
+    int n_writes = 0;   // For sending requests.
+
+
+//
+// Send request
+//
+
+    gws_debug_print ("__gws_get_next_event_request: Writing ...\n");
+
+// parameters
+    message_buffer[0] = 0; 
+    message_buffer[1] = GWS_GetNextEvent;    // Message code.
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+    //...
+
+// Send
+
+    while (1){
+        n_writes = send ( 
+                       fd, 
+                       __gws_message_buffer, 
+                       sizeof(__gws_message_buffer), 
+                       0 );
+        if(n_writes>0){ break; }
+    }
+
+    return 0; 
+    //return n_writes; 
+}
+
+struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *event )
+{
+    unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
+
+
+// #importante
+// As informações devem ficar aqui até que o
+// cliente pegue.
+// Um ponteiro será devolvido para ele.
+
+
+    int n_reads = 0;    // For receiving responses.
+
+
+//
+// Recv
+//
+
+    gws_debug_print ("__gws_get_next_event_response: Reading ...\n"); 
+
+    n_reads = recv ( 
+                  fd, 
+                  __gws_message_buffer, 
+                  sizeof(__gws_message_buffer), 
+                  0 );
+
+    if (n_reads <= 0){ return -1; }
+
+//
+// The msg packet
+//
+
+    int msg = (int)  message_buffer[1];
+    msg = (msg & 0xFFFF);
+
+    switch (msg){
+
+        // Reply!
+        case GWS_SERVER_PACKET_TYPE_REPLY:
+            goto process_reply;
+            break;
+
+        case GWS_SERVER_PACKET_TYPE_REQUEST:
+        case GWS_SERVER_PACKET_TYPE_EVENT:
+        case GWS_SERVER_PACKET_TYPE_ERROR:
+        default:
+            return NULL;
+            break; 
+    };
+
+// fail
+    return NULL;
+
+process_reply:
+
+// Get the message sent by the server.
+
+    //printf ("libgws: $\n");
+
+    if( (void*) event == NULL )
+        return NULL;
+   
+    event->wid   = (int) message_buffer[0];
+    event->msg   = (int) message_buffer[1];
+    event->long1 = (unsigned long) message_buffer[2];
+    event->long2 = (unsigned long) message_buffer[3];
+
+    event->used = TRUE;
+    event->magic = 1234;
+
+    return (struct gws_event_d *) event;
+}
+
+
+
+
+//=========
 
 
 int 
@@ -2602,6 +2728,39 @@ gws_redraw_window (
 }
 
 
+// The server will return an event from the its client's event queue.
+struct gws_event_d *gws_get_next_event(int fd, struct gws_event_d *event)
+{
+    struct gws_event_d *e;
+    int value=0;
+
+
+    if (fd<0){
+        debug_print("gws_get_next_event: fd\n");
+        return NULL;
+    }
+
+// Request
+    __gws_get_next_event_request (fd);
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+
+    // Response
+    // Waiting to read the response.
+    while (1){
+        value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
+        if (value == ACTION_REPLY ) { break; }
+        if (value == ACTION_ERROR ) { return -1; }
+        gws_yield();
+    };
+    e = (struct gws_event_d *) __gws_get_next_event_response (fd,event);
+
+    if( (void*) e == NULL )
+        debug_print("gws_get_next_event: fail\n");
+
+    return (struct gws_event_d *) e;
+}
+
+
 
 /*
  **************************************** 
@@ -3171,9 +3330,11 @@ struct gws_menu_item_d *gws_create_menu_item (
 
 
 // Expand a byte all over the long.
-unsigned long gws_explode_byte (unsigned char data)
+// #todo: This is valid only for 32bit 'unsigned int'
+// We need to create another one for 8bytes long.
+unsigned int gws_explode_byte_32 (unsigned char data)
 {
-    return (unsigned long) (data << 24 | data << 16 | data << 8 | data);
+    return (unsigned int) (data << 24 | data << 16 | data << 8 | data);
 }
 
 
