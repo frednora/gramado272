@@ -2608,7 +2608,7 @@ int main (int argc, char **argv)
         // #test
         // Double shot the current thread.
         // See: sched.c
-        gramado_system_call (667,0,0,0);
+        //gramado_system_call (667,0,0,0);
 
         // #todo
         // Daqui pra frente é conexão com cliente.
@@ -2776,9 +2776,15 @@ int main (int argc, char **argv)
     // Wait
     // printf ("gwssrv: [FIXME] yield \n");
 
+
+// #test
+// We do NOT need to wait,
+// 'cause we did not call any client.
+// We were called by gws.bin
+
     // #bugbug: too much?
     //for (i=0; i<22; i++){  gwssrv_yield();  };
-    for (i=0; i<44; i++){  gwssrv_yield();  };
+    //for (i=0; i<44; i++){  gwssrv_yield();  };
 
 
 //
@@ -2918,7 +2924,8 @@ int main (int argc, char **argv)
                 
             // Vamos fazer refrsh de retângulos sujos 
             // quando não temos requests. Isso é melhor do que dormir.
-            if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
+            // #bugbug: Talvez isso esta atrazando as coisas.
+            //if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
         }
 
         // if (newconn>0 && AcceptingConnections)

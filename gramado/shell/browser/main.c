@@ -920,6 +920,9 @@ int main ( int argc, char *argv[] ){
     }
 
 
+// style: 
+// 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen | 0x0008 statusbar
+
     // ===================
     // main window
     main_window = gws_create_window ( 
@@ -927,7 +930,7 @@ int main ( int argc, char *argv[] ){
                       WT_OVERLAPPED, 1, 1, "Browser",
                       viewwindowx, viewwindowy, w_width, w_height,
                       0, 
-                      0x0001,  // style: 0x0001=maximized | 0x0002=minimized | 0x0004=fullscreen
+                      0x0000,  
                       COLOR_GRAY, COLOR_GRAY );
 
     if ( main_window < 0 ){
