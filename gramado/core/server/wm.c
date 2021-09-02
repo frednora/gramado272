@@ -1110,8 +1110,80 @@ do_redraw:
 }
 
 
+// local worker
+// Colocaremos uma mensagem na fila de mensagens 
+// da janela indicada via argumento.
+int
+__add_message_to_into_the_queue(
+    struct gws_window_d *window,
+    int msg,
+    unsigned long long1,
+    unsigned long long2 )
+{
+
+    debug_print("__add_message_to_into_the_queue:\n");
+
+// Invalid window
+
+    if( (void*) window == NULL )
+    {
+        debug_print("__add_message_to_into_the_queue: window\n");
+        return -1;
+    }
+
+    if( window->used != TRUE )
+    {
+        debug_print("__add_message_to_into_the_queue: used\n");
+        return -1;
+    }
 
 
+    if( window->magic != 1234 )
+    {
+        debug_print("__add_message_to_into_the_queue: magic\n");
+        return -1;
+    }
+
+
+//
+// Offset
+//
+
+// next position
+
+    window->head_pos++;
+
+// end of list
+    if( window->head_pos < 0 || window->head_pos >= 32 )
+        window->head_pos = 0;
+
+
+// offset
+    int offset = (int) window->head_pos;
+
+    offset = (int) (offset & 0xFF);
+
+//
+// event
+//
+
+// standard
+    window->window_list[offset] = (int) window->id;      // wid
+    window->msg_list[offset]    = (int) (msg & 0xFFFF);  // message code
+    window->long1_list[offset] = (unsigned long) long1;
+    window->long2_list[offset] = (unsigned long) long2;
+
+// extra
+    window->long3_list[offset] = 0;
+    window->long4_list[offset] = 0;
+
+
+    debug_print("__add_message_to_into_the_queue: done\n");
+
+    return 0;
+}
+
+// Talvez precisaremos de mais parametros.
 unsigned long 
 wmProcedure(
     struct gws_window_d *window,
@@ -1201,12 +1273,30 @@ wmProcedure(
          case GWS_GetFocus2:
              printf("wmProcedure: [19] GWS_GetFocus2\n");
              break;
-         
-         // #todo: A rotina aqui pode virar uma funçao
+
+         // #bugbug
+         // Quando imprimir na tela e quando enviar para o cliente?
+         // Uma flag deve indicar se o sistema deve ou nao imprimir 
+         // previamente o char.
+         // Caixas de edição podem deixar todo o trabalho
+         // de teclas de digitação para o sistema, liberando o aplicativo
+         // desse tipo de tarefa. Mas editores de texto querem 
+         // processar cada tecla digitada.
          case GWS_KeyDown:
-             //printf("wmProcedure: [?] GWS_KeyDown\n");
-             //printf("[%c] ",long1); fflush(stdout);
+             // Imprime o char na janela indicada.
+             // Essa é a janela com foco de entrada.
+             //if( pre_print === TRUE)
              __draw_char_into_the_window(window,(int)long1);
+             // Enfileirar a mensagem na fila de mensagens
+             // da janela com foco de entrada.
+             // O cliente vai querer ler isso.
+             __add_message_to_into_the_queue(
+                 (struct gws_window_d *)window,
+                 (int)msg,
+                 (unsigned long)long1,
+                 (unsigned long)long2);
+             
+             return 0;
              break;
 
          case GWS_SysKeyDown:
@@ -1299,18 +1389,22 @@ wmHandler(
     switch (msg){
 
     // Mensagens de digitação. Atuam sobre a janela com foco de entrada.
+    // #bugbug: a janela com foco de entrada precisa ser válida.
     case GWS_KeyDown:
     case GWS_SwitchFocus:
+        if( window_with_focus < 0 || window_with_focus >= WINDOW_COUNT_MAX ){ return 0; } //fail
         w = windowList[window_with_focus];
-        goto do_send_message;
+        goto do_process_message;
         break;
         
     // Mensagens de sistema. Atuam sobre a jenela ativa.
+    // #bugbug: a janela com foco de entrada precisa ser válida.
     case GWS_SysKeyDown:
+        if( active_window < 0 || active_window >= WINDOW_COUNT_MAX ){ return 0; } //fail
         w = windowList[active_window];
-        goto do_send_message;
+        goto do_process_message;
         break;
-    
+
     //case 9091:
         //wmCompositor();
         //return 0;  //important
@@ -1324,7 +1418,7 @@ wmHandler(
     };
 
 
-do_send_message:
+do_process_message:
 
     if ( (void *) w == NULL ){
         printf ("wmHandler: GWS_KeyDown w\n");
@@ -1492,7 +1586,7 @@ void destroy_window (struct gws_window_d *window)
 // Receive the tid of the client in the request packet.
 // Save it as an argument of the window structure.
 
-int serviceCreateWindow (void)
+int serviceCreateWindow (int client_fd)
 {
 
 
@@ -1710,14 +1804,43 @@ int serviceCreateWindow (void)
 
 
 
-    // #test
-    // Save the tid of the client.
+//===============================================
+
+//
+// The client!
+//
+
+    Window->client_fd = (int) client_fd;
+
+//
+// Input queue
+// 
+
+// Initialized the input queue
+
+    //int i=0;
+    for ( i=0; i<32; ++i )
+    {
+        Window->window_list[i] = 0;
+        Window->msg_list[i]    = 0;
+        Window->long1_list[i]  = 0;
+        Window->long2_list[i]  = 0;
+        Window->long3_list[i]  = 0;
+        Window->long4_list[i]  = 0;
+    };
+    Window->head_pos = 0;
+    Window->tail_pos = 0;
+
+//===============================================
+
+
+
+
+// #test
+// Save the tid of the client.
     
     Window->client_pid = ClientPID;
     Window->client_tid = ClientTID;
-
-
-
 
     //
     // The client's fd.

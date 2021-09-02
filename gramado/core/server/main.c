@@ -116,6 +116,7 @@ void xxxHandleNextSystemMessage (void);
 
 int
 gwsProcedure (
+    int client_fd,
     struct gws_window_d *window,
     int msg,
     unsigned long long1,
@@ -386,7 +387,9 @@ __again:
 // Worker
 // There is a vetor with values for the next response.
 // Called by dispatcher().
-int __send_response(int fd, int is_error)
+// IN:
+// fd, 1=REPLY | 2=EVENT | 3=ERROR
+int __send_response(int fd, int type)
 {
 // Reusing the same buffer from the request.
     unsigned long *message_buffer = (unsigned long *) &__buffer[0];
@@ -404,15 +407,36 @@ int __send_response(int fd, int is_error)
     // Primeiros longs do buffer.
     message_buffer[0] = next_response[0];         // Window ID.
 
-// Normal rsponse.
-    message_buffer[1] = SERVER_PACKET_TYPE_REPLY;
 
-// Error.
-    if (is_error == TRUE)
+// Type of reply
+
+    switch(type){
+    case 1:  // normal reply
+        message_buffer[1] = SERVER_PACKET_TYPE_REPLY;
+        break;
+    case 2:  // event
+        message_buffer[1] = SERVER_PACKET_TYPE_EVENT;
+        break;
+    case 3:  // error
         message_buffer[1] = SERVER_PACKET_TYPE_ERROR;
+        break;
+    default:  // error
+        message_buffer[1] = SERVER_PACKET_TYPE_ERROR;
+        break;
+    };
+
 
     message_buffer[2] = next_response[2];         // Return value (long1)
     message_buffer[3] = next_response[3];         // Return value (long2)
+
+// The event it self.
+    if(type == 2)
+    {
+        message_buffer[4] = next_response[4];
+        message_buffer[5] = next_response[5];
+        message_buffer[6] = next_response[6];
+        message_buffer[7] = next_response[7];
+    }
 
 //__again:
 
@@ -619,12 +643,27 @@ void dispacher (int fd)
         goto exit2;
     }
 
+// Um cliente solicitou um evento.
+// Vamos sinalizar o tipo de resposta que temos que enviar,
+// caso nenhum erro aconteça.
+
+    int doSendEvent = FALSE;
+    if ( message_buffer[1] == GWS_GetNextEvent )
+    {
+        doSendEvent = TRUE;  // The response is an EVENT, not a REPLY.
+    }
+
+
 // Process request.
 // Do the service.
 
     debug_print ("dispacher: Process request\n");
 
+// OUT
+// <0 : error 
+
     Status = gwsProcedure (
+       (int) fd,
        (struct gws_window_d *) message_buffer[0], 
        (int)                   message_buffer[1], 
        (unsigned long)         message_buffer[2], 
@@ -643,9 +682,9 @@ void dispacher (int fd)
 // == Sending reply =======================================
 //
 
-    // Alguns requests nao exigem resposta,
-    // Entao precisamos modificar a flag de sincronizaçao.
-    // que ainda deve estar sinalizando um request.
+// Alguns requests nao exigem resposta.
+// Entao precisamos modificar a flag de sincronizaçao.
+// que ainda deve estar sinalizando um request.
     
     if (NoReply == TRUE){
         rtl_set_file_sync( 
@@ -653,23 +692,43 @@ void dispacher (int fd)
         goto exit0;
     }
 
-
+//
 // == reponse ====================================================
+//
 
-// IN: 
-// fd, error or not.
+// IN:
+// fd, 1=REPLY | 2=EVENT | 3=ERROR
 
+
+// ==========================================
+// ERROR: (3)
 // Se o serviço não pode ser prestado corretamente.
     if( SendErrorResponse == TRUE )
-        Status = (int) __send_response(fd,TRUE);
+        Status = (int) __send_response(fd,3); //error message
 
+// ==========================================
+// EVENT: (2)
 // Se o serviço foi prestado corretamente.
-    if( SendErrorResponse != TRUE )
-        Status = (int) __send_response(fd,FALSE);
+// Era uma solicitação de evento
 
-// A resposta foi enviada com sucesso?
-    if(Status==0)
-        goto exit0;
+    if (doSendEvent == TRUE)
+        Status = (int) __send_response(fd,2);  // event
+
+// ==========================================
+// REPLY: (1)
+// Se o serviço foi prestado corretamente.
+// Era uma solicitação de serviço normal,
+// então vamos enviar um reponse normal. Um REPLY.
+
+    if (doSendEvent != TRUE)
+        Status = (int) __send_response(fd,1);  // normal reply
+
+
+// A mensagem foi enviada normalmente,
+// Vamos sair normalmente.
+
+    //if(Status >= 0)
+        //goto exit0;
 
 // Fall
 
@@ -681,7 +740,7 @@ exit2:
     message_buffer[4] = 0;
     message_buffer[5] = 0;
 exit1:
-    gwssrv_yield();
+    //gwssrv_yield();
 exit0:
     return;
 }
@@ -715,34 +774,7 @@ void ____get_system_message( unsigned long buffer )
 
 void xxxHandleNextSystemMessage (void)
 {
-    unsigned long message_buffer[5];
-
-    // Get message.
-    gwssrv_enter_critical_section();
-    gramado_system_call ( 111,
-            (unsigned long) &message_buffer[0],
-            (unsigned long) &message_buffer[0],
-            (unsigned long) &message_buffer[0] );
-    gwssrv_exit_critical_section();
-
-    // No message
-    if ( message_buffer[1] == 0 ){
-        gramado_system_call (265,0,0,0);
-        return;
-    }
-
-    // Send message to the window procedure and clean.
-
-    gwsProcedure ( 
-        (struct gws_window_d *) message_buffer[0], 
-        (int)                   message_buffer[1], 
-        (unsigned long)         message_buffer[2], 
-        (unsigned long)         message_buffer[3] );
-
-     message_buffer[0] = 0;
-     message_buffer[1] = 0;
-     message_buffer[2] = 0;
-     message_buffer[3] = 0;
+    printf("xxxHandleNextSystemMessage: deprecated\n");
 }
 
 
@@ -867,8 +899,12 @@ done:
     // + Disconnect:
     // ...
 
+// OUT
+// <0 : error 
+
 int
 gwsProcedure ( 
+    int client_fd,
     struct gws_window_d *window, 
     int msg, 
     unsigned long long1, 
@@ -989,7 +1025,7 @@ gwsProcedure (
     // See: wm.c
     case GWS_CreateWindow:
         gwssrv_debug_print ("gwssrv: [1001] serviceCreateWindow\n");
-        serviceCreateWindow();
+        serviceCreateWindow(client_fd);
         NoReply = FALSE;   // #bugbug: Why not? We need to return the window id.
         break; 
 
@@ -1099,7 +1135,7 @@ gwsProcedure (
 // The server will return an event from the its client's event queue.
     case GWS_GetNextEvent:
         gwssrv_debug_print ("gwssrv: [2031] serviceNextEvent\n");
-        serviceNextEvent();
+        serviceNextEvent(client_fd);
         NoReply = FALSE;
         break;
 
@@ -1957,35 +1993,14 @@ void gwssrv_message_all_clients(void)
 }
 */
 
-// When a client send us an event
+
+// When a client sent us an event
+// ??? mas o cliente envia as coisas via request, ???
 int serviceClientEvent(void)
 {
     //O buffer é uma global nesse documento.
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
+    //unsigned long *message_address = (unsigned long *) &__buffer[0];
 
-    unsigned long window =0;
-    unsigned long msg    =0;
-    unsigned long long1  =0;
-    unsigned long long2  =0;
-
-    //struct gws_client_d *client;
-    //struct gws_window_d *hWindow;
-    //struct gws_event_d  *event;
-    //...
-
-
-    window  = message_address[0]; 
-    msg     = message_address[1]; 
-    long1   = message_address[2]; 
-    long2   = message_address[3]; 
-
-    //z      = message_address[4]; 
-    //z      = message_address[5]; 
-    //z      = message_address[6]; 
-    //z      = message_address[7]; 
-    // ...
-
-    // ...
 
     return -1;
 }
@@ -1993,47 +2008,156 @@ int serviceClientEvent(void)
 
 // When a client get the next event from it's own queue.
 // The parameters 
-int serviceNextEvent (void)
+int serviceNextEvent (int client_fd)
 {
-    //O buffer é uma global nesse documento.
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
 
-    unsigned long window =0;
-    unsigned long msg    =0;
-    unsigned long long1  =0;
-    unsigned long long2  =0;
+    debug_print("serviceNextEvent: \n");
+
+// O cliente que está solicitando evento
+    if ( client_fd < 0 )
+    {
+        debug_print("serviceNextEvent: client_fd\n");
+        return -1;
+    }
+
+// a janela com o foco de entrada.
+    int wid = window_with_focus;
+
+// invalid window
+    if (wid<0)
+    {
+        debug_print("serviceNextEvent: wid<0\n");
+        return -1;
+    }
 
 
-    //struct gws_client_d *client;
-    //struct gws_window_d *hWindow;
-    //struct gws_event_d  *event;
-    //...
+// invalid window
+    if (wid>=WINDOW_COUNT_MAX)
+    {
+        debug_print("serviceNextEvent: wid>=WINDOW_COUNT_MAX\n");
+        return -1;
+    }
 
 
-    //printf ("serviceNextEvent: \n");
+// get window pointer
 
-// Getting the parameters.
-    window  = message_address[0]; 
-    msg     = message_address[1]; 
-    long1   = message_address[2]; 
-    long2   = message_address[3]; 
+    struct gws_window_d *window;
 
-    //z      = message_address[4]; 
-    //z      = message_address[5]; 
-    //z      = message_address[6]; 
-    //z      = message_address[7]; 
-    // ...
+    window = windowList[wid];
 
-    // ...
+// Invalid window
+    if( (void*) window == NULL )
+    {
+        debug_print("serviceNextEvent: window\n");
+        return -1;
+    }
 
-// fake response.
-// This is a test #test
-    next_response[0] = 1234;        // window
-    next_response[1] = SERVER_PACKET_TYPE_REPLY;  // msg code
-    next_response[2] = 1234;
-    next_response[3] = 1234;
+
+// Invalid window
+    if( window->used != TRUE )
+    {
+        debug_print("serviceNextEvent: used\n");
+        return -1;
+    }
+
+
+// Invalid window
+    if( window->magic != 1234 )
+    {
+        debug_print("serviceNextEvent: magic\n");
+        return -1;
+    }
+
+
+// o cliente autorizado a ler a janela com foco de entrada.
+    int owner_client = window->client_fd;
+
+// invalid owner client fd.
+    if (owner_client<0)
+    {
+        debug_print("serviceNextEvent: owner_client<0\n");
+        return -1;
+    }
+
+
+
+// check client.
+// The caller and the owner needs to be the same
+// or the caller will not be able to read the input.
+
+    if(client_fd != owner_client)
+    {
+        debug_print("serviceNextEvent: client_fd != owner_client\n");
+        return -1;
+    }
+
+
+
+//
+// Ok
+// 
+
+// Compose the response.
+// The response will be the next valid event found in the list.
+
+// Setup offset for the next event index.
+    window->tail_pos++;
+
+// fim da lista.
+// circulando.
+    if (window->tail_pos < 0 || window->tail_pos >= 32)
+    {
+        window->tail_pos = 0;
+    }
+
+//
+// The message buffer
+//
+
+// The header
+    next_response[0] = window->id;                // The window with focus.
+    next_response[1] = (SERVER_PACKET_TYPE_EVENT & 0xFFFF);  // msg code (This is a REPLY message).
+    next_response[2] = 1234;  // Signature
+    next_response[3] = 5678;  // Signature
+
+// The event
+
+    int offset = (int) window->tail_pos;
+    
+    offset = (int) (offset & 0xFF);
+
+// Get from queue.
+    unsigned long data4 = (unsigned long) window->window_list[offset];
+    unsigned long data5 = (unsigned long) window->msg_list[offset];
+    unsigned long data6 = (unsigned long) window->long1_list[offset];
+    unsigned long data7 = (unsigned long) window->long2_list[offset];
+    unsigned long data8 = (unsigned long) window->long3_list[offset];
+    unsigned long data9 = (unsigned long) window->long4_list[offset];
+
+// Clear the slot where we got the info.
+// We don't wanna get this again
+    window->window_list[offset] = 0;
+    window->msg_list[offset] = 0;
+    window->long1_list[offset] = 0;
+    window->long2_list[offset] = 0;
+    window->long3_list[offset] = 0;
+    window->long4_list[offset] = 0;
+
+// 'int' type.
+    data4 = (unsigned long) (data4 & 0xFFFF);  // wid
+    data5 = (unsigned long) (data5 & 0xFFFF);  // message code
+
+    next_response[4] = (unsigned long) data4;  //window id
+    next_response[5] = (unsigned long) data5;  //message code
+    next_response[6] = (unsigned long) data6;  //long1
+    next_response[7] = (unsigned long) data7;  //long2
+
+// extra: not implemented yet
+    next_response[8] = (unsigned long) data8;  //long3
+    next_response[9] = (unsigned long) data9;  //long4
 
 // ok
+    debug_print("serviceNextEvent: done\n");
     return 0;
 }
 
@@ -2939,6 +3063,7 @@ int main (int argc, char **argv)
         // if (newconn>0 && AcceptingConnections)
         if (newconn>0)
         {
+            
             gwssrv_debug_print("gwssrv: accept returned OK\n");
             dispacher(newconn);
             //close(newconn);

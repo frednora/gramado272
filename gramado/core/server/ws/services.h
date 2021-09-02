@@ -14,7 +14,8 @@ int serviceDrawText(void);
 int serviceRefreshRectangle(void);
 
 // Window
-int serviceCreateWindow ( void );
+int serviceCreateWindow (int client_fd);
+
 int serviceChangeWindowPosition(void);
 int serviceResizeWindow(void);
 int serviceRedrawWindow(void);
@@ -29,7 +30,7 @@ int serviceDrawButton (void);
 int serviceClientEvent(void);
 
 // When a client get the next event from it's own queue.
-int serviceNextEvent(void);
+int serviceNextEvent(int client_fd);
 
 int serviceAsyncCommand (void);
 

@@ -309,6 +309,11 @@ struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *
     int n_reads = 0;    // For receiving responses.
 
 
+// crazy fail
+    if( (void*) event == NULL )
+        return NULL;
+
+
 //
 // Recv
 //
@@ -321,7 +326,15 @@ struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *
                   sizeof(__gws_message_buffer), 
                   0 );
 
-    if (n_reads <= 0){ return -1; }
+// fail
+    if (n_reads <= 0)
+    { 
+        printf ("__gws_get_next_event_response: Read 0 bytes\n"); 
+        event->msg = 0;
+        event->used = FALSE;
+        event->magic = 0;
+        return (struct gws_event_d *) event;
+    }
 
 //
 // The msg packet
@@ -332,38 +345,97 @@ struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *
 
     switch (msg){
 
-        // Reply!
-        case GWS_SERVER_PACKET_TYPE_REPLY:
-            goto process_reply;
+        case GWS_SERVER_PACKET_TYPE_EVENT:
+            goto process_event;
             break;
 
+        case GWS_SERVER_PACKET_TYPE_REPLY:
         case GWS_SERVER_PACKET_TYPE_REQUEST:
-        case GWS_SERVER_PACKET_TYPE_EVENT:
         case GWS_SERVER_PACKET_TYPE_ERROR:
         default:
-            return NULL;
+
+            // fail
+            printf ("__gws_get_next_event_response: Invalid msg code\n"); 
+            event->msg = 0;
+            event->used = FALSE;
+            event->magic = 0;
+            return (struct gws_event_d *) event;
             break; 
     };
 
-// fail
-    return NULL;
+// crazy fail
+    printf ("__gws_get_next_event_response: crazy fail\n"); 
+    event->msg = 0;
+    event->used = FALSE;
+    event->magic = 0;
 
-process_reply:
+    return (struct gws_event_d *) event;
+
+
+// The header
+    int wid=0;
+    int msg_code=0;
+    unsigned long sig1=0;
+    unsigned long sig2=0;
+
+process_event:
 
 // Get the message sent by the server.
 
     //printf ("libgws: $\n");
 
-    if( (void*) event == NULL )
-        return NULL;
-   
-    event->wid   = (int) message_buffer[0];
-    event->msg   = (int) message_buffer[1];
-    event->long1 = (unsigned long) message_buffer[2];
-    event->long2 = (unsigned long) message_buffer[3];
 
-    event->used = TRUE;
-    event->magic = 1234;
+
+
+    wid      = (int) message_buffer[0];             // window id
+    msg_code = (int) message_buffer[1];             // message code: (It is an EVENT)
+    sig1 = (unsigned long) message_buffer[2];   // Signature 1: 1234
+    sig2 = (unsigned long) message_buffer[3];   // Signature 2: 5678
+
+//
+// Checks
+//
+
+// #todo: Check if it is a REPLY message.
+    if ( msg_code != GWS_SERVER_PACKET_TYPE_EVENT ){
+        debug_print ("__gws_get_next_event_response: msg_code fail\n");
+        printf      ("__gws_get_next_event_response: msg_code fail\n");
+    }
+
+    if ( sig1 != 1234 ){
+        debug_print ("__gws_get_next_event_response: sig1 fail\n");
+        printf      ("__gws_get_next_event_response: sig1 fail\n");
+    }
+
+    if ( sig2 != 5678 ){
+        debug_print ("__gws_get_next_event_response: sig2 fail\n");
+    }
+
+// The event properly.
+
+    event->used = FALSE;
+    event->magic = 0;
+
+    if ( msg_code == GWS_SERVER_PACKET_TYPE_EVENT )
+    {
+        //printf("__gws_get_next_event_response: WE GOT AN EVENT\n");
+    
+        event->wid   = (int) message_buffer[4];            // window id
+        event->msg   = (int) message_buffer[5];            // message code
+        event->long1 = (unsigned long) message_buffer[6];  // long1
+        event->long2 = (unsigned long) message_buffer[7];  // long2
+
+        event->wid = (int) ( event->wid & 0xFFFF );
+        event->msg = (int) ( event->msg & 0xFFFF );
+
+        event->used = TRUE;
+        event->magic = 1234;
+
+        // #debug
+        //printf ("::: wid=%d msg=%d l1=%d l2=%d \n",
+            //event->wid, event->msg, event->long1, event->long2 );
+    }
+
 
     return (struct gws_event_d *) event;
 }

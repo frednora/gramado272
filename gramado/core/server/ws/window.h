@@ -464,18 +464,18 @@ struct gws_window_d
     struct gws_client_d  *client;
 
 
-    // #todo
-    // Para sabermos quem receberá o reply no caso
-    // de eventos.
-    // Quando um cliente solicitar por eventos em uma dada janela
-    // com foco, então essa janela deve registrar qual é o fd do
-    // cliente que receberá o reply com informações sobre o evento.
+// #importante
+// Para sabermos quem receberá o reply no caso de eventos.
+// Quando um cliente solicitar por eventos em uma dada janela
+// com foco, então essa janela deve registrar qual é o fd do
+// cliente que receberá o reply com informações sobre o evento.
 
     int client_fd;
 
-    // #todo
-    // Podemos mandar mensagens para o pid
-    // com o objetivo de alcançarmos a thread de controle.
+// #todo
+// maybe not!
+// Podemos mandar mensagens para o pid
+// com o objetivo de alcançarmos a thread de controle.
 
     int client_pid;
 
@@ -484,14 +484,32 @@ struct gws_window_d
 // TID
 //
 
-    // #test
-    // tid da control thread do cliente.
-    // #todo
-    // Se uma janela tiver o id da thread ao qual ela pertence
-    // então podemos colocar ela em foreground quando a janela
-    // receber o foco usando o teclado ou mouse.
+// #test
+// Maybe not!
+// tid da control thread do cliente.
+// #todo
+// Se uma janela tiver o id da thread ao qual ela pertence
+// então podemos colocar ela em foreground quando a janela
+// receber o foco usando o teclado ou mouse.
 
     int client_tid;
+
+
+
+//
+// Message queue
+//
+
+    int window_list[32];
+    int msg_list[32];
+    unsigned long long1_list[32];
+    unsigned long long2_list[32];
+    unsigned long long3_list[32];
+    unsigned long long4_list[32];
+
+    int head_pos;
+    int tail_pos;
+
 
 //
 // Características dessa janela..

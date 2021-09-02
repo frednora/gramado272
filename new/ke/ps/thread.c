@@ -761,8 +761,10 @@ __ps_initialize_thread_common_elements(
     t->ke_long2  = 0;
     t->ke_newmessageFlag = FALSE;
 
-    // loop
-    for ( i=0; i<32; ++i ){
+// loop
+// Clear the queue.
+    for ( i=0; i<32; ++i )
+    {
         t->window_list[i] = 0;
         t->msg_list[i]    = 0;
         t->long1_list[i]  = 0;

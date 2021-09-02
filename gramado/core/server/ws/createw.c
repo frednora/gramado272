@@ -2179,7 +2179,6 @@ draw_frame:
 
     __w->dirty = TRUE;
 
-
 //done:
     gwssrv_debug_print ("gwsCreateWindow: done\n");
     return (void *) __w;
