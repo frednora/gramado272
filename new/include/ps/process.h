@@ -180,7 +180,7 @@ typedef enum {
 
     KERNEL_PROCESS,
 
-// Service (Background)
+// Services (Background)
     SYSTEM_SERVICE,
     USER_SERVICE,
 
@@ -225,6 +225,17 @@ struct process_d
     int magic;
 
     process_type_t type;
+
+
+// #todo
+// Usage, in percentage.
+// How much this process is using the shared system resources.
+
+    //int memory_usage_in_percentage;
+    //int cpu_usage_in_percentage;
+    //int disk_usage_in_percentage;
+    //int network_usage_in_percentage;
+
 
     int position;
 
