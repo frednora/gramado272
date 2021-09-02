@@ -968,7 +968,13 @@ void *xxxCreateWindow (
     window->width_in_bytes  = (unsigned long) (window->width / 8);  //>>3
     window->height_in_bytes = (unsigned long) (window->height / 8); //>>3
 
- 
+
+// =================================
+
+//
+// == Client area ==
+//
+
 // #todo
 // Os valores da área de cliente são elaborados
 // no decorrer da construção da janela.
@@ -983,6 +989,15 @@ void *xxxCreateWindow (
     clientRect.top    = 0;
     clientRect.width  = (unsigned long) window->width;
     clientRect.height = (unsigned long) window->height;
+
+
+// The original values. They are the same os the window.
+    window->rcClient.left   = clientRect.left;    // window left
+    window->rcClient.top    = clientRect.top;     // window top
+    window->rcClient.width  = clientRect.width;   // window width
+    window->rcClient.height = clientRect.height;  // window height
+
+// =================================
 
 
 // Deslocamento em relação a janela mãe.
@@ -1671,10 +1686,10 @@ void *xxxCreateWindow (
     if( ClientArea == TRUE )
     {
         // The original values. They are the same os the window.
-        window->rcClient.left   = clientRect.left;    // window left
-        window->rcClient.top    = clientRect.top;     // window top
-        window->rcClient.width  = clientRect.width;   // window width
-        window->rcClient.height = clientRect.height;  // window height
+        //window->rcClient.left   = clientRect.left;    // window left
+        //window->rcClient.top    = clientRect.top;     // window top
+        //window->rcClient.width  = clientRect.width;   // window width
+        //window->rcClient.height = clientRect.height;  // window height
 
         // Now we will change the client area values
         // for reflecting the size of the overlapped window components.
@@ -2112,8 +2127,6 @@ draw_frame:
         // __w->useStandardFrame
 
         // See: wm.c
-
-// METRICS_BORDER_SIZE
 
         if ( (void*) __w != NULL )
         {

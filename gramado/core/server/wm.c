@@ -276,11 +276,9 @@ wmDrawFrame (
     // check parent;
     //if ( (void*) parent == NULL ){}
 
-// #todo
-// check window.
+// check window
 
-    if ( (void*) window == NULL )
-    {
+    if ( (void*) window == NULL ){
         gwssrv_debug_print ("wmDrawFrame: [FAIL] window\n");
         return -1;
     }
@@ -464,6 +462,11 @@ wmDrawFrame (
             window->width, window->border_size, 
             window->border_color, TRUE,0 );
 
+        // #important:
+        // The border in an overlapped window will affect
+        // the top position of the client area rectangle.
+        window->rcClient.top += window->border_size;
+
         //
         // Title bar
         //
@@ -515,11 +518,80 @@ wmDrawFrame (
                 gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
                 return -1;
             }
+
+            // #important:
+            // The Titlebar in an overlapped window will affect
+            // the top position of the client area rectangle.
+            window->rcClient.top += window->titlebar_height;
         }
+
+        // Ornamento:
+        // Ornamento na parte de baixo da title bar.
+        // #important:
+        // O ornamento é pintado dentro da barra, então isso
+        // não afetará o positionamento da área de cliente.
+
+        // border on bottom.
+        // Usado para explicitar se a janela é ativa ou não
+        // e como separador entre a barra de títulos e a segunda
+        // área da janela de aplicativo.
+        // Usado somente por overlapped window.
         
+        window->frame.ornament_color1   = OrnamentColor1;  //COLOR_BLACK;
+        window->titlebar_ornament_color = OrnamentColor1;  //COLOR_BLACK;
+        
+        rectBackbufferDrawRectangle ( 
+            tbWindow->left, ( (tbWindow->top) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
+            tbWindow->width, METRICS_TITLEBAR_ORNAMENT_SIZE, 
+            OrnamentColor1, TRUE,
+            0 );  // rop_flags
 
         //
-        // Status bar
+        // Icon (Titlebar)
+        //
+
+        // O posicionamento em relação
+        // à janela é consistente por questão de estilo.
+        
+        // See: bmp.c
+        // IN: index, x, y.
+
+        window->titlebarHasIcon = FALSE;
+        window->frame.icon_id = 1;
+        if( useIcon == TRUE ){
+            gwssrv_display_system_icon( 
+                (int) window->frame.icon_id, 
+                (tbWindow->left + METRICS_ICON_LEFT), 
+                (tbWindow->top  + METRICS_ICON_TOP) );
+             window->titlebarHasIcon = TRUE;
+         }
+
+        //
+        // String (title bar)
+        //
+        
+        window->titlebar_text_color = COLOR_WHITE;
+        
+        // #todo
+        // Temos que gerenciar o posicionamento da string.
+        
+        // #bugbug: Use 'const char *'
+        tbWindow->name = (char *) strdup ( (const char *) window->name );
+        
+        //#todo: validation
+        //if ( (void*) tbWindow->name == NULL ){}
+        
+        if ( useTitleString == TRUE ){
+            grDrawString ( 
+                (tbWindow->left) + offset, 
+                (tbWindow->top)  + 8, 
+                COLOR_WHITE, 
+                tbWindow->name );
+        }
+
+
+        //
+        // Status bar (bottom)
         // 
         
         // Se for maximized ou fullscreen
@@ -553,69 +625,6 @@ wmDrawFrame (
         }
 
 
-        // Ornamento:
-        // border on bottom.
-        // Usado para explicitar se a janela é ativa ou não
-        // e como separador entre a barra de títulos e a segunda
-        // área da janela de aplicativo.
-        // Usado somente por overlapped window.
-        
-        window->frame.ornament_color1   = OrnamentColor1;  //COLOR_BLACK;
-        window->titlebar_ornament_color = OrnamentColor1;  //COLOR_BLACK;
-        
-        rectBackbufferDrawRectangle ( 
-            tbWindow->left, ( (tbWindow->top) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
-            tbWindow->width, METRICS_TITLEBAR_ORNAMENT_SIZE, 
-            OrnamentColor1, TRUE,
-            0 );  // rop_flags
-
-        //
-        // Icon
-        //
-
-        // #
-        // O posicionamento em relação
-        // à janela é consistente por questão de estilo.
-        
-        // See: bmp.c
-        // IN: index, x, y.
-
-        window->titlebarHasIcon = FALSE;
-        window->frame.icon_id = 1;
-        if( useIcon == TRUE ){
-            gwssrv_display_system_icon( 
-                (int) window->frame.icon_id, 
-                (tbWindow->left + METRICS_ICON_LEFT), 
-                (tbWindow->top  + METRICS_ICON_TOP) );
-             window->titlebarHasIcon = TRUE;
-         }
-
-        //
-        // string
-        //
-        
-        window->titlebar_text_color = COLOR_WHITE;
-        
-        // #todo
-        // Temos que gerenciar o posicionamento da string.
-        
-        // #bugbug: Use 'const char *'
-        tbWindow->name = (char *) strdup ( (const char *) window->name );
-        
-        //#todo: validation
-        //if ( (void*) tbWindow->name == NULL ){}
-        
-        if ( useTitleString == TRUE ){
-            grDrawString ( 
-                (tbWindow->left) + offset, 
-                (tbWindow->top)  + 8, 
-                COLOR_WHITE, 
-                tbWindow->name );
-        }
-
-        //  control ?
-        // ... 
-        
         // ok
         return 0;
     }
