@@ -170,6 +170,27 @@ typedef enum {
 }process_state_t;
 
 
+typedef enum {
+
+    INVALID_PROCESS_TYPE,
+
+// The kernel process.
+// It has the programs:
+// KERNEL.BIN and GWSSRV.BIN
+
+    KERNEL_PROCESS,
+
+// Service (Background)
+    SYSTEM_SERVICE,
+    USER_SERVICE,
+
+// Applications
+    SYSTEM_APPLICATION,
+    USER_APPLICATION,    
+
+}process_type_t;
+
+
 /* 
  appmode_t
  
@@ -203,6 +224,7 @@ struct process_d
     int used;
     int magic;
 
+    process_type_t type;
 
     int position;
 
@@ -694,6 +716,8 @@ struct process_d
     struct usession_d  *usession;  //user session
     struct room_d      *room;      //room (Window Station) do processo.  
     struct desktop_d   *desktop;   //Desktop do processo.        
+
+// ============================================
 
 	// ORDEM: 
 	// O que segue eh referenciado com pouca frequencia.

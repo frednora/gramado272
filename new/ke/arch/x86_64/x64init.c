@@ -143,8 +143,9 @@ void I_x64CreateInitialProcess (void)
         panic ("I_x64CreateInitialProcess: pid\n");
     }
 
-
-
+// The init process is a system application
+// GWS.BIN
+    InitProcess->type = SYSTEM_APPLICATION;
 
 
     if ( init_mm_data.used != TRUE || init_mm_data.magic != 1234 )
@@ -587,6 +588,9 @@ void I_x64CreateKernelProcess(void)
     }
 
 
+// The kernel process is a system program.
+// KERNEL.BIN and GWSSRV.BIN
+    KernelProcess->type = KERNEL_PROCESS;
 
 
     if ( kernel_mm_data.used != TRUE || 
