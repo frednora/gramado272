@@ -84,13 +84,36 @@ void *sc82 (
 // =============================================================
 
 
+// ==========================================
+// Exit on fail
+// Entry point
+// + Passamos esse símbolo para o kernel.
+// + O kernel saltará para cá no caso de alguma erro fatal nesse aplicativo.
+// + Esse aplicativo roda algumas rotinas de finalização do aplicativo
+//   com base nas suas informações guardadas na estrutura app_d
+// encontrada em gramado.h na rtl.
+// + Por fim essa rotina deve finalizar a thread de controle.
+
+void rtl_elegant_exit_on_fail(void)
+{
+    debug_print("rtl_elegant_exit_on_fail: #todo\n");
+    exit(0);
+}
+
+
+// =============================================================
+
 int rtl_get_input_mode(void)
 {
     return (int) gramado_system_call(911,0,0,0);
 }
 
+// #todo: explique isso.
 void rtl_set_input_mode(int mode)
 {
+    if( mode < 0 )
+        return;
+
     gramado_system_call(912,mode,mode,mode);
 }
 
@@ -99,6 +122,7 @@ void rtl_set_input_mode(int mode)
 // sync
 //
 
+// #todo: explique isso melhor, bem melhor.
 // Configurando sincronização de leitura e escrita em arquivo.
 // principalmente socket.
 // A estrutura de arquivo contém uma estrutura de sincronização 
@@ -110,6 +134,7 @@ void rtl_set_file_sync(int fd, int request, int data)
     sc82 (10000,fd,request,data);
 }
 
+// #todo: explique isso melhor, bem melhor.
 // Pegando informação sobre sincronização de leitura e escrita de arquivos.
 // principalmente para socket.
 // A estrutura de arquivo contém uma estrutura de sincronização 
