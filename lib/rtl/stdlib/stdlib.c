@@ -801,6 +801,18 @@ char *mktemp (char *template)
 
 
 /*
+// #todo
+// gerar número aleatório dentro de uma faixa.
+int rtl_rand_in_a_range(int lim_inf, int lim_sup);
+int rtl_rand_in_a_range(int lim_inf, int lim_sup)
+{
+    return (int) (lim_inf + (rand() % lim_sup));
+}
+*/
+
+
+
+/*
  *******
  * rand:
  *     Gera um número randômico. 

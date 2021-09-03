@@ -254,13 +254,13 @@ gwsProcedure (
         case MSG_COMMAND:
             printf("gws.bin: MSG_COMMAND %d \n",long1);
             switch(long1){
-            case 4001:
+            case 4001:  //app1
             printf("gws.bin: 4001\n");
             gws_clone_and_execute("browser.bin");  break;
-            case 4002:
+            case 4002:  //app2
             printf("gws.bin: 4002\n");
-            gws_clone_and_execute("fileman.bin");  break;
-            case 4003:
+            gws_clone_and_execute("editor.bin");  break;
+            case 4003:  //app3
             printf("gws.bin: 4003\n");
             gws_clone_and_execute("terminal.bin");  break;
             };
@@ -451,9 +451,8 @@ int main ( int argc, char *argv[] )
          exit(1);
     }
 
-    //===============
 
-    //========================================
+//========================================
     
     // Waiting ...
     // Wait for the moment where the server says: 'yes'
@@ -507,9 +506,9 @@ int main ( int argc, char *argv[] )
     */
 
 
-    //========================================
-    
-    // Metrics.
+//========================================
+
+// Device info
 
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
@@ -539,7 +538,7 @@ int main ( int argc, char *argv[] )
 // #debug
 // ok
 
-    printf("gws.bin: [1] calling create window\n");
+    //printf("gws.bin: [1] calling create window\n");
 
     //while(1){}
     //asm ("int $3");
@@ -603,8 +602,11 @@ int main ( int argc, char *argv[] )
     //===================
     gws_debug_print ("gws.bin: 2 Drawing a char \n");
     //printf          ("gws.bin: Drawing a char \n");
-    gws_draw_char ( 
-        client_fd, main_window, 0, 0, COLOR_YELLOW, 'G' );
+    if(main_window>0){
+        gws_draw_char ( 
+            client_fd, 
+            main_window, 0, 0, COLOR_YELLOW, 'G' );
+    }
     //====================   
 
 
@@ -666,9 +668,9 @@ int main ( int argc, char *argv[] )
     gws_plot0 ( client_fd, -50, -50, 0, COLOR_YELLOW );
     */
 
-    //
-    // == cube ==================================
-    //
+//
+// == cube ==================================
+//
 
     // #maybe
     // The custon status bar?
@@ -808,8 +810,11 @@ int main ( int argc, char *argv[] )
     // #debug
     //while (1){
 
-    gws_draw_char ( 
-        client_fd, main_window, 8, 8, COLOR_YELLOW, 'x' );
+    if( main_window > 0 ){
+        gws_draw_char ( 
+            client_fd, 
+            main_window, 8, 8, COLOR_YELLOW, 'x' );
+    }
 
         // ...
 
@@ -893,21 +898,21 @@ int main ( int argc, char *argv[] )
     //gws_refresh_window (client_fd, main_window);
         
 
-    //
-    // Game
-    //
+//
+// Game
+//
 
-    // ??
-    // What is this?
-    // Is this a prototype, a test?
+// ??
+// What is this?
+// Is this a prototype, a test?
 
     gameInitialize(client_fd,w,h);
     //gameTestASCIITable(client_fd,w,h);
 
 
-    // #test
-    // Setup the flag to show or not the fps window.
-    // Request number 6.
+// #test
+// Setup the flag to show or not the fps window.
+// Request number 6.
 
     gws_async_command(client_fd,6,FALSE,0);
 
@@ -916,7 +921,7 @@ int main ( int argc, char *argv[] )
 // Refresh
 //
 
-    // #test
+// #test
     gws_refresh_window (client_fd, main_window);
 
 

@@ -451,14 +451,15 @@ int main ( int argc, char *argv[] ){
 
 // ============================================
 // focus
+// It needs to be an EDITBOX window.
 
 // We need a wrapper for that thing.
 
     gws_async_command(
          client_fd,
          9,             // set focus
-         Client_window,
-         Client_window );
+         addressbar_window,
+         addressbar_window );
 
 
 
