@@ -443,6 +443,11 @@ struct gws_window_d
 
     int dirty;
 
+// FAST FLAG. Essa será a flag de ativa ou não. (decidindo isso)
+    int active;
+
+// Se tem o foco de entrada ou não.
+    int focus;
 
     char *name;
 
@@ -472,28 +477,11 @@ struct gws_window_d
 
     int client_fd;
 
-// #todo
-// maybe not!
-// Podemos mandar mensagens para o pid
-// com o objetivo de alcançarmos a thread de controle.
+
+// Client's pid and tid.
 
     int client_pid;
-
-
-//
-// TID
-//
-
-// #test
-// Maybe not!
-// tid da control thread do cliente.
-// #todo
-// Se uma janela tiver o id da thread ao qual ela pertence
-// então podemos colocar ela em foreground quando a janela
-// receber o foco usando o teclado ou mouse.
-
     int client_tid;
-
 
 
 //
@@ -572,15 +560,15 @@ struct gws_window_d
     //unsigned long client_area_width;
     //unsigned long client_area_height;
 
-    //
-    // == input pointer =========================================
-    //
-    
+//
+// == input pointer =========================================
+//
+
     // Valido apenas para essa janela.
-    
+
     // Esta ligado?
     int ip_on;
-    
+
 // Qual eh o dispositivo de input.
     gws_ip_device_t ip_device;
 
@@ -600,6 +588,18 @@ struct gws_window_d
     unsigned long ip_pixel_x;
     unsigned long ip_pixel_y;
 
+// ======================================
+// The text for this input devices.
+
+    const char *window_text;
+    int text_size_in_bytes;
+    int text_fd;             // file descriptor for the text
+
+    const char *window_doc;
+    int doc_size_in_bytes;
+    int doc_fd;             // file descriptor for the document.
+
+    // ...
 
 // 
 //==================================================
@@ -616,6 +616,23 @@ struct gws_window_d
     unsigned long top_frame_Height;
     unsigned long client_area_Height;
     unsigned long bottom_frame_Height;
+
+
+
+//
+// Rectangles
+//
+
+    struct gws_rect_d  rcWindow;  // The frame's rectangle.
+    struct gws_rect_d  rcClient;  // The Client area.
+
+    // Os componentes dessa janela.
+    struct gws_rect_d  *rects;
+
+    // Os retângulos que foram pintados e
+    // precisam ser copiados para o framebuffer
+    // para tornarem-se visíveis.
+    struct gws_rect_d  *dirty_rects;
 
 
 //
@@ -642,13 +659,13 @@ struct gws_window_d
 // 3
 // Titlebar
 
-    unsigned int titlebar_color;
-    unsigned int titlebar_ornament_color;
-    unsigned int titlebar_text_color;
     struct gws_window_d  *titlebar;
     struct gws_window_d  *tb_minimize;
     struct gws_window_d  *tb_maximize;
     struct gws_window_d  *tb_close;
+    unsigned int titlebar_color;
+    unsigned int titlebar_ornament_color;
+    unsigned int titlebar_text_color;
     int isMinimize;
     int isMaximize;
     int isClose;
@@ -657,6 +674,7 @@ struct gws_window_d
     int titlebar_style;
     int titlebarUsed;
 
+// =========================================================
 // 4
 // Controls
 
@@ -666,6 +684,7 @@ struct gws_window_d
     int controls_style;
     int controlsUsed;
 
+// =========================================================
 // 5
 // Borders
 
@@ -674,46 +693,51 @@ struct gws_window_d
     int border_style;
     int borderUsed;
 
+// =========================================================
 // 6
 // Menubar
 
-    unsigned int menubar_color;
     struct gws_window_d *menubar;
+    struct gwsssrv_menu_d  *barMenu;      // Menu da barra de menu.
+    unsigned int menubar_color;
     unsigned long menubar_height;
     int menubar_style;
     int menubarUsed; 
 
+
+// =========================================================
 // 7
 // Toolbar
 
-    unsigned int toolbar_color;
     struct gws_window_d *toolbar;
+    unsigned int toolbar_color;
     unsigned long toolbar_height;
     int toolbar_style;
     int toolbarUsed;
 
+// =========================================================
 // 8
 // Client window
 
-    unsigned int clientrect_bg_color;
     struct gws_window_d *client_window; 
-    struct gws_rect_d  rcClient;         // Client rect. Not a pointer.
+    unsigned int clientrect_bg_color;
     unsigned long clientwindow_height;
     int clientarea_style;
     int clientAreaUsed;
 
 
+// =========================================================
 // 9
 // Scrollbar
 
 // vertical scrollbar
 // The wm will call the window server to create this kind of control.
 
-    unsigned int scrollbar_color;
     struct gws_window_d *scrollbar;
     struct gws_window_d *scrollbar_button1;
     struct gws_window_d *scrollbar_button2;
     struct gws_window_d *scrollbar_button3;
+    unsigned int scrollbar_color;
     int isScrollBarButton1;
     int isScrollBarButton2;
     int isScrollBarButton3;
@@ -722,20 +746,75 @@ struct gws_window_d
     int scrollbar_style;
     int scrollbarUsed;
 
+// =========================================================
 // 10
 // Statusbar
 
+    struct gws_window_d *statusbar;
     unsigned int statusbar_color;
-    struct window_d *statusbar;
     unsigned long statusbar_height;
     int statusbar_style;
     int statusbarUsed;
 
     // ...
 
-// ======================================================
 
-    // Flag par indicar se a janela é um item de menu ou um botão.
+// =========================================================
+// 11 
+// Navigation windows:
+// #todo: We need to select just some few pointer here.
+
+    struct gws_window_d  *next;
+    struct gws_window_d  *prev;
+
+    // ??
+    struct gws_window_d  *child;    // next (again?)
+    struct gws_window_d  *parent;   // back (again?)
+    struct gws_window_d  *owner;    // parent (again?)
+
+// Child support.
+// obs: gosto mais de arrays.
+//Lista encadeada de janelas filhas.
+//Tamanho da lista.
+
+    struct gws_window_d  *childListHead;  
+    int childCount;
+
+// Parent support
+//(Número da janela mãe).
+    unsigned long parentid;
+
+// =========================================================
+
+
+// 12
+// 
+
+// Menu da janela.
+// Aquela janelinha quando clicamos no icone.
+    struct gws_window_d *menu_window;     // Janela do menu.
+    struct gwsssrv_menu_d  *defaultMenu;  // Menu da janela.
+
+// Menu do sistema.
+    struct gws_window_d *system_menu;
+    struct gwsssrv_menu_d  *sysMenu;
+
+//==================================
+
+
+// Seleção  de item de menu.
+// No caso dessa janela ser um ítem de menu.
+    int selected;
+
+// Menuitem text.
+// Texto no caso dessa janela ser um ítem de menu.
+    const char *menuitem_text;
+
+
+
+// ======================================================
+// Flag par indicar se a janela é um item de menu ou um botão.
+
     int isMenu;   
     int isMenuItem;
     int isControl;  // Window control ...
@@ -744,36 +823,21 @@ struct gws_window_d
     int isCheckBox;
     int isIcon;
     // ...
-    
+
 // ======================================================
+// Um alerta de que exite uma mensagem para essa janela.
 
-    // ??
-    // Um alerta de que exite uma mensagem para essa janela.
-    int msgAlert;  
+    int msgAlert;
 
-// ?
-// Procedimento de janela 
-    unsigned long procedure; 
+// ======================================================
+// #todo
+// Window procedure.
+// Ok. Se isso for um endereço em ring3, dentro do cliente,
+// então precisamos de um método para chamá-lo daqui do window server
+// que está em ring0.
 
-// FAST FLAG. Essa será a flag de ativa ou não. (decidindo isso)
-    int active;
+    unsigned long procedure;
 
-// Se tem o foco de entrada ou não.
-    int focus;
-
-// 
-//==================================================
-
-
-    // Parent support
-    unsigned long parentid;       //(Número da janela mãe).
-    struct gws_window_d *parent;	  //Parent window.	
-
-
-    // Child support.
-    // obs: gosto mais de arrays.
-    struct gws_window_d *childListHead;  //Lista encadeada de janelas filhas.
-    int childCount;                  //Tamanho da lista.
 
 // 
 //==================================================	
@@ -813,36 +877,10 @@ struct gws_window_d
     int locked; 
 
 
-// 
-//==================================================
-
-    // parent window. 
-    // ?? again ??
-    struct gws_window_d *owner;
-    
-    // child window;
-    // ?? again ??
-    struct gws_window_d *child; 
-
-
-// 
-//==================================================
- 
-
-
-
 	// Buffer para mensagens pequenas.
     // Será usado pelo produtor e pelo consumidor.
     // char read_buf[WINDOW_MSG_BUFFER_SIZE];
 
-
-
-	//
-	// Window Class support.
-	//
-
-
-    struct gws_window_class_d *window_class;
 
     // ?? wtf
     // unsigned long scancodeList[32];	
@@ -963,16 +1001,7 @@ struct gws_window_d
     
     // ?? again ??
     // Qual buffer dedicado a janela usa.
-    // void *buffer;        
-
-
-
-    // rects.
-
-	// Lista encadeada dos retângulos que pertencem a essa janela.
-	// Quando uma janela for deletada, devemos desalocar toda a memória 
-	// usada por esses recursos.
-	struct gws_rect_d *rectList;
+    // void *buffer;
 
 
 	//
@@ -1012,33 +1041,20 @@ struct gws_window_d
     //struct process_d *process;	
 
 
-	//
-	// Menus.
-	//
 
 
-    // O menu para gerenciamento dessa janela se ela for overlapped.
-    struct gws_window_d *menu_window;
-    struct gwsssrv_menu_d  *defaultMenu;     //menu da janela (*importante)
-    
-    // Outros menus.
-    struct gwsssrv_menu_d  *sysMenu;         //menu de sistema.(control menu)
-    struct gwsssrv_menu_d  *barMenu;         //menu da barra de menu.
 
     // ...
 
-    //
-    // button
-    //
+//
+// button
+//
 
 	// suspenso
 	// Se a flag indicar que a janela é um botão, então 
 	// essa será a estrutura para o botão.
 
 	//struct button_d *button;
-
-    int selected;         //seleção  de item de menu.
-    const char *text;     // 
 
 
 //
@@ -1089,13 +1105,12 @@ struct gws_window_d
 
     int handle_status;
 
-
-//==================================================
-// Navigation
-
-    struct gws_window_d  *prev;
-    struct gws_window_d  *next;
+//
+// Window Class support.
+//
+    struct gws_window_class_d *window_class;
 };
+
 
 // Windows.
 
@@ -1260,6 +1275,9 @@ void reset_zorder(void);
 
 void validate_window (struct gws_window_d *window);
 void invalidate_window (struct gws_window_d *window);
+
+void __begin_paint(struct gws_window_d *window);
+void __end_paint(struct gws_window_d *window);
 
 
 // #todo

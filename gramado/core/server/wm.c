@@ -1556,6 +1556,22 @@ void invalidate_window (struct gws_window_d *window)
 }
 
 
+void __begin_paint(struct gws_window_d *window)
+{
+    if( (void*) window == NULL )
+        return;
+
+    validate_window(window);
+}
+
+
+void __end_paint(struct gws_window_d *window)
+{
+    if( (void*) window == NULL )
+        return;
+
+    invalidate_window(window);
+}
 
 /*
 void destroy_window (struct gws_window_d *window);
@@ -1810,9 +1826,6 @@ int serviceCreateWindow (int client_fd)
     }
 
 
-
-
-
 //===============================================
 
 //
@@ -2002,8 +2015,8 @@ int serviceResizeWindow(void)
         return -1;
     }
 
-    //do!
-    
+//do!
+
     gws_resize_window ( 
         (struct gws_window_d *) window, 
         (unsigned long) w, 
@@ -2059,8 +2072,11 @@ int serviceDrawButton(void)
 
 
 // Redraw window.
-int serviceRedrawWindow (void){
-    
+// It will invalidate the window, and it will need to be flushed
+// into the frame buffer.
+
+int serviceRedrawWindow (void)
+{
     //O buffer é uma global nesse documento.
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
@@ -2072,11 +2088,11 @@ int serviceRedrawWindow (void){
     unsigned long flags = 0;
 
 
-    // #debug
+// #debug
     gwssrv_debug_print ("serviceRedrawWindow:\n");
 
 
-    // Get wid and flag.
+// Get wid and flag.
     window_id  = message_address[0];  // window id 
     msg_code   = message_address[1];  // message code
     flags      = message_address[2];  // flags
@@ -2090,60 +2106,82 @@ int serviceRedrawWindow (void){
     //}
 
 
-    //
-    // Window ID
-    //
-   
-    // Limits
+// Window ID
+
+    window_id = (int) (window_id & 0xFFFF);
     if ( window_id < 0 || window_id >= WINDOW_COUNT_MAX ){
         gwssrv_debug_print ("serviceRefreshWindow: [FAIL] window_id\n");
         goto fail;
     }
 
-    // Get the window structure given the id.
+// Get the window structure given the id.
 
     window = (struct gws_window_d *) windowList[window_id];
 
     if ( (void *) window == NULL ){
         gwssrv_debug_print ("serviceRefreshWindow: [FAIL] window\n");
         goto fail;
-    }else{
-        if ( window->used != TRUE || window->magic != 1234 )
-        {
-            gwssrv_debug_print ("serviceRefreshWindow: [FAIL] window validation\n");
-            goto fail;
-        }
+    }
 
-        // redraw!
-        gwssrv_redraw_window (
-            (struct gws_window_d *) window, 
-            (unsigned long) flags );
+    if ( window->used != TRUE || window->magic != 1234 )
+    {
+        gwssrv_debug_print ("serviceRefreshWindow: [FAIL] window validation\n");
+        goto fail;
+    }
 
-        return 0;
-    };
+// Validate
+    window->dirty = FALSE;
+
+// Redraw
+
+    gwssrv_redraw_window (
+        (struct gws_window_d *) window, 
+        (unsigned long) flags );
+
+// Invalidate
+    window->dirty = TRUE;
+
+//done:
+    return 0;
 
 fail:
-    return -1;
+    return (int) (-1);
 }
 
 
-int serviceRefreshRectangle (void){
 
+// Flush a given area into the framebuffer.
+
+int serviceRefreshRectangle (void)
+{
 	//o buffer é uma global nesse documento.
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
-    unsigned long left,top,width,height;
+    unsigned long left=0;
+    unsigned long top=0;
+    unsigned long width=0;
+    unsigned long height=0;
 
-    // #todo
-    // Check all the header.
+// #todo
+// Check all the header.
+
+// #todo
+// Check if the message code is right.
 
     left   = message_address[4];
     top    = message_address[5];
     width  = message_address[6];
     height = message_address[7];
 
-    // #todo
-    // Maybe we can test some limits here.
+    left   = (left   & 0xFFFF);
+    top    = (top    & 0xFFFF);
+    width  = (width  & 0xFFFF);
+    height = (height & 0xFFFF);
+
+// #todo
+// Maybe we can test some limits here.
+
+// Flush it into the framebuffer.
 
     gws_refresh_rectangle ( left, top, width, height );
 
@@ -2152,6 +2190,10 @@ int serviceRefreshRectangle (void){
 
 
 // 1006
+// Flush a given window into the backbuffer.
+// #todo: Here we can simple mark this window as 'dirty'
+// and let the compositor do its job.
+
 int serviceRefreshWindow (void){
 
     unsigned long *message_address = (unsigned long *) &__buffer[0];
@@ -2214,21 +2256,19 @@ int serviceRefreshWindow (void){
         return -1;
     }
 
+
+
+// #todo
+// simply invalidate the window and let the compositor do its job.
+
+    //invalidate_window(window);
+
+//
+// Flush
+//
+
     gws_show_window_rect(window);
     
-    //
-    // Refresh
-    //  
-        
-    //gws_show_backbuffer ();       // for debug   
-    //gws_show_window_rect(window);   // something faster for now.
-    //something faster.
-    //gws_refresh_rectangle ( 
-    //    window->left +x, 
-    //    window->top  +y, 
-    //    8,   //char width 
-    //    8 ); // char height 
-
     return 0;
 }
 
@@ -3623,6 +3663,28 @@ set_window_vert (
     tss->window_bottom = j;
 }
 */
+
+
+/*
+// process id
+// Retorna o pid associado à essa janela.
+// #todo: fazer essa rotina também na biblioteca client side.
+pid_t get_window_pid( struct gws_window_d *window);
+pid_t get_window_pid( struct gws_window_d *window)
+{
+}
+*/
+
+/*
+// thread id
+// Retorna o tid associado à essa janela.
+// #todo: fazer essa rotina também na biblioteca client side.
+int get_window_tid( struct gws_window_d *window);
+int get_window_tid( struct gws_window_d *window)
+{
+}
+*/
+
 
 
 //

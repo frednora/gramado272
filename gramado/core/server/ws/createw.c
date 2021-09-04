@@ -972,6 +972,17 @@ void *xxxCreateWindow (
 // =================================
 
 //
+// == Frame rectangle ==
+//
+
+// #test
+
+    window->rcClient.left   = (unsigned long) window->left;
+    window->rcClient.top    = (unsigned long) window->height;
+    window->rcClient.width  = (unsigned long) window->width;
+    window->rcClient.height = (unsigned long) window->height;
+
+//
 // == Client area ==
 //
 

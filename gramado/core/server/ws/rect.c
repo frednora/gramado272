@@ -740,62 +740,6 @@ gws_refresh_rectangle (
 }
 
 
-
-// #todo
-// The structure needs to have all the information
-// we need to redraw the given rectangle.
-// # not tested yet.
-int update_rectangle( struct gws_rect_d *rect )
-{
-
-    unsigned long left=0;    //left
-    unsigned long top=0;     //top
-    unsigned long width=0;   // width
-    unsigned long height=0;  //height
-    unsigned int color=0;    // color
-
-
-// validation
-
-    if ( (void*) rect == NULL )
-        return -1;
-
-    if (rect->used != TRUE)
-        return -1;
-
-    if (rect->magic != 1234)
-        return -1;
-
-
-// Values
-
-    left   = (unsigned long) (rect->left   & 0xFFFF); 
-    top    = (unsigned long) (rect->top    & 0xFFFF); 
-    width  = (unsigned long) (rect->width  & 0xFFFF); 
-    height = (unsigned long) (rect->height & 0xFFFF); 
-
-    color = (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
-
-//
-// Paint it into the backbuffer.
-//
-
-// no return
-    rectBackbufferDrawRectangle ( 
-        (unsigned long) left,     //left
-        (unsigned long) top,      //top
-        (unsigned long) width,    // width
-        (unsigned long) height,   //height
-        (unsigned int) color,     // color
-        (int) TRUE,               // fill it?
-        (unsigned long) 0 );      // rop_flags
-
-
-    rect->dirty = TRUE;
-
-    return 0;
-}
-
 /*
  *******************************************************
  * rectBackbufferDrawRectangle: (API)
@@ -1001,6 +945,64 @@ rectBackbufferDrawRectangle (
     debug_print("rectBackbufferDrawRectangle: done\n");
 }
 
+// #todo
+// The structure needs to have all the information
+// we need to redraw the given rectangle.
+// # not tested yet.
+int update_rectangle( struct gws_rect_d *rect )
+{
+
+    unsigned long left=0;    //left
+    unsigned long top=0;     //top
+    unsigned long width=0;   // width
+    unsigned long height=0;  //height
+    unsigned int color=0;    // color
 
 
+// validation
+
+    if ( (void*) rect == NULL )
+        return -1;
+
+    if (rect->used != TRUE)
+        return -1;
+
+    if (rect->magic != 1234)
+        return -1;
+
+
+// Values
+
+    left   = (unsigned long) (rect->left   & 0xFFFF); 
+    top    = (unsigned long) (rect->top    & 0xFFFF); 
+    width  = (unsigned long) (rect->width  & 0xFFFF); 
+    height = (unsigned long) (rect->height & 0xFFFF); 
+
+    color = (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
+
+//
+// Paint it into the backbuffer.
+//
+
+// no return
+    rectBackbufferDrawRectangle ( 
+        (unsigned long) left,     //left
+        (unsigned long) top,      //top
+        (unsigned long) width,    // width
+        (unsigned long) height,   //height
+        (unsigned int) color,     // color
+        (int) TRUE,               // fill it?
+        (unsigned long) 0 );      // rop_flags
+
+
+    rect->dirty = TRUE;
+
+    return 0;
+}
+
+
+
+//
+// End
+//
 
