@@ -1326,6 +1326,7 @@ void *rect_memcpy32 ( void *v_dst, const void *v_src, unsigned long c );
 
 
 int gwssrv_refresh_this_rect( struct gws_rect_d *rect );
+int flush_rectangle(struct gws_rect_d *rect);
 
 
 //======================================
@@ -1373,6 +1374,13 @@ gws_refresh_rectangle (
     unsigned long height );
 
 
+// =======================================
+
+//
+// Update rectangle
+//
+
+// Paint it into the backbuffer.
 
 void 
 rectBackbufferDrawRectangle ( 
@@ -1383,6 +1391,10 @@ rectBackbufferDrawRectangle (
     unsigned int color,
     int fill,
     unsigned long rop_flags );
+
+int update_rectangle( struct gws_rect_d *rect );
+
+// =======================================
 
 int
 set_rect ( 
@@ -1419,6 +1431,7 @@ copy_offset_rect (
     unsigned long cy ); 
     
 int gws_show_window_rect (struct gws_window_d *window);
+int flush_window (struct gws_window_d *window);
 
 
 void *xxxCreateSurfaceWindow( 
@@ -1544,7 +1557,22 @@ gwssrv_change_window_position (
     unsigned long y );
 
 
-int gwssrv_redraw_window (struct gws_window_d *window, unsigned long flags ); 
+//================================
+
+// Redraw window
+
+int 
+gwssrv_redraw_window (
+    struct gws_window_d *window, 
+    unsigned long flags ); 
+
+int 
+update_window ( 
+    struct gws_window_d *window, 
+    unsigned long flags );
+
+//================================
+
 
 void gwsWindowLock (struct gws_window_d *window);
 void gwsWindowUnlock (struct gws_window_d *window);

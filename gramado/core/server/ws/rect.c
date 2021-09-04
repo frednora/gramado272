@@ -388,6 +388,12 @@ void *rect_memcpy32 (
 }
 
 
+// Flush the rectangle into the framebuffer.
+// Here we are flushing the content of a given
+// dirty retangle into the frame buffer.
+// We are using a flag to guide us if we realy need to refresh 
+// the given rectangle.
+
 int gwssrv_refresh_this_rect ( struct gws_rect_d *rect )
 {
     if ( (void*) rect == NULL )
@@ -406,9 +412,21 @@ int gwssrv_refresh_this_rect ( struct gws_rect_d *rect )
 }
 
 
+// Flush the rectangle into the framebuffer.
+int flush_rectangle(struct gws_rect_d *rect)
+{
+    return (int) gwssrv_refresh_this_rect(rect);
+}
+
+
 //======================================
 // Calling kgws in ring0.
 // Using the kgws to draw the rectangle.
+
+// #todo
+// At this moment, no structure ware invalidated.
+// So, the caller needs to specify a rect structure,
+// this way we can invalidated it.
 
 void 
 draw_rectangle_via_kgws ( 
@@ -723,11 +741,71 @@ gws_refresh_rectangle (
 
 
 
+// #todo
+// The structure needs to have all the information
+// we need to redraw the given rectangle.
+// # not tested yet.
+int update_rectangle( struct gws_rect_d *rect )
+{
+
+    unsigned long left=0;    //left
+    unsigned long top=0;     //top
+    unsigned long width=0;   // width
+    unsigned long height=0;  //height
+    unsigned int color=0;    // color
+
+
+// validation
+
+    if ( (void*) rect == NULL )
+        return -1;
+
+    if (rect->used != TRUE)
+        return -1;
+
+    if (rect->magic != 1234)
+        return -1;
+
+
+// Values
+
+    left   = (unsigned long) (rect->left   & 0xFFFF); 
+    top    = (unsigned long) (rect->top    & 0xFFFF); 
+    width  = (unsigned long) (rect->width  & 0xFFFF); 
+    height = (unsigned long) (rect->height & 0xFFFF); 
+
+    color = (unsigned int) (rect->bg_color & 0xFFFFFFFF); 
+
+//
+// Paint it into the backbuffer.
+//
+
+// no return
+    rectBackbufferDrawRectangle ( 
+        (unsigned long) left,     //left
+        (unsigned long) top,      //top
+        (unsigned long) width,    // width
+        (unsigned long) height,   //height
+        (unsigned int) color,     // color
+        (int) TRUE,               // fill it?
+        (unsigned long) 0 );      // rop_flags
+
+
+    rect->dirty = TRUE;
+
+    return 0;
+}
+
 /*
  *******************************************************
  * rectBackbufferDrawRectangle: (API)
  *     Draw a rectangle on backbuffer. 
  */
+
+// #todo
+// At this moment, no structure ware invalidated.
+// So, the caller needs to specify a rect structure,
+// this way we can invalidated it.
 
 void 
 rectBackbufferDrawRectangle ( 
@@ -739,7 +817,6 @@ rectBackbufferDrawRectangle (
     int fill,
     unsigned long rop_flags )
 {
-
 
 //
 // flag

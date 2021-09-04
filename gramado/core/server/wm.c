@@ -2237,7 +2237,6 @@ int serviceRefreshWindow (void){
 //===================================================================
 //
 
-
 // Let's redraw the window.
 // Called by serviceRedrawWindow().
 // IN: window pointer, show or not.
@@ -2531,6 +2530,16 @@ draw_frame:
     return 0;
 }
 
+
+// Here we're gonna redraw the given window
+// and invalidate it.
+int 
+update_window ( 
+    struct gws_window_d *window, 
+    unsigned long flags )
+{
+    return (int) gwssrv_redraw_window(window,flags);
+}
 
 /*
  * =====================================================
@@ -2862,6 +2871,11 @@ fail:
     return (int) -1;
 }
 
+
+int flush_window (struct gws_window_d *window)
+{
+    return (int) gws_show_window_rect(window);
+}
 
 /*
 // #todo
