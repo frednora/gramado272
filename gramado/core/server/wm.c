@@ -1134,21 +1134,17 @@ __add_message_to_into_the_queue(
 
 // Invalid window
 
-    if( (void*) window == NULL )
-    {
+    if( (void*) window == NULL ){
         debug_print("__add_message_to_into_the_queue: window\n");
         return -1;
     }
 
-    if( window->used != TRUE )
-    {
+    if( window->used != TRUE ){
         debug_print("__add_message_to_into_the_queue: used\n");
         return -1;
     }
 
-
-    if( window->magic != 1234 )
-    {
+    if( window->magic != 1234 ){
         debug_print("__add_message_to_into_the_queue: magic\n");
         return -1;
     }
@@ -1159,7 +1155,6 @@ __add_message_to_into_the_queue(
 //
 
 // next position
-
     window->head_pos++;
 
 // end of list
@@ -1179,8 +1174,8 @@ __add_message_to_into_the_queue(
 // standard
     window->window_list[offset] = (int) window->id;      // wid
     window->msg_list[offset]    = (int) (msg & 0xFFFF);  // message code
-    window->long1_list[offset] = (unsigned long) long1;
-    window->long2_list[offset] = (unsigned long) long2;
+    window->long1_list[offset]  = (unsigned long) long1;
+    window->long2_list[offset]  = (unsigned long) long2;
 
 // extra
     window->long3_list[offset] = 0;
@@ -1332,6 +1327,7 @@ wmProcedure(
 
 
 // Entry point
+// Called by the kernel.
 // Order: rdi, rsi, rdx, rcx, r8, r9.
 unsigned long 
 wmHandler(

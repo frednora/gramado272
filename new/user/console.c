@@ -1163,9 +1163,39 @@ int consoleInputChar( int c )
 int consoleCompareStrings(void)
 {
 
+// ===================================
+// #test: Testando carregar usando path.
+    //char __path[] = "/GRAMADO/TEST.BMP";
+    //char __path[] = "/GRAMADO/TEST.TXT";
+    //char __path[] = "/GRAMADO/FOLDER/TEST2.TXT";
+    char __path[] = "/GRAMADO/FOLDER/FOLDER2/TEST3.TXT";
+    //unsigned long tmp_size = (512*4096);    // 512*4096 = 2MB
+    void *__buffer; //= (void *) allocPages ( 512 );
+    int status=0;
+// =========================================
+
+
     debug_print("consoleCompareStrings: \n");
 
 //...
+
+// #test
+    if ( strncmp(prompt,"path",4) == 0 )
+    {
+        __buffer = (void *) allocPages(32);   //32 KB
+        status = (int) fs_load_path ( 
+                           (const char*)   __path, 
+                           (unsigned long) __buffer,
+                           (unsigned long) 32*4096 );  //32KB
+        if(status<0)
+            printf("fail\n");
+        
+        if(status>=0)
+            printf("Data:{%s}\n",__buffer);
+
+        goto exit_cmp;
+    }
+
 
 // about
     if ( strncmp( prompt, "about", 5 ) == 0 )
@@ -2049,6 +2079,8 @@ void console_banner(unsigned long banner_flags)
 
     //asm("hlt");
 }
+
+
 
 
 /*

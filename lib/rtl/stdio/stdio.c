@@ -2068,49 +2068,67 @@ int printf3 ( const char *format, ... )
 
 
 //=============================================================
-// kinguio printf
+// Usada por kinguio_printf
 
-void kinguio_i2hex(unsigned int val, char* dest, int len)
+void 
+kinguio_i2hex( 
+    unsigned int val, 
+    char *dest, 
+    int len )
 {
-	char* cp;
-	int i, x;
-	unsigned n;
-	
-	if(val == 0) {
-		cp = &dest[0];
-		*cp++ = '0';
-		*cp = '\0';
-		return;
-	}
-	
 
-	n = val;
-	cp = &dest[len];
-	while (cp > dest)
-	{
-		x = n & 0xF;
-		n >>= 4;
-		*--cp = x + ((x > (HEX_LEN+1)) ? 'A' - 10 : '0');
-	}
+    char* cp;
+
+    int i=0; 
+    int x=0;
+    unsigned n=0;
+
+// Simplesmente coloca '0' no buffer.
+    if (val == 0)
+    {
+        cp = &dest[0];
+        *cp++ = '0';
+        *cp = '\0';
+        return;
+    }
+
+
+// error
+    if(len<0)
+        return;
+
+// #todo
+// Qual é o tamanho desse buffer?
+
+    n = val;
+    cp = &dest[len];
+    while (cp > dest)
+    {
+        // Pega um nibble.
+        x = (n & 0xF);
+        // Próximo nibble.
+        n >>= 4;
+        
+        *--cp = x + ((x > (HEX_LEN+1)) ? 'A' - 10 : '0' );
+    };
     
-	dest[len]='\0';
+    dest[len]='\0';
 
-	cp = &dest[0];
-	for(i=0; i < len;i++) {
-	
-		if(*cp == '0') {
-			cp++;
-		}
-		else {
-			strcpy(dest,cp);
-			 break;
-		}
-			
-	}
+    cp = &dest[0];
+    for (i=0; i<len; i++)
+    {
+        if (*cp == '0') 
+        {
+            cp++;
+        }else{
+            strcpy(dest,cp);
+            break;
+        };
+    };
 
-	cp = &dest[0];
-	n = strlen(cp);
-	memset(dest + n,0,8-n);
+    cp = &dest[0];
+    n = strlen(cp);
+    memset( dest + n, 0, 8-n );
 }
 
 
@@ -2221,75 +2239,91 @@ static char *_vsputs_r(char *dest, char *src)
 }
 
 
-int kinguio_vsprintf(char * str,const char * fmt, va_list ap)
+int 
+kinguio_vsprintf( 
+    char * str, 
+    const char *fmt, 
+    va_list ap )
 {
+    char *str_tmp = str;
 
-	char *str_tmp = str;
+    char _c_r[] = "\0\0";
 
-	char _c_r[] = "\0\0";
+    int index = 0;
 
-	int index = 0;
-	unsigned char u;	
-	int d;
-	char c, *s;
-	char buffer[256];
+    char buffer[256];
 
-	while (fmt[index])
-	{
-		switch (fmt[index])
-		{
-		case '%':
-			++index;
-			switch (fmt[index])
-			{
-			
-			case 'c':
-				*_c_r = c = (char) va_arg (ap, int);
-				str_tmp  = _vsputs_r(str_tmp,_c_r);
-				break;
+// c
+    char c=0; 
 
-			case 's':
-				s = va_arg (ap, char*);
-				str_tmp  = _vsputs_r(str_tmp,s);
-				break;
+// s
+    char *s;
 
-			case 'd':
-			case 'i':
-				d = va_arg (ap, int);
-				kinguio_itoa (d,buffer);
-				str_tmp  = _vsputs_r(str_tmp,buffer);
-				break;
+// d|i|x
+    int d=0;
 
-			case 'u':
-				u = va_arg (ap, unsigned int);
-				kinguio_itoa  (u,buffer);
-				str_tmp  = _vsputs_r(str_tmp,buffer);
-				break;
+// u
+    unsigned char u=0;
 
-			case 'X':
-			case 'x':
-				d = va_arg (ap, int);
-				kinguio_i2hex(d, buffer,8);
-				str_tmp  = _vsputs_r(str_tmp,buffer);
-				break;
-			
-			default:
-				str_tmp  = _vsputs_r(str_tmp,"%%");
-				break;
-				
-				
-			}
-			break;
 
-		default:
-			*_c_r = fmt[index]; //
-			str_tmp  = _vsputs_r(str_tmp,_c_r);
-			break;
-		}
-		++index;
-	}
-	
-    return ((long)str_tmp - (long)str);
+
+
+    while (fmt[index])
+    {
+        switch (fmt[index]){
+        case '%':
+            ++index;
+            
+            switch (fmt[index]){
+            
+            case 'c':
+                *_c_r = c = (char) va_arg (ap, int);
+                str_tmp  = _vsputs_r(str_tmp,_c_r);
+                break;
+
+            case 's':
+                s = va_arg (ap,char*);
+                str_tmp  = _vsputs_r(str_tmp,s);
+                break;
+
+            case 'd':
+            case 'i':
+                d = va_arg (ap, int);
+                kinguio_itoa (d,buffer);
+                str_tmp  = _vsputs_r(str_tmp,buffer);
+                break;
+
+            case 'u':
+                u = va_arg (ap, unsigned int);
+                kinguio_itoa  (u,buffer);
+                str_tmp  = _vsputs_r(str_tmp,buffer);
+                break;
+
+            case 'X':
+            case 'x':
+                d = va_arg (ap, int);
+                kinguio_i2hex(d,buffer,8);
+                str_tmp  = _vsputs_r(str_tmp,buffer);
+                break;
+
+            default:
+                str_tmp = _vsputs_r(str_tmp,"%%");
+                break;
+            };
+            break;
+
+        default:
+            *_c_r = fmt[index];
+            str_tmp  = _vsputs_r(str_tmp,_c_r);
+            break;
+        };
+
+        ++index;
+    };
+
+// done:
+// Return size ?
+    return (int) ((long)str_tmp - (long)str);
 }
 
 
@@ -2352,7 +2386,7 @@ void printf_atoi (int value, char* valuestring){
 }
 
 
-//usada na printf2
+// Usada na printf2
 void printf_i2hex (uint32_t val, char *dest, int len){
 
     char *cp;

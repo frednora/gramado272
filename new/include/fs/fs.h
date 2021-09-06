@@ -528,7 +528,7 @@ fs_save_rootdir (
     
 // ===
 
-unsigned long fsRootDirGetFileSize ( unsigned char *file_name );
+unsigned long fsGetFileSize ( unsigned char *file_name, unsigned long dir_address );
 
 unsigned long 
 fsLoadFile ( 

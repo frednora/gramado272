@@ -106,6 +106,106 @@ struct sockaddr_in addr = {
 */
 
 
+int barCompareStrings(void)
+{
+    debug_print("barCompareStrings: \n");
+
+
+    char c=0;
+    
+    c = (char) prompt[0];
+
+// =============================
+// Emergency 
+
+
+// reboot
+    if(c=='q')
+        gws_reboot();
+
+// 
+    if(c=='1')
+        rtl_clone_and_execute("browser.bin");
+
+//
+    if(c=='2')
+        rtl_clone_and_execute("editor.bin");
+
+//
+    if(c=='3')
+        rtl_clone_and_execute("logon.bin");
+
+//
+    if(c=='4')
+        rtl_clone_and_execute("terminal.bin");
+
+
+/*
+// reboot
+// #bugbug: It is not working
+    //if( strcmp(prompt,"reboot") == 0 )
+    if ( strncmp( prompt, "reboot", 6 ) == 0 )
+    {
+        printf("reboot:\n");
+        gws_reboot();
+        goto exit_cmp;
+    }
+*/
+
+    printf("Typed String:{%s}\n",prompt);
+
+// #test
+    //gws_clone_and_execute( (char*) &prompt[0] );
+
+exit_cmp:
+   //nothing
+done:
+    barPrompt();
+    return 0;
+}
+
+
+
+void barPrompt (void)
+{
+    int i=0;
+
+// Clean prompt[] buffer.
+// This is a buffer inside the libc.
+
+    for ( i=0; i<PROMPT_MAX_DEFAULT; i++ ){ prompt[i] = (char) '\0'; };
+
+    prompt[0] = (char) '\0';
+    prompt_pos    = 0;
+    prompt_status = 0;
+    prompt_max    = PROMPT_MAX_DEFAULT;  
+
+// #todo
+// We need to change the cursor position inside the 
+// editbox.
+
+    // Prompt
+    //printf("\n");
+    //printf("$ ");
+    
+    //invalidate_screen();
+    //refresh_screen();
+
+    //gws_refresh_screen();
+}
+
+// Coloca no prompt[] para ser comarado.
+// Talvez o prompt também seja o buffer de stdin
+int barInputChar( int c )
+{
+    unsigned long ascii=0;
+    
+    ascii = (unsigned long) (c & 0xFF);
+
+    return (int) input(ascii);
+}
+
+
 //
 // Main
 //
@@ -463,49 +563,44 @@ int main ( int argc, char *argv[] ){
 
 
 
-// #importante
-// Se não usarmos o loop acima, então podemos pegar
-// as mensagens do sistema....
-// O ws pode mandar mensagens de sistema para o
-// wm registrado.
 
+//
+// Events
+//
 
-    /*
-    struct gws_event_d *Event;
-     
-    for(;;){
-        
-        Event = (struct gws_event_d *) gws_next_event();
-        
-        if (Event.type == 0){
-           gws_debug_print("gwm: event 0\n");
-        
-        }else if (Event.type == 1){
-           gws_debug_print("gwm: event 1\n");
-        
-        }else if (Event.type == 2){
-           gws_debug_print("gwm: event 2\n");
-        
-        }else{
-           gws_debug_print("gwm: Not valid event!\n");
-        };
-    };
-    */
+// #test
+// Let's include the typed byte into the buffer
+// and using the string for calling a child process.
 
-    /*
-    //=================================
-    //get current thread
-    int cThread = (int) sc82 (10010,0,0,0);
-    //set foreground thread.
-    sc82 (10011,cThread,cThread,cThread);
-    
-    while(1){
-        if ( rtl_get_event() == TRUE ){  
-            filemanProcedure( (void*) RTLEventBuffer[0], RTLEventBuffer[1], RTLEventBuffer[2], RTLEventBuffer[3] );
+    struct gws_event_d lEvent;
+    lEvent.used=0;
+    lEvent.magic=0;
+    lEvent.msg=0;
+    lEvent.long1=0;
+    lEvent.long2=0;
+
+    struct gws_event_d *ev;
+
+    while(TRUE){
+        ev = (struct gws_event_d *) gws_get_next_event(client_fd,(struct gws_event_d *) &lEvent);
+
+        // The typed key
+        if( lEvent.msg == MSG_KEYDOWN )
+        {
+            if( lEvent.long1 != VK_RETURN ){
+                barInputChar( (int)lEvent.long1 );
+            }
+
+            if( lEvent.long1 == VK_RETURN )
+            {
+                input('\n');
+                barCompareStrings();
+            }
+            
+            lEvent.msg = 0;
         }
     };
-    //=================================
-    */
+
 
     while(1){}
 

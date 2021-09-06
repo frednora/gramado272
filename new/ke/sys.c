@@ -1810,6 +1810,8 @@ int sys_fcntl ( int fd, int cmd, unsigned long arg )
 }
 
 // 178
+// Only root dir.
+//#todo: unsigned long sys_get_file_size ( char *path, unsigned long dir_address )
 unsigned long sys_get_file_size ( char *path )
 {
     unsigned long Size=0;
@@ -1828,8 +1830,11 @@ unsigned long sys_get_file_size ( char *path )
 
     //taskswitch_lock();
     //scheduler_lock();
-    
-    Size = (unsigned long) fsRootDirGetFileSize ( (unsigned char *) path ); 
+
+
+    Size = (unsigned long) fsGetFileSize ( 
+                               (unsigned char *) path, 
+                               (unsigned long) VOLUME1_ROOTDIR_ADDRESS ); 
     
     //scheduler_unlock();
     //taskswitch_unlock();

@@ -299,7 +299,7 @@ void set_file ( void *file, int Index )
 
 
      file_table[Index] = (unsigned long) file;
-}    
+}
 
 
 // Called by init() in init.c
@@ -316,13 +316,13 @@ int fsInit (void)
     set_filesystem_type(FS_TYPE_NULL);
 
 
-    //
-    // Initialize fat16 support for the system's volume.
-    //
+//
+// Initialize fat16 support for the system's volume.
+//
 
-    // #todo: 
-    // Devemos checar o tipo da partiçao de boot. 
-    // Se nao aqui, depois!
+// #todo: 
+// Devemos checar o tipo da partiçao de boot. 
+// Se nao aqui, depois!
 
     // #todo
     fat16Init();
@@ -1305,7 +1305,7 @@ done:
 
 /*
  ***************************** 
- * fsRootDirGetFileSize: 
+ * fsGetFileSize: 
  * 
  */
 
@@ -1323,11 +1323,12 @@ done:
 // #bugbug
 // Estamos com problemas na string do nome.
 
-// #bubug
-// Only on rootdir.
-
-unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
+unsigned long 
+fsGetFileSize ( 
+    unsigned char *file_name, 
+    unsigned long dir_address )
 {
+
     unsigned long FileSize=0;    // 64bit
     unsigned int intFileSize=0;  // 32bit
     
@@ -1349,7 +1350,7 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
 	// #todo: 
 	// Devemos carregar o diretório alvo.
 
-    unsigned short *Dir = (unsigned short *) VOLUME1_ROOTDIR_ADDRESS;
+    unsigned short *Dir = (unsigned short *) dir_address;//VOLUME1_ROOTDIR_ADDRESS;
 
 	// #todo: Devemos carregar o diretório atual.
 	//unsigned long current_dir_address = (unsigned long) Newpage();
@@ -1374,7 +1375,13 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
         goto fail;
     }
 
-	
+
+    if (dir_address == 0){
+        printk("fsRootDirGetFileSize: [ERROR] dir_address\n");
+        goto fail;
+    }
+
+
 	// Lock ??.
 	
 	//taskswitch_lock();
@@ -1404,12 +1411,19 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
     // Estamos chamando isso toda vez que
     // tentamos abrir um arquivo.
 
-    // Carregando o diretório raiz.
-    fs_load_rootdir ( 
-        VOLUME1_ROOTDIR_ADDRESS, 
-        VOLUME1_ROOTDIR_LBA, 
-        32 );
+// Carregando o diretório raiz.
+// #bugbug
+// Case seja o diretório raiz ...
+// e essa for a primeira vez que estamos carregando um arquivo.
+// #todo: FIXME
 
+    if(dir_address == VOLUME1_ROOTDIR_ADDRESS)
+    {
+        fs_load_rootdir ( 
+            VOLUME1_ROOTDIR_ADDRESS, 
+            VOLUME1_ROOTDIR_LBA, 
+            32 );
+    }
 
 	//#todo:
 	//precisamos na verdade carregarmos o diretório corrente.
@@ -1422,10 +1436,9 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
     //A intenção é obtermos a quantidade de entradas no diretório raiz.
 	//#bugbug: Mas isso deveria ser feito para o diretório atual.
 
-    //
-    // == root filesystem structure ===============================
-    //
-
+//
+// == root filesystem structure ===============================
+//
 
     if ( (void *) root == NULL ){
         panic ("fsRootDirGetFileSize: [FAIL] No root file system!\n");
@@ -1437,7 +1450,10 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
 
         // Max entries ~ Número de entradas no rootdir.
         // #bugbug: 
-        // Devemos ver o número de entradas no diretório alvo.
+        // Devemos ver o número de entradas no diretório raiz
+        // #bugbug: Esse valor não é válido para todos os diretórios
+        // por isso temos que usar estruturas para gerenciar
+        // diretórios e entradas.
 
         max = root->dir_entries;
         if (max <= 0){ panic ("fsRootDirGetFileSize: [FAIL] max root entries\n"); }
@@ -1472,14 +1488,16 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
 	
 //search_file:
 
-    //
-    // file name limit.
-    //
 
-    size_t szFileName = (size_t) strlen (file_name); 
-    
-    // o tamanho da string falhou
-    //vamos ajustar.
+//
+// file name limit.
+//
+
+// Se o tamanho da string falhou
+// vamos ajustar.
+
+    size_t szFileName = (size_t) strlen(file_name); 
+
     if ( szFileName > 11 )
     {
         printf ("fsRootDirGetFileSize: [FIXME] name size fail %d\n",
@@ -1487,10 +1505,10 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
         szFileName = 11;
     }
 
-    // Compare.
-    // Copia o nome e termina incluindo o char 0.
-    // Compara 11 caracteres do nome desejado, 
-    // com o nome encontrado na entrada atual.
+// Compare.
+// Copia o nome e termina incluindo o char 0.
+// Compara 11 caracteres do nome desejado, 
+// com o nome encontrado na entrada atual.
 
     i=0; 
 
@@ -1515,7 +1533,7 @@ unsigned long fsRootDirGetFileSize ( unsigned char *file_name )
         i++;        
     }; 
 
-    // Not found!
+// Not found!
 
 fail:
 
@@ -1529,7 +1547,7 @@ fail:
     refresh_screen ();
     return (unsigned long) 0;
 
-    // Found!
+// Found!
 
 found:
 
@@ -1543,7 +1561,7 @@ found:
     // Offsets: 28 29 30 31
 
     //FileSize = *(unsigned long*) (VOLUME1_ROOTDIR_ADDRESS + (z*2) + 28 );
-    intFileSize = *(unsigned int*) (VOLUME1_ROOTDIR_ADDRESS + (z*2) + 28 );
+    intFileSize = *(unsigned int *) (dir_address + (z*2) + 28 );
 
     FileSize = (unsigned long) intFileSize;
 
@@ -1858,7 +1876,7 @@ fsLoadFile (
 // Precisamos usar as estruturas de diretorio e 
 // as estruturas de buffer.
     
-    FileSize = (unsigned long) fsRootDirGetFileSize ( (unsigned char *) file_name );
+    FileSize = (unsigned long) fsGetFileSize ( (unsigned char *) file_name, (unsigned long)dir_address );
     
     if (FileSize==0)
     {
@@ -2599,12 +2617,13 @@ int fs_initialize_process_cwd ( int pid, char *string )
  */
 
 // IN:
-// @path:
-//     Path de dois níveis, endereço onde carregar.
+// path:
+//     Path de dois níveis.
 //     Ex: "/BIN/GDESHELL.BIN"
-// @address:
+// address:
 //     Address to load the file.
-//
+// buffer_size:
+//     Size of the buffer for the file.
 
 // #bugbug
 // Starts only on root dir.
@@ -2625,14 +2644,13 @@ fs_load_path (
     unsigned long buffer_size )
 {
 
-    // #todo
-    // Work on that limit stuff.
-    // We have the limit given by the argument,
-    // that needs to be respected.
-    // And we have the size of the root dir.
-    
-    unsigned long MaxEntries = FAT16_ROOT_ENTRIES;  //512
+// #todo
+// Work on that limit stuff.
+// We have the limit given by the argument,
+// that needs to be respected.
+// And we have the size of the root dir.
 
+    unsigned long MaxEntries = FAT16_ROOT_ENTRIES;  //512
 
     int i=0;         // Deslocamento dentro do buffer.
     int level=0;
@@ -2653,7 +2671,7 @@ fs_load_path (
     void *__file_buffer;
 
 
-    // path
+// Path
 
     if ( (void*) path == NULL ){
         panic ("fs_load_path: path\n"); 
@@ -2663,97 +2681,99 @@ fs_load_path (
         panic ("fs_load_path: *path\n"); 
     }
 
-    // Address
+// Address
+
     if (address == 0){
         panic ("fs_load_path: address\n");
     }
+
+// Buffer size
 
     if (buffer_size == 0){
         panic ("fs_load_path: buffer_size\n");
     }
 
+//===================================
 
-    // File buffer.
+// File buffer
     __file_buffer = (void *) address;
 
-
-    // Counting the levels.
+// Counting the levels.
+// Start with 0.
     n_levels = fs_count_path_levels(path);
-    
     if (n_levels==0){
         panic ("fs_load_path: n_levels\n");
     }
-    
     printf ("fs_load_path: path with %d levels\n",n_levels);
-
-
-    // Start with 0.
     level = 0;
 
-    // Path provisório.
+
+// Local pointer.
     p = path;
 
 
-    // #bugbug
-    // Overflow quando colocarmos um diretorio maior que
-    // o buffer.
+// #bugbug
+// Overflow quando colocarmos um diretorio maior que o buffer.
 
     // Primeiro src =  root address;
     __src_buffer = (void *) VOLUME1_ROOTDIR_ADDRESS;
     unsigned long limits = (512*32);
 
-    
+
     // Not absolute   
     if ( p[0] != '/' ){
         panic ("fs_load_path: Not absolute pathname \n");
     }
 
-    
-    //
-    // loop: Carregar n levels.
-    //
+
+//
+// loop: 
+// Carregar n levels.
+//
 
     for (l=0; l<n_levels; l++)
     {
+        printf ("\n");
+        printf ("[LEVEL %d]\n",l);
 
-        printf ("\n[LEVEL %d]\n\n",l);
-        
         // The level needs to start with '/', even the first one.
         if ( p[0] != '/' ){
             panic ("fs_load_path: All levels need to start with '/' \n");
         }
-        
-        //Skip the '/'.
-        p++;  
+
+        // Skip the '/'.
+        p++;
 
         // Walk 13 chars in the same level.
         for ( i=0; i<12; i++ )
         {
-            // #debug
+            // #debug Show the char.
             printf ("%c", (char) *p);
 
             // Copia o char para o buffer até que o char seja '/'
             // indicando inicio do próximo nível.
-            
+            // E se não houver próximo nível?
+
             buffer[i] = (char) *p;
-            
-            
-            // O ponto deve aparecer no último nível.
+
+            // + O ponto deve aparecer no último nível.
             // caso contrário falhou
+            // + Se o ponto está além do limite permitido.
+            // + Se o ponto for antes do nono byte. OK.
+
             if ( *p == '.' )
             {
                 if ( l != (n_levels-1) ){
-                    panic ("fs_load_path: Directory name with '.'\n");
+                    panic ("fs_load_path: '.' found into a subdirectory\n");
                 }
-                
-                // Se o ponto está além do limite permitido.
+
                 //if (i>7){
                 if (i>=7){
                     printf ("fs_load_path: '.' fail.\n");
                     panic ("Name size bigger than 8.\n");
                 }
-                
-                // Se o ponto for antes do nono slot. OK.
+
+                // O ponto foi encontrado dentro do range permitido.
                 if (i<8)
                 {
                      // Nome tem no máximo 8 chars.
@@ -2761,13 +2781,13 @@ fs_load_path (
                      // "FILE    123"
                      while (i<=7){ buffer[i] = ' '; i++; };
 
-                     
                      // Skip the dot '.'.
                      // Yes it is a dot. See the IF statement above.
                      p++;
-                     
+
                      // Add the extension.
-                     while (i<=11)
+                     i=8;  // [8] [9] [10]
+                     while (i<11)
                      {
                          buffer[i] = (char) *p;
                          i++;
@@ -2796,7 +2816,7 @@ fs_load_path (
                 
                 // #bugbug
                 // Se o diretório for o diretório raiz
-                // então não podemos sondr menos que 512 entradas.
+                // então não podemos sondar menos que 512 entradas.
                 // #todo: Temos que considerar o número de entradas
                 // exatos de um diretório.
                 // Podemos ter um limite estabelecido pelo sistema.
@@ -2804,6 +2824,7 @@ fs_load_path (
                 // IN: 
                 // fat address, dir address, filename, file address.
                 
+                // Load the file. (The last level)
                 Ret = fsLoadFile ( 
                           (unsigned long) VOLUME1_FAT_ADDRESS,  // fat address
                           (unsigned long) __src_buffer,         // dir address. onde procurar. 
@@ -2851,7 +2872,7 @@ fs_load_path (
                     // Adicionando espaços.
                     // O formato desejado eh: "DIRXDIRX   "
                     // Nome do diretorio sem extensao.
-                    while (i<=11)
+                    while (i<11)
                     { 
                         //o primeiro espaço deve retirar a barra colocada antes
                         buffer[i] = ' ';  
@@ -2881,8 +2902,11 @@ fs_load_path (
                 if ( (void *) __dst_buffer == NULL ){
                     panic ("fs_load_path: __dir\n");
                 }
-                          
-                      //IN: fat address, dir address, filename, file address.
+
+                // IN: 
+                // fat address, dir address, filename, file address.
+
+                // Load the directory. (Not the last level)
                 Ret = fsLoadFile ( 
                           (unsigned long) VOLUME1_FAT_ADDRESS,  // fat address
                           (unsigned long) __src_buffer,         // dir address. onde procurar.
@@ -4045,8 +4069,10 @@ __OK:
     
     // File size.
     // #bugbug: OUT: 'unsigned long'
-    FileSize = (size_t) fsRootDirGetFileSize( (unsigned char *) file_name );
-    
+    FileSize = (size_t) fsGetFileSize( 
+                            (unsigned char *) file_name,
+                            (unsigned long)VOLUME1_ROOTDIR_ADDRESS );
+
     if (FileSize <= 0){
         printf ("sys_read_file_from_disk: File size fail\n");
         refresh_screen();

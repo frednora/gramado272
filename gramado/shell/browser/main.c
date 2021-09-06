@@ -254,28 +254,14 @@ int main ( int argc, char *argv[] ){
 
 // loop
     while(1){
-        
         e = (struct gws_event_d *) gws_get_next_event(client_fd, (struct gws_event_d *) &lEvent);
-        
-        //#debug
-        //if( (void*) e == NULL )
-            //printf("."); fflush(stdout);
-            
-        //if( (void*) e != NULL )
-        //{
-            //if (e->magic != 1234 )
-                //printf ("browser: Invalid struct\n");
-            
-            // print what we got
-            // IMPRIME SOMENTA AS MENSAGENS DE DIGITAÇAO
-            if( e->msg == MSG_KEYDOWN )
-               printf ("event: >>[%c]\n",lEvent.long1);
-           
-            //#debug
-            //if (e->magic == 1234 )
-                //printf ("event: wid=%d msg=%d l1=%d l2=%d \n",
-                    //lEvent.wid, lEvent.msg, lEvent.long1, lEvent.long2 );
-        //}
+
+        if( e->msg == MSG_KEYDOWN )
+        {
+           //printf ("event: >>[%c]\n",lEvent.long1);
+           //if(lEvent.long1 == 'q')
+               //exit(0);
+        }
     };
 
 //HANG:

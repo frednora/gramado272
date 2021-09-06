@@ -101,8 +101,9 @@ int NoReply = FALSE;
 #define LONGSTRING_SIZE        256
 // ...
 
-int connection_status = 0;
-
+static int connection_status = 0;
+static int IsTimeToQuit = FALSE;
+static int IsAcceptingConnections = FALSE;
 
 
 
@@ -2503,6 +2504,10 @@ int main (int argc, char **argv)
     // #debug flags
     int UseCompositor = TRUE;
 
+
+    IsTimeToQuit = FALSE;
+    IsAcceptingConnections = TRUE;
+
 // =============
 
 // #test
@@ -2681,22 +2686,21 @@ int main (int argc, char **argv)
     int CanRead=-1;
 
 
-        // #todo:
-        // Initialize all the OS dependent stuff.
-        // ex: OsInit();
+// #todo:
+// Initialize all the OS dependent stuff.
+// ex: OsInit();
 
-        // #debug
-        // Initializing or reinitializing
-        gwssrv_debug_print ("-----------------------\n");
-        gwssrv_debug_print ("gwssrv: Initializing...\n");
-        printf             ("gwssrv: Initializing...\n");
-
+// #debug
+    gwssrv_debug_print ("-----------------------\n");
+    gwssrv_debug_print ("gwssrv: Initializing...\n");
+    // printf             ("gwssrv: Initializing...\n");
 
 //
 // Init clients support.
 //
 
-    // Inicializa a lista de clientes.
+// Inicializa a lista de clientes.
+
     gwssrv_init_client_support();
 
 
@@ -2704,82 +2708,80 @@ int main (int argc, char **argv)
 // #bugbug
 //
 
-    // Essa estrutura nao esta sendo inicializada corretamente.
+// Essa estrutura nao esta sendo inicializada corretamente.
     
     if ( serverClient->used != TRUE || serverClient->magic != 1234 )
     {
          //asm ("int $3");
     } 
 
-        // Register.
 
-        // #bugbug
-        // I don't know if we can register more than one time.
+// Register.
+
+// #bugbug
+// I don't know if we can register more than one time.
         // We can fix it!
 
-        // Register.
-        // Register window server as the current window server 
-        // for this desktop.
-        // #bugbug: Se tentarmos reiniciar o servidor, talvez
-        // nao consigamos registrar novamente, pois ja tem um registrado.
-        // Precisamos a opcao de desregistrar, para tentarmos 
-        // mais de um window server.
-        // See: connect.c
+// Register.
+// Register window server as the current window server 
+// for this desktop.
+// #bugbug: 
+// Se tentarmos reiniciar o servidor, talvez
+// nao consigamos registrar novamente, pois ja tem um registrado.
+// Precisamos a opcao de desregistrar, para tentarmos 
+// mais de um window server.
+// See: connect.c
 
-        _status = (int) register_ws();
+    _status = (int) register_ws();
 
-        if (_status<0){
-            gwssrv_debug_print ("gwssrv: Couldn't register the server \n");
-            printf             ("gwssrv: Couldn't register the server \n");
-            exit(1);
-        }
-        gwssrv_debug_print ("gwssrv: Registration ok \n");
-        window_server->registration_status = TRUE;
+    if (_status<0){
+        gwssrv_debug_print ("gwssrv: Couldn't register the server \n");
+        printf             ("gwssrv: Couldn't register the server \n");
+        exit(1);
+    }
+    gwssrv_debug_print ("gwssrv: Registration ok \n");
+    window_server->registration_status = TRUE;
 
 
-        // #test
-        // Double shot the current thread.
-        // See: sched.c
-        //gramado_system_call (667,0,0,0);
+// #todo
+// Daqui pra frente é conexão com cliente.
+// Lembrando que o servidor vai se conectar à mais de um cliente.
+// ...
 
-        // #todo
-        // Daqui pra frente é conexão com cliente.
-        // Lembrando que o servidor vai se conectar à mais de um cliente.
-        // ...
-        
-        // #todo
-        // Aqui nos podemos criar vários sockets que serão usados
-        // pelo servidor.
-        //ex: CreateWellKnownSockets ();
-    
-        // #atenção
-        // socket() bind() e listen() ficam antes do loop.
+// #todo
+// Aqui nos podemos criar vários sockets que serão usados
+// pelo servidor.
+//ex: CreateWellKnownSockets ();
 
-        //
-        // Socket
-        //
 
-        // #debug
-        //printf ("gwssrv: [1] socket()\n");
+//
+// Socket
+//
 
-        server_fd = (int) socket (AF_GRAMADO, SOCK_STREAM, 0);
-
-        if (server_fd<0){
-            gwssrv_debug_print ("gwssrv: [FATAL] Couldn't create the server socket\n");
-            printf             ("gwssrv: [FATAL] Couldn't create the server socket\n");
-            exit(1);
-        }
-
-        // Saving the socket fd.
-        window_server->socket = server_fd;
-
-        // Saving the socket fd.
-        serverClient->fd      = (int) server_fd;
-        ____saved_server_fd   = (int) server_fd;
-        
+// + Creating the socket for the server.
+// + Saving the socket fd.
 
     // #debug
-    // ok
+    //printf ("gwssrv: [1] socket()\n");
+
+    server_fd = (int) socket (AF_GRAMADO, SOCK_STREAM, 0);
+    if (server_fd<0){
+        gwssrv_debug_print ("gwssrv: [FATAL] Couldn't create the server socket\n");
+        printf             ("gwssrv: [FATAL] Couldn't create the server socket\n");
+        exit(1);
+    }
+
+// Global variable.
+    ____saved_server_fd   = (int) server_fd;
+
+// Window server structure.
+    window_server->socket = (int) server_fd;
+
+// The server itself has its own client structure.
+    serverClient->fd      = (int) server_fd;
+
+
+    // #debug
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
@@ -2787,7 +2789,6 @@ int main (int argc, char **argv)
 //
 // bind
 //
-
 
     // #debug
     //printf ("gwssrv: [2] bind()\n");
@@ -2804,9 +2805,7 @@ int main (int argc, char **argv)
     }
 
 
-
     // #debug
-    // ok
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
@@ -2815,20 +2814,18 @@ int main (int argc, char **argv)
 // listen
 //
 
+// #todo
+// It will setup how many connection the kernel
+// is able to have in the list.
+// 5 clients in the list.
 
-        // #todo
-        // It will setup how many connection the kernel
-        // is able to have in the list.
-        // 5 clients in the list.
+    // #debug
+    //printf ("gwssrv: [3] listen()\n");
 
-        // #debug
-        //printf ("gwssrv: [3] listen()\n");
-
-    listen(server_fd,5);
+    listen (server_fd,5);
 
 
     // #debug
-    // ok
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
@@ -2837,26 +2834,22 @@ int main (int argc, char **argv)
 // Init Graphics
 //
 
-    //if ( serverClient->fd != 3 ) { asm("int $3"); }
-
-
-        // Draw !!!
-        // Init gws infrastructure.
-        // Initialize the 3d graphics support.
-        // Let's create the traditional green background.
+// Draw something.
+// Init gws infrastructure.
+// Initialize the 3d graphics support.
+// Let's create the atandard green background.
 
     // #debug
     //printf ("gwssrv: Init graphics\n");
 
+// Init graphics
     initGraphics();
+
+// Flag
     window_server->graphics_initialization_status = TRUE;
 
-
-    //if ( serverClient->fd != 3 ) { asm("int $3"); }
-    
-        //gws_show_backbuffer();
-        //while(1){}
-
+    //gws_show_backbuffer();
+    //while(1){}
 
     // #debug
     //printf ("fd: %d\n", serverClient->fd);
@@ -2867,32 +2860,31 @@ int main (int argc, char **argv)
 // Child
 //
 
-        // Calling child.
-        //printf ("gwssrv: Calling child \n"); 
+    // Calling child.
+    //printf ("gwssrv: Calling child \n"); 
 
-        /*
-        if ( window_server->launch_first_client == TRUE )
-        {
-            // #todo: Get the status.
-            //rtl_clone_and_execute("gws.bin");
-            //gwssrv_clone_and_execute ("gwm.bin");
-            //gwssrv_clone_and_execute ("logon.bin");
-        }
-        */
-
+    /*
+    if ( window_server->launch_first_client == TRUE )
+    {
+        // #todo: Get the status.
+        //rtl_clone_and_execute("gws.bin");
+        //gwssrv_clone_and_execute ("gwm.bin");
+        //gwssrv_clone_and_execute ("logon.bin");
+    }
+    */
 
     // #debug
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
-    //if ( serverClient->fd != 3 ) { asm("int $3"); }
 
 //
 // Client
 //
 
-    debug_print ("gwssrc: Calling client $$$$$\n");
+    //debug_print ("gwssrc: Calling client $$$$$\n");
 
+/*
     if ( flagUseClient == TRUE )
     {
         //rtl_clone_and_execute("gws.bin");
@@ -2903,87 +2895,57 @@ int main (int argc, char **argv)
         //rtl_clone_and_execute("fileman.bin");
         //rtl_clone_and_execute("logon.bin");
     }
+*/
 
-
-    // Wait
-    // printf ("gwssrv: [FIXME] yield \n");
-
-
-// #test
-// We do NOT need to wait,
-// 'cause we did not call any client.
-// We were called by gws.bin
-
-    // #bugbug: too much?
-    //for (i=0; i<22; i++){  gwssrv_yield();  };
-    //for (i=0; i<44; i++){  gwssrv_yield();  };
 
 
 //
-// #debug
+// =======================================
 //
 
-        //gws_show_backbuffer();
-        //while(1){}
+//
+// Loop
+//
 
+// #todo
+// Isso é um teste.
+// #atenção
+// Provavelmente precisamos de um loop
+// contendo accept, read e write.
+// Não presizamos criar o socket novamente,
+// mas temos que refazer a conecção toda vez
+// que enviarmos uma resposta.
+// Então logo após enviarmos a resposta precisamos
+// fechar o arquivo? Acabaria com o socket?
+// #atenção:
+// A função accept vai retornar o descritor do
+// socket que usaremos ... por isso poderemos fecha-lo
+// para assim obtermos um novo da próxima vez.
 
-        //
-        // =======================================
-        //
-
-        //
-        // Loop
-        //
-     
-        // #todo
-        // Isso é um teste.
-        // #atenção
-        // socket() bind() e listen() ficam antes do loop.
-        // Provavelmente precisamos de um loop
-        // contendo accept, read e write.
-        // Não presizamos criar o socket novamente,
-        // mas temos que refazer a conecção toda vez
-        // que enviarmos uma resposta.
-        // Então logo após enviarmos a resposta precisamos
-        // fechar o arquivo? Acabaria com o socket?
-        // #atenção:
-        // A função accept vai retornar o descritor do
-        // socket que usaremos ... por isso poderemos fecha-lo
-        // para assim obtermos um novo da próxima vez.
-    
 // loop:
     gwssrv_debug_print ("gwssrv: Entering main loop.\n");
 
-        //#todo:
-        // No loop precisamos de accept() read() e write();
+//#todo:
+// No loop precisamos de accept() read() e write();
 
-        // + Compositor. (Redraw dirty rectangles)
-        // + Socket requests.
-        // + Normal messages. (It's like signals.)
- 
-        //not used for now.
+    // Not used for now.
     connection_status = 1;
 
-        //curconn = ____saved_server_fd;
-        //curconn = serverClient->fd;
+    //curconn = serverClient->fd;
     newconn = -1;
-
-        // #todo:
-        // Precisamos criar uma fila de mensagens para o sistema
-        // e uma fila de mensagens para cada aplicativo.
-        // a fila de mensagem dos aplicativos poderá ficar
-        // na estrutura de cliente, ja que cada cliente representa
-        // um apps.
-        // a fila do sistema é global.See: input.c
-        // ntuser faz isso também. tem dois inputs,
-        // um do sistema e outro dos apps.
  
-        //initialize frames counter,
+// Initialize frames counter.
     frames_count = 0;
     fps = 0;
  
  
- 
+
+// #important
+// Here we are exporting some callback to the base kernel.
+// This way the kernel is able to call this routine directly.
+// It is possible because the window server and the base kernel
+// are sharing the process structure and the same memory space.
+// This is an unusual practice. :)
 
     gramado_system_call( 
         101234, 
@@ -2991,123 +2953,59 @@ int main (int argc, char **argv)
         (unsigned long) &wmHandler, 
         (unsigned long) &wmHandler );
 
- 
+
 //
-// Focus
-// 
+// The message loop.
+//
 
-// Podemos chamar mais de um diálogo
-// Retorna TRUE quando o diálogo chamado 
-// consumiu o evento passado à ele.
-// Nesse caso chamados 'continue;'
-// Caso contrário podemos chamar outros diálogos.
+// + Accept connection from a client.
+// + Call the dispatcher to porcess the message.
 
-    //rtl_focus_on_this_thread();
-
- 
     while (running == TRUE)
     {
-
-        //if ( rtl_get_event() == TRUE )
-        //{  
-        //    wsInputProcedure ( 
-        //        (void*) RTLEventBuffer[0], 
-        //        RTLEventBuffer[1], 
-        //        RTLEventBuffer[2], 
-        //        RTLEventBuffer[3] );
-        //}
-         
-
-            // Se tem ou não retângulos sujos.
-            // #bugbug: Talvez isso seja trabalho do window manager.
-            // mas ele teria que chamar o window server pra efetuar o refresh
-            // dos retângulos.
-            // See comp.c
-            
-            // #test
-            // Essa é a terceira vez que acontece o refresh de retângulos.
-            // uma vez no kernel, outra vez quando o kernel chama diretamente
-            //o ws, e agora quando o ws esta em seu tempo de processamento.
-            // Talvez possamos cancelar essa daqui para melhorar o desempenho do ws.
-            
-            //if (UseCompositor==TRUE){  wmCompositor();  }
-            //if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
-            
-            //process_events(); //todo
-
-            //if (isTimeToQuit == 1) { break; };
-
-            // Accept connection from a client.
-
-            // Se nao estamos aceitqando conexoes.
-
-        //if ( serverClient->fd != 3 ) { asm("int $3"); } 
+        if (IsTimeToQuit == TRUE) { break; };
 
         newconn = accept ( 
-                      ____saved_server_fd, //serverClient->fd, 
+                      ____saved_server_fd,
                       (struct sockaddr *) &server_address, 
                       (socklen_t *) addrlen );
-            
-        //gwssrv_debug_print("gwssrv: accept returned\n");
-        //printf ("gwssrv: newconn %d\n",newconn);
 
-        if (newconn<=0){
+        // Fail
+        if (newconn <= 0){
             gwssrv_debug_print("gwssrv: accept returned FAIL\n");
-                
-            // Vamos fazer refrsh de retângulos sujos 
-            // quando não temos requests. Isso é melhor do que dormir.
-            // #bugbug: Talvez isso esta atrazando as coisas.
-            //if (UseCompositor==TRUE){  wmRefreshDirtyRectangles();  }
         }
 
-        // if (newconn>0 && AcceptingConnections)
-        if (newconn>0)
-        {
-            
+        // Dispatch
+        if (IsAcceptingConnections == TRUE){
             gwssrv_debug_print("gwssrv: accept returned OK\n");
             dispacher(newconn);
             //close(newconn);
         }
+
+        // Not accpeting
+        if (IsAcceptingConnections == FALSE){
+            //close(newconn);
+        }
     };
 
-
-//
 // =======================================
-//
-  
+
+    if (IsTimeToQuit != TRUE)
+        debug_print ("gwssrv: [ERROR] Invalid IsTimeToQuit\n");
 
 
+// #todo
+// Now we will close the window server.  
+// Free all the structure, one by one in cascade.
+// See: 'gws' structure in gws.h
+// We will call the kernel to unregister the window server.
+// We will close all the sockets.
+// ...
 
 
- 
-    // Now we will close the window server.  
-    
-    // #todo
-    // Free all the structure, one by one
-    // in cascade.
-    // See: 'gws' structure in gws.h
-    // We will call the kernel to unregister the window server.
-    // We will close all the sockets.
-    // ...
-
-    //
-    // == Exited ========================================
-    //
-    
-    // Well, if we are here so we exited from the main loop.
-    // The server will not call a client again.
-    // All we can do is exit.
-
-    // Messages from kernel.
-    // It is a kind of signal.
-    // ipc message loop
-    // while(1){ xxxGetNextSystemMessage(); }
-
-    // Done.
-    //close(server_fd);
-    
-    gwssrv_debug_print ("gwssrv: [FIXME] exited \n");
-    printf             ("gwssrv: [FIXME] exited \n");
+// Close the server's fd.
+    if (server_fd>0)
+        close(server_fd);
 
     // #todo
     // The kernel needs to react when the window server closes.
@@ -3116,10 +3014,14 @@ int main (int argc, char **argv)
     // #debug
     // #bugbug:
     // Page fault  when exiting ... 
- 
-    // HANG
-    while(1){ }
-    //suspended.
+
+    gwssrv_debug_print ("gwssrv: [FIXME] Hang, not exit \n");
+    printf             ("gwssrv: [FIXME] Hang, not exit \n");
+
+// HANG
+    while(1){};
+
+// Suspended.
     return 0; 
 }
 
@@ -3131,4 +3033,12 @@ void gwssrv_yield(void)
 }
 
 
+void gwssrv_quit(void)
+{
+    IsTimeToQuit = TRUE;
+}
+
+//
+// End
+//
 

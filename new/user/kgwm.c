@@ -189,7 +189,11 @@ wmProcedure (
             switch (long1){
 
             case VK_RETURN:
-                if (ShellFlag==TRUE)
+                if(ShellFlag!=TRUE){
+                    wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
+                    return 0;
+                }
+                if(ShellFlag==TRUE)
                 {
                     input('\0');               // finalize
                     consoleCompareStrings();   // compare
