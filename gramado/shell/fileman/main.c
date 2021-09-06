@@ -596,10 +596,19 @@ int main ( int argc, char *argv[] ){
                 input('\n');
                 barCompareStrings();
             }
-            
-            lEvent.msg = 0;
         }
+
+        // system keys
+        if (lEvent.msg == MSG_SYSKEYDOWN)
+        {
+            //printf(" >>>> SYS\n");
+            if(lEvent.long1 == VK_F1){printf("F1\n");}
+            if(lEvent.long1 == VK_F2){printf("F2\n");}
+        }
+        
+        lEvent.msg = 0;
     };
+
 
 
     while(1){}

@@ -1299,12 +1299,14 @@ int consoleCompareStrings(void)
 
         // See: swlib.asm
         // Setup parameters
-        wmData_RDI = 0;
-        wmData_RSI = MSG_SYSKEYDOWN;  //MSG_KEYDOWN;
-        wmData_RDX = 3;
-        wmData_RCX = 4;
+        //wmData_RDI = 0;
+        //wmData_RSI = MSG_SYSKEYDOWN;  //MSG_KEYDOWN;
+        //wmData_RDX = VK_F1;           //3;
+        //wmData_RCX = 4;
         // Trampoline
-        wmWindowMananer_SendMessage();
+        //wmWindowMananer_SendMessage();
+        
+        wmSendInputToWindowManager(0,MSG_SYSKEYDOWN,VK_F1,0);
         
         goto exit_cmp;
     }

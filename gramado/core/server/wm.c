@@ -1305,8 +1305,17 @@ wmProcedure(
 
          case GWS_SysKeyDown:
              printf("wmProcedure: [?] GWS_SysKeyDown\n");
-             //#test
+             // Enfileirar a mensagem na fila de mensagens
+             // da janela com foco de entrada.
+             // O cliente vai querer ler isso.
+             __add_message_to_into_the_queue(
+                 (struct gws_window_d *)window,
+                 (int)msg,
+                 (unsigned long)long1,
+                 (unsigned long)long2);
+
              //wm_update_desktop(); // 
+             return 0;
              break;
          
          //
@@ -1317,7 +1326,7 @@ wmProcedure(
              //next = window->next;
              //window->focus = TRUE;
              //gwssrv_redraw_window(window,1);
-             
+             return 0;
              break;
     };
 
@@ -1393,20 +1402,16 @@ wmHandler(
 
     switch (msg){
 
-    // Mensagens de digitação. Atuam sobre a janela com foco de entrada.
-    // #bugbug: a janela com foco de entrada precisa ser válida.
+
+// #important:
+// Mandaremos input somente para a janela com foco de entrada,
+// seja ela de quaquer tipo.
+
     case GWS_KeyDown:
+    case GWS_SysKeyDown:
     case GWS_SwitchFocus:
         if( window_with_focus < 0 || window_with_focus >= WINDOW_COUNT_MAX ){ return 0; } //fail
         w = windowList[window_with_focus];
-        goto do_process_message;
-        break;
-        
-    // Mensagens de sistema. Atuam sobre a jenela ativa.
-    // #bugbug: a janela com foco de entrada precisa ser válida.
-    case GWS_SysKeyDown:
-        if( active_window < 0 || active_window >= WINDOW_COUNT_MAX ){ return 0; } //fail
-        w = windowList[active_window];
         goto do_process_message;
         break;
 

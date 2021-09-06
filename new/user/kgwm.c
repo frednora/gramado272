@@ -186,13 +186,19 @@ wmProcedure (
 
 
         case MSG_KEYDOWN:
+
+            // Para todas as teclas quando o console não está ativo.
+            if ( ShellFlag!=TRUE ){
+                wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
+            }
+
             switch (long1){
 
             case VK_RETURN:
-                if(ShellFlag!=TRUE){
-                    wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
-                    return 0;
-                }
+                //if(ShellFlag!=TRUE){
+                    //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
+                    //return 0;
+                //}
                 if(ShellFlag==TRUE)
                 {
                     input('\0');               // finalize
@@ -216,9 +222,8 @@ wmProcedure (
                 // enquanto o console virtual está imprimindo.
                 if ( ShellFlag!=TRUE )
                 {
-                    // #test
                     // Send it to the window server.
-                    wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
+                    //wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
 
                     // #test
                     // Write into stdin
@@ -251,7 +256,11 @@ wmProcedure (
 
 
         // Pressionadas: teclas de funçao
-        case MSG_SYSKEYDOWN: 
+        case MSG_SYSKEYDOWN:
+             
+            // Send it to the window server.
+            wmSendInputToWindowManager(0,MSG_SYSKEYDOWN,long1,long2); 
+
             switch (long1){
 
                 // Exibir a surface do console.
