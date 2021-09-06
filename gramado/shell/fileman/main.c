@@ -206,6 +206,81 @@ int barInputChar( int c )
 }
 
 
+
+int filemanProcedure(
+    int fd,
+    int wid,
+    int msg,
+    unsigned long long1,
+    unsigned long long2 )
+{
+
+    if(msg<0)
+        return -1;
+
+
+    switch(msg)
+    {
+
+// keydown
+        case MSG_KEYDOWN:
+            switch(long1)
+            {
+                // [ENTER]
+                case VK_RETURN: 
+                    input('\n');
+                    barCompareStrings();
+                    return 0;
+                    break;
+
+                // Teclas de digitação.
+                default:
+                    barInputChar( (int) long1 );
+                    return 0;
+                    break;
+            };
+            break;
+
+// syskeydown
+        case MSG_SYSKEYDOWN:
+            switch (long1)
+            {
+                case VK_F1: 
+                    printf("VK_F1\n");
+                    rtl_clone_and_execute("editor.bin");
+                    return 0;
+                    break;
+
+                case VK_F2: 
+                    printf("VK_F2\n");
+                    rtl_clone_and_execute("terminal.bin");
+                    return 0;
+                    break;
+
+               // main window
+               case VK_F3: 
+                    gws_resize_window(fd,Main_window,320,200);
+                    gws_redraw_window(fd,Main_window,TRUE);
+                    //gws_refresh_window(fd,Main_window);
+                    return 0;
+                    break;
+
+               // menu window
+               case VK_F4: 
+                    gws_resize_window(fd,Menu_window,400,400);
+                    gws_redraw_window(fd,Menu_window,TRUE); // redraw and show
+                    //gws_refresh_window(fd,Menu_window);
+                    return 0;
+                    break;
+
+            };
+            break;
+    };
+
+    return 0;
+}
+
+
 //
 // Main
 //
@@ -583,29 +658,13 @@ int main ( int argc, char *argv[] ){
 
     while(TRUE){
         ev = (struct gws_event_d *) gws_get_next_event(client_fd,(struct gws_event_d *) &lEvent);
+        filemanProcedure(
+            (int) client_fd,
+            (int) lEvent.wid,
+            (int) lEvent.msg,
+            (unsigned long) lEvent.long1,
+            (unsigned long) lEvent.long2 );
 
-        // The typed key
-        if( lEvent.msg == MSG_KEYDOWN )
-        {
-            if( lEvent.long1 != VK_RETURN ){
-                barInputChar( (int)lEvent.long1 );
-            }
-
-            if( lEvent.long1 == VK_RETURN )
-            {
-                input('\n');
-                barCompareStrings();
-            }
-        }
-
-        // system keys
-        if (lEvent.msg == MSG_SYSKEYDOWN)
-        {
-            //printf(" >>>> SYS\n");
-            if(lEvent.long1 == VK_F1){printf("F1\n");}
-            if(lEvent.long1 == VK_F2){printf("F2\n");}
-        }
-        
         lEvent.msg = 0;
     };
 

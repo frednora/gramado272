@@ -425,16 +425,17 @@ struct gws_window_d
     int used;
     int magic;
 
-    // style:
-    // Isso eh estilo de design ...
-    // Serao muitas flags descrevendo caracteristicas da janela.
-    // Qualquer janela pode ter vários estilos de design 
-    // ex: um editbox poderá ser de vários estilos.
-    // window style:
-    // WINDOW_STYLE_FLOATING (flutuante) 
-    // WINDOW_STYLE_DOCKING   (atracada em algum canto)
+
+// #todo
+// We need to review that list of flags.
+// We already using some flags.
 
     unsigned long style;
+
+
+// Uma janela de aplicativo
+// poderá ter janelas de aplicativo dentro de sua área de cliente.
+    int multiple;
 
 
 // Used to invalidate the rectangle.

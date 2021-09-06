@@ -1907,10 +1907,17 @@ void gwssrv_init_client_support (void)
 // The current client
 //
 
+// #todo
+// We need the information about the current client
+// And we need a list of the connected clientes.
+
     currentClient = (struct gws_client_d *) 0;
-    
-    
-    // The server client.
+
+
+//
+// The server client
+//
+
     serverClient = (struct gws_client_d *) malloc ( sizeof( struct gws_client_d ) );
     if ( (void *) serverClient == NULL ){
         gwssrv_debug_print ("gwssrv_init_client_support: [FATAL] Couldn't create serverClient\n");
@@ -1926,25 +1933,11 @@ void gwssrv_init_client_support (void)
         
     serverClient->pid = getpid();
     serverClient->gid = getgid();
-        // ...
-
-        // #todo
-        // Limpar a fila de mensagens para esse cliente.
-        
-    for (i=0; i<CLIENT_COUNT_MAX; i++)
-    {
-        serverClient->window_list[i] = 0;
-        serverClient->msg_list[i]    = 0;
-        serverClient->long1_list[i]  = 0;
-        serverClient->long2_list[i]  = 0;
-    };
-    serverClient->tail_pos = 0;
-    serverClient->head_pos = 0;
-        
-        // ...
+    // ...
 
     connections[SERVER_CLIENT_INDEX] = (unsigned long) serverClient;
 
+//done:
     serverClient->used  = TRUE;
     serverClient->magic = 1234;
 }
@@ -1953,34 +1946,26 @@ void gwssrv_init_client_support (void)
 
 void init_client_struct ( struct gws_client_d *c )
 {
-    int i=0;
+    register int i=0;
 
 
-    if ( (void*) c == NULL )
-    {
-        gwssrv_debug_print("init_client_struct: c fail\n");
+    if ( (void*) c == NULL ){
+        gwssrv_debug_print("init_client_struct: [FAIL] c\n");
         return;
     }
 
-
+// ID
+// #todo
     c->id = -1;  //fail
 
-    c->used  = TRUE;
-    c->magic = 1234;
     c->is_connected = FALSE;
     c->fd  = -1;
     c->pid = -1;
     c->gid = -1;
- 
-    for (i=0; i<CLIENT_COUNT_MAX; i++)
-    {
-        c->window_list[i] = 0;
-        c->msg_list[i]    = 0;
-        c->long1_list[i]  = 0;
-        c->long2_list[i]  = 0;
-    };
-    c->tail_pos = 0;
-    c->head_pos = 0;
+
+//done:
+    c->used  = TRUE;
+    c->magic = 1234;
 }
 
 /*
@@ -2182,145 +2167,20 @@ void serviceExitGWS(void)
     exit(0);
 }
 
-
-
+// #todo
+// Now we put messages only in the window structure's message queue.
 int servicePutClientMessage(void)
 {
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
-    
-    
-    int           window = 0;
-    int           msg    = 0;  // msg = Put message
-    unsigned long long1  = 0;  // client id
-    unsigned long long2  = 0;
-    // ...
-
-
-    struct gws_client_d *client;
-    int client_id = -1;
-    //
-    // parameters
-    //
-
-    window = (int)           message_address[0];
-    msg    = (int)           message_address[1];
-    long1  = (unsigned long) message_address[2]; 
-    long2  = (unsigned long) message_address[3];
-    //...
-
-
-    // Check the message code.
-    if ( msg != GWS_PutClientMessage )
-    {
-        return -1;
-    }
-
-    // Get the client id.
-
-    client_id = (int) long1;
-
-    if (client_id<0 || client_id >= CLIENT_COUNT_MAX)
-    {
-        return -1;
-    }
-
-    client = (struct gws_client_d *) connections[client_id];
-    
-    if ( (void*) client == NULL )
-        return -1;
-    
-    if ( client->used != NULL || client->magic != 1234 )
-    {
-        return -1;
-    }
-    
-    client->tail_pos++;
-    if ( client->tail_pos >= 32 )
-    {
-        client->tail_pos = 0;
-    }
-    
-    int Slot = (int) client->tail_pos;
-    
-    client->window_list[Slot] = (int) window;
-    client->msg_list[Slot]    = (int) msg;
-    client->long1_list[Slot]  = (unsigned long) long1;
-    client->long2_list[Slot]  = (unsigned long) long2;
-    // ...
-    
-    message_address[0] = 0;
-    message_address[1] = 0;
-    message_address[2] = 0;
-    message_address[3] = 0;
-    
+    debug_print("servicePutClientMessage: deprecated\n");
     return 0;
 }
 
 
-
+// #todo
+// Now we get messages only in the window structure's message queue.
 int serviceGetClientMessage(void)
 {
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
-    
-    
-    int           window = 0;
-    int           msg    = 0;  // msg = Put message
-    unsigned long long1  = 0;  // client id
-    unsigned long long2  = 0;
-    // ...
-
-
-    struct gws_client_d *client;
-    int client_id = -1;
-    //
-    // parameters
-    //
-
-    window = (int)           message_address[0];
-    msg    = (int)           message_address[1];
-    long1  = (unsigned long) message_address[2]; 
-    long2  = (unsigned long) message_address[3];
-    //...
-
-    // Check the message code.
-    if ( msg != GWS_GetClientMessage )
-    {
-        return -1;
-    }
-
-    // Get the client id.
-
-    client_id = (int) long1;
-
-    if (client_id<0 || client_id >= CLIENT_COUNT_MAX)
-    {
-        return -1;
-    }
-
-    client = (struct gws_client_d *) connections[client_id];
-    
-    if ( (void*) client == NULL )
-        return -1;
-    
-    if ( client->used != NULL || client->magic != 1234 )
-    {
-        return -1;
-    }
-    
-    client->head_pos++;
-    if ( client->head_pos >= 32 )
-    {
-        client->head_pos = 0;
-    }
-
-    int Slot = (int) client->tail_pos;
-    
-    message_address[0] = client->window_list[Slot];
-    message_address[1] = client->msg_list[Slot];
-    message_address[2] = client->long1_list[Slot];
-    message_address[3] = client->long2_list[Slot];
-    // ...
-    
+    debug_print("serviceGetClientMessage: deprecated\n");
     return 0;
 }
 

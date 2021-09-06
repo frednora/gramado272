@@ -706,6 +706,12 @@ void I_x64CreateEarlyRing0IdleThread(void)
     // Or in the dispatcher?
 
     ____IDLE = (struct thread_d *) EarlyRING0IDLEThread;
+    
+
+// This is the control thread of the kernel process.
+
+    if ((void*)KernelProcess != NULL)
+        KernelProcess->control = (struct thread_d *) EarlyRING0IDLEThread;
 }
 
 
@@ -906,6 +912,9 @@ int I_x64main (void)
 // ================================
 // Creating kernel process.
 // Local
+// It loads the window server's image and create
+// a process structure to handle the kernel base and the
+// window server's control thread.
 
     PROGRESS("Kernel:1:6\n"); 
     I_x64CreateKernelProcess();
@@ -913,6 +922,11 @@ int I_x64main (void)
 // ================================
 // Creating a ring 0 thread for the kernel.
 // Local
+// It creates the thread used by the window server.
+// It is the ring0 thread that belongs to the kernel process.
+// It is also the control thread of the kernel process.
+// And it is also the initial idle thread.
+// #todo: The kernel needs a standar sti/hlt idle thread.
 
     PROGRESS("Kernel:1:7\n"); 
     I_x64CreateEarlyRing0IdleThread();

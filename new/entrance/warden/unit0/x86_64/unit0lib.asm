@@ -633,20 +633,6 @@ setup_vectors:
     pop rax
 
     ret
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 
 

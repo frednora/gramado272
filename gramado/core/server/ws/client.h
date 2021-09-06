@@ -30,15 +30,28 @@ struct gws_client_d
     int used;
     int magic;
 
+// #todo
+    unsigned long flags;
+
+// Para qual versão do Gramado esse aplicativo foi feito.
+// ex: 0x0101  (1.1)
+    unsigned short gramado_version;
+
+// Flags para gerenciamento de compatibilidade entre
+// versões
+    unsigned long compat_flags;
+
+// maybe
+// The main window of this client.
+// We can send messages to this window.
+    //struct gws_window_d *main_window;
 
     int is_connected;
-
 
     // host, display, screen
     struct gws_host_d     host;
     struct gws_display_d  display;  
     struct gws_screen_d   screen;
-
 
     // Socket for this client.
     int fd;
@@ -49,16 +62,12 @@ struct gws_client_d
     gid_t gid;
 
 
-    //
-    // Queue. (list)
-    //
+// Spin
+// Lets count how many times this client
+// is looking for the next event.
+// It can be useful for changing the client's priority.
 
-    int            window_list[32];
-    int            msg_list[32];
-    unsigned long  long1_list[32];
-    unsigned long  long2_list[32];
-    int tail_pos;
-    int head_pos;
+    unsigned long spin;
 
     // ...
 };
@@ -73,7 +82,7 @@ unsigned long connections[CLIENT_COUNT_MAX];
 
 
 //
-// prototypes
+// == prototypes =============================
 //
 
 int servicePutClientMessage(void);

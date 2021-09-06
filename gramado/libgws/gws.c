@@ -3484,7 +3484,10 @@ int gws_create_empty_directory ( char *dir_name )
 
 // Send async request.
 // No response.
-// IN: fd, request number, subrequest.
+// #todo
+// List some standard commands accepted by the ws.
+// IN: 
+// fd, request number, subrequest.
 void
 gws_async_command ( 
     int fd, 
