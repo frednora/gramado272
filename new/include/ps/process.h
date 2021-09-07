@@ -27,22 +27,14 @@
 
 
 // Image. 
-// (Base da imagem de um processo de usu�rio).
-//
-// "Todo processo ter� seu pr�prio diret�rio de p�ginas
-//  e ser� carregado no endere�o virtual 0x400000, logicamente
-//  cada processo ser� carregado em um endere�o f�sico diferente."
-
-// old, used in gramado 32bit
-//#define UPROCESS_IMAGE_BASE  0x400000
-// new, used in gramado 64bit
+// (Base da imagem de um processo de usuário).
+// virtual address
 #define UPROCESS_IMAGE_BASE  0x200000 
 
 
 //Process Limit. (User process) 
-//(O limite � o in�cio do kernel).
-//#define UPROCESS_PROCESS_LIMIT 0xC0000000    
-#define UPROCESS_PROCESS_LIMIT 0x30000000    
+//(O limite é o início do kernel).
+#define UPROCESS_PROCESS_LIMIT  0x30000000 
 
 // Heap.
 // Base default do heap do processo.
@@ -50,9 +42,10 @@
 //  evidentemente, cada processo ter� seu heap em um 
 //  endere�o f�sico diferente".
 
+// #bugbug
 #define UPROCESS_DEFAULT_HEAP_BASE  0x80000000 
 //Tamanho default do heap do processo.  
-#define UPROCESS_DEFAULT_HEAP_SIZE  0x2000     
+#define UPROCESS_DEFAULT_HEAP_SIZE  0x2000
 
 //Stack.
 //Deslocamento default do in�cio da pilha em rela��o ao in�cio do kernel. #bugbug
@@ -61,7 +54,6 @@
 #define UPROCESS_DEFAULT_STACK_BASE ( UPROCESS_PROCESS_LIMIT - UPROCESS_DEFAULT_STACK_OFFSET )  
 //Tamanho da pilha do processo.   
 #define UPROCESS_DEFAULT_STACK_SIZE 0x2000    
-
 
 
 
@@ -91,18 +83,23 @@
 #define PRIORITY_LOW3      2  // 3
 #define PRIORITY_LOW2      3  // 2
 #define PRIORITY_LOW1      4  // 1 
-#define PRIORITY_NORMAL    5  // 0 (Normal).
+#define PRIORITY_NORMAL    5  // 0 (Normal)
 #define PRIORITY_HIGH1     6  // 1
 #define PRIORITY_HIGH2     7  // 2
 #define PRIORITY_HIGH3     8  // 3
 #define PRIORITY_HIGH4     9  // 4
 
-// Aliases.
-
+// Aliases
 #define PRIORITY_MIN       PRIORITY_LOW4
 #define PRIORITY_MAX       PRIORITY_HIGH4
+
+// Aliases
 #define PRIORITY_LOW       PRIORITY_LOW1
 #define PRIORITY_HIGH      PRIORITY_HIGH1 
+
+// Aliases
+#define PRIORITY_FIRST_PLANE    PRIORITY_MAX
+#define PRIORITY_SECOND_PLANE   PRIORITY_MIN 
 
 
 //
@@ -116,26 +113,6 @@
 //#define TIMESLICE_MULTIPLIER 2
 #define TIMESLICE_MULTIPLIER 3
 //...
-
-
-
- 
- 
- 
-//Lista de status na cria��o de um processo.     
-#define ERRO_SLOT_OCUPADO  0xfffff    //Slot ocupado.      
-#define ERRO_DEFAULT       0xffffe
-//...
-
-
-//Process runtime stack.
-//??? Deve ser o limite m�ximo para a pilha de um processo.
-#define MAXSTACK 128    //dwords.
- 
-//N�mero total de slots para cria��o de processo.
-//@todo: deletar, definido em threads. ??? 
-#define NUMERO_TOTAL_DE_SLOTS 256   
-
 
 
 //
@@ -206,7 +183,7 @@ typedef enum {
 typedef enum {
     APPMODE_NULL,      // Isso se aplica ao processo kernel e ao processo idle por exemplo.
     APPMODE_TERMINAL,  // O kernel cria uma janela de terminal para o aplicativo.
-    APPMODE_WINDOW,    // O kernel n�o cria janela de terminal para o aplicativo
+    APPMODE_WINDOW,    // O kernel não cria janela de terminal para o aplicativo
 }appmode_t;
 
 
@@ -318,20 +295,22 @@ struct process_d
 //
 // tty 
 //
-    
-    // Essa � a tty do processo.
-    // Ela ser� master se o processo for um shell e
-    // Ser� slave se o processo for um terminal.
-    // O terminal(slave) encontrar� o shell(master) em tty->link.
+
+// Essa é a tty do processo.
+// Ela será master se o processo for um shell e
+// Será slave se o processo for um terminal.
+// O terminal(slave) encontrará o shell(master) em tty->link.
+
     struct tty_d  *tty;
 
-    // Um buffer no app en ring3
-    // onde o driver de rede pode colocar conte�do e depois
-    // avisar o processo via mensagem.
+
+// Um buffer no app en ring3
+// onde o driver de rede pode colocar conte�do e depois
+// avisar o processo via mensagem.
     char *net_buffer;
- 
-    // Qual � apersonalidade do processo.
-    // Ele deve agir como unix-like, gramado-like, etc ?
+
+// Qual é apersonalidade do processo.
+// Ele deve agir como gramado-like, unix-like, etc?
     int personality;
 
 	//Importante:
@@ -412,7 +391,8 @@ struct process_d
 	// deve ser atribu�do a ele, mesmo antes de mapear os frames desse 
 	// framepool em alguma pagetable do page directory do processo.
 
-    // See: mm/x64mm.h
+// See: 
+// mm/x64mm.h
 
     struct frame_pool_d *framepoolListHead;
 
@@ -536,10 +516,15 @@ struct process_d
     unsigned long childStackPA; 
 
 
-    //#todo: estrutura com informa��es sobre a imagem do processo.
-    //see: image.h
+// #todo: 
+// Estrutura com informações sobre a imagem do processo.
+// See: image.h
+// #bugbug
+// O problema é que tem processo que tem mais de uma imagem.
+// Como é caso do processo kernel, que tem KERNEL.BIN e GWSSRV.BIN.
+// #obs: A segunda imagem do kernel é considerada um módulo.
 
-    struct image_info_d *image_info;
+    struct image_info_d  *image_info;
 
 
 	//#test
@@ -549,26 +534,38 @@ struct process_d
 // Heap
 //
 
-	//#importante 
-	unsigned long Heap;            //Endere�o do in�cio do Heap do processo.
-	unsigned long HeapEnd;
-	unsigned long HeapSize;        //Tamanho do heap.
-	
+// #important
+// Isso é endereço virtual, 
+// usado o espaço de endereçamento do kernel.
+
+	unsigned long HeapStart;  // Início do heap.
+	unsigned long HeapEnd;    // Fim do heap.
+	unsigned long HeapSize;   // Tamanho do heap.
+
 	//?? Isso serve para manipula��o do heap do processo.
 	unsigned long HeapPointer;     //Ponteiro do heap do processo para o pr�xima aloca��o.
 	unsigned long HeapLastValid;   //�ltimo ponteiro v�lido.
 	unsigned long HeapLastSize;    //�ltimo tamanho alocado..	
 	//struct heap_d *processHeap;  //@todo: Usar essa estrutura.
 
+
 //
 // Stack
 //
 
-	unsigned long Stack;          //Endere�o do in�cio da Stack do processo.
-	unsigned long StackEnd;
-	unsigned long StackSize;      //Tamanho da pilha.	
-	unsigned long StackOffset;    //Deslocamento da pilha em rela��o ao in�cio do kernel.	
-	//struct stack_d *processStack;  //@todo: Criar essa estrutura.
+// #important
+// Isso é endereço virtual, 
+// usado o espaço de endereçamento do kernel.
+// Lembrando que a pilha é invertida. Que o início da pilha
+// fica no endereço mais alto e o fim fica no endereço mais baixo.
+
+	unsigned long StackStart;   // Início da stack.
+	unsigned long StackEnd;     // Fim da stack;
+	unsigned long StackSize;    // Tamanho da stack.
+
+// Deslocamento da stack em relação ao início do kernel.
+	unsigned long StackOffset;
+
 
 	// Teste: 
 	// Blocos de memoria usados pelo processo.

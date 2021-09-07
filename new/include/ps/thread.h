@@ -369,19 +369,15 @@ struct thread_d
 
 
 // Heap
-
-    unsigned long Heap;
+    unsigned long HeapStart;
     unsigned long HeapSize;
 
 //todo: 
 // Usar a estrutura. Maybe. 
-
     //struct heap_d *heap;
 
-
 //Stack
-
-    unsigned long Stack;
+    unsigned long StackStart;
     unsigned long StackSize;
 
 // Service table?
@@ -842,6 +838,12 @@ struct thread_d *InitThread;
 // Ponteiro para a thread usada na hora da clonagem de processos.
 struct thread_d *ClonedThread;
 
+
+
+//
+// == round robin =======================================
+//
+
 /* 
  * Listas encadeadas de threads.
  * Usadas no gerenciamento de rounds 
@@ -855,6 +857,19 @@ struct thread_d *tmpConductor;  //Conductor2;
 struct thread_d *rootConductor;
 
 int conductorIndex;
+
+
+//
+// == input round =======================================
+//
+
+// Configuramos essa thread para
+// se a thread que deve rodar logo após um evento de input.
+// teclado, mouse ou outra coisa.
+struct thread_d *first_after_keyboard_input;
+struct thread_d *first_after_mouse_input;
+//struct thread_d *first_after_network_input;
+// ...
 
 
 // #Atenção

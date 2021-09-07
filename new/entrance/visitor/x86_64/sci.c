@@ -44,7 +44,6 @@ void __service897(void)
 
 
 
-
     _Color = (unsigned int) (COLOR_GREEN + 0);
 
 // Configura o retângulo
@@ -1845,6 +1844,7 @@ void *sci2 (
     unsigned long arg4 )
 {
     struct process_d  *p;
+    struct thread_d  *t;
 
     // Array de longs.
     unsigned long *a2 = (unsigned long*) arg2;
@@ -1986,25 +1986,31 @@ void *sci2 (
     // A estrutura de arquivo contém uma estrutura de sincronização de leitura e escrita.
     // #ok: podemos usar ioctl
     // See: sys.c
-    if ( number == 10001 )
-    {
+    // IN: fd, request
+    if ( number == 10001 ){
         debug_print("sci2: [10000] sys_get_file_sync\n");
-        // IN: fd, request
         return (void*) sys_get_file_sync( (int) arg2, (int) arg3 );
     }
 
+
     // Get the tid of the current thread.
-    if ( number == 10010 )
-    {
+    if ( number == 10010 ){
         debug_print("sci2: [10010] GetCurrentTID\n");
         return (void*) GetCurrentTID();
     }
-    
-    // Se the foreground thread tid.
+
+
+    // Set the foreground thread tid.
     // #todo: We need a method for that.
     if ( number == 10011 )
     {
         debug_print("sci2: [10011] set foreground thread tid\n");
+        if (arg2<0 || arg2>=THREAD_COUNT_MAX){ return NULL; }  //fail
+        t = (struct thread_d *) threadList[arg2];
+        if( (void*) t == NULL ){ return NULL; }; //fail
+        if(t->used != TRUE) { return NULL; }; //fail
+        if(t->magic != 1234){ return NULL; }; //fail
+        t->quantum = QUANTUM_FIRST_PLANE;
         foreground_thread = (int) arg2;
         return NULL;
     }

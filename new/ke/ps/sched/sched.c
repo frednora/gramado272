@@ -305,8 +305,7 @@ int init_scheduler (unsigned long sched_flags)
 }
 
 
-
-// lets end this round putting a given thread at the end
+// Lets end this round putting a given thread at the end
 // of this round.
 void cut_round( struct thread_d *last_thread )
 {

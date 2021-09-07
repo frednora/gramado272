@@ -39,15 +39,20 @@ struct scheduler_info_d SchedulerInfo;
 #define QUANTUM_MIN    20
 #define QUANTUM_MAX    100
 
+// Aliases
 #define QUANTUM_BASE   QUANTUM_MIN
 #define QUANTUM_LIMIT  QUANTUM_MAX
 
+// Aliases
+#define QUANTUM_FIRST_PLANE   QUANTUM_MAX
+#define QUANTUM_SECOND_PLANE  QUANTUM_MIN
+
+// Aliases
 // Limite de tempo esperando.
 #define READY_LIMIT      QUANTUM_MAX
 #define WAITING_LIMIT    QUANTUM_MAX
 #define BLOCKED_LIMIT    QUANTUM_MAX
 // ...
-
 
 
 

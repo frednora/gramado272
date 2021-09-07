@@ -149,8 +149,10 @@ unsigned long __GetThreadStats ( int tid, int index ){
 
         case 15:  return (unsigned long) t->preempted;  break;
         case 16:  return (unsigned long) t->saved;  break;
-        case 17:  return (unsigned long) t->Heap;  break;
-        case 18:  return (unsigned long) t->Stack;  break;
+
+        case 17:  return (unsigned long) t->HeapStart;   break;
+        case 18:  return (unsigned long) t->StackStart;  break;
+
         case 19:  return (unsigned long) t->HeapSize;  break;
         case 20:  return (unsigned long) t->StackSize;  break;
         case 21:  return (unsigned long) t->step;  break;

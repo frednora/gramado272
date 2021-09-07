@@ -96,15 +96,19 @@ unsigned long __GetProcessStats ( int pid, int index ){
         case 18:  return (unsigned long) p->ImagePA;  break;
         case 19:  return (unsigned long) p->childImage;  break;
         case 20:  return (unsigned long) p->childImage_PA;  break;
-        case 21:  return (unsigned long) p->Heap;  break;
-        case 22:  return (unsigned long) p->HeapEnd;  break;
-        case 23:  return (unsigned long) p->HeapSize;  break;
+
+        case 21:  return (unsigned long) p->HeapStart;  break;
+        case 22:  return (unsigned long) p->HeapEnd;    break;
+        case 23:  return (unsigned long) p->HeapSize;   break;
+
         case 24:  return (unsigned long) p->HeapPointer;  break;
         case 25:  return (unsigned long) p->HeapLastValid;  break;
         case 26:  return (unsigned long) p->HeapLastSize;  break;
-        case 27:  return (unsigned long) p->Stack;  break;
-        case 28:  return (unsigned long) p->StackEnd;  break;
-        case 29:  return (unsigned long) p->StackSize;  break;
+
+        case 27:  return (unsigned long) p->StackStart;  break;
+        case 28:  return (unsigned long) p->StackEnd;    break;
+        case 29:  return (unsigned long) p->StackSize;   break;
+
         case 30:  return (unsigned long) p->StackOffset;  break;
         case 31:  return (unsigned long) p->iopl;  break;
         case 32:  return (unsigned long) p->base_priority;  break;
@@ -1344,13 +1348,13 @@ struct process_d *create_process (
         panic ("clone_and_execute_process: g_heap_size\n");
     }
 
-    // #bugbug
-    // There is a limit here. End we will have a huge problem 
-    // when reach it.
+// #bugbug
+// There is a limit here. End we will have a huge problem 
+// when reach it.
 
-    Process->Heap     = (unsigned long) g_heappool_va + (g_heap_count * g_heap_size);
-    Process->HeapSize = (unsigned long) g_heap_size;
-    Process->HeapEnd  = (unsigned long) (Process->Heap + Process->HeapSize); 
+    Process->HeapStart = (unsigned long) g_heappool_va + (g_heap_count * g_heap_size);
+    Process->HeapSize  = (unsigned long) g_heap_size;
+    Process->HeapEnd   = (unsigned long) (Process->HeapStart + Process->HeapSize); 
     g_heap_count++;
 
 
@@ -1376,9 +1380,9 @@ struct process_d *create_process (
 
     // Wrong !!!!!!!!!!!!!!!!!!!!
 
-    Process->Stack       = (unsigned long) UPROCESS_DEFAULT_STACK_BASE; 
+    Process->StackStart  = (unsigned long) UPROCESS_DEFAULT_STACK_BASE; 
     Process->StackSize   = (unsigned long) UPROCESS_DEFAULT_STACK_SIZE; //?? usamos isso na hora de criar a stack?? 
-    Process->StackEnd    = (unsigned long) (Process->Stack - Process->StackSize);  
+    Process->StackEnd    = (unsigned long) (Process->StackStart - Process->StackSize);  
     Process->StackOffset = (unsigned long) UPROCESS_DEFAULT_STACK_OFFSET;  //??
 
 
@@ -1540,7 +1544,7 @@ unsigned long GetProcessHeapStart ( pid_t pid )
         }
 
         // Ok.
-        return (unsigned long) process->Heap;
+        return (unsigned long) process->HeapStart;
     };
 
 fail:
@@ -2061,23 +2065,18 @@ struct process_d *__create_and_initialize_process_object(void)
 
 //===========================================================
 
-
 //
 // Heap
 //
 
-    New->Heap     = (unsigned long) g_heappool_va + (g_heap_count * g_heap_size);
-    New->HeapSize = (unsigned long) g_heap_size;
-    New->HeapEnd  = (unsigned long) (New->Heap + New->HeapSize); 
+    New->HeapStart = (unsigned long) g_heappool_va + (g_heap_count * g_heap_size);
+    New->HeapSize  = (unsigned long) g_heap_size;
+    New->HeapEnd   = (unsigned long) (New->HeapStart + New->HeapSize); 
     g_heap_count++;
 
-
 //#debug
-
-    printf (":: Heap %x | HeadSize %x | HeapEnd %x \n",
-        New->Heap,
-        New->HeapSize,
-        New->HeapEnd );
+    printf (":: HeapStart %x | HeadSize %x | HeapEnd %x \n",
+        New->HeapStart, New->HeapSize, New->HeapEnd );
     
     //refresh_screen();
     //while(1){}
@@ -2089,11 +2088,12 @@ struct process_d *__create_and_initialize_process_object(void)
 // Stack
 //
 
-    // Stack for the clone. 
+// Stack for the clone. 
+
     New->control->rsp = CONTROLTHREAD_STACK;
-    New->Stack        = CONTROLTHREAD_STACK;
-    New->StackSize = (32*1024);    //isso foi usado na rotina de alocação.
-    New->StackEnd = ( New->Stack - New->StackSize );
+    New->StackStart   = CONTROLTHREAD_STACK;
+    New->StackSize    = (32*1024);    //isso foi usado na rotina de alocação.
+    New->StackEnd     = ( New->StackStart - New->StackSize );
 
 
 
@@ -2103,7 +2103,8 @@ struct process_d *__create_and_initialize_process_object(void)
 
     int sIndex=0;
 
-    for (sIndex=0; sIndex<32; ++sIndex){
+    for (sIndex=0; sIndex<32; ++sIndex)
+    {
         New->socket_pending_list[sIndex] = 0; 
     };
 

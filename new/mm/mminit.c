@@ -797,19 +797,20 @@ unsigned long get_process_heap_pointer (int pid){
         goto fail;
     }
 
-    //#todo: Checar validade.
+// #todo: 
+// Checar validade.
 
 
-    // Limits:
-    //     Cada processo tem uma área onde ele pode alocar memória, os 
-    // processos usam seu próprio heap ou o heap do desktop ao qual 
-    // pertencem.
-    // Os limites devem ser respeitados.
-    // if: Se for menor que o início ou maior que o limite.
+// #
+// Cada processo tem seu heap.
+// É memória em ring3 compartilhada.
+// Mas tem processo em ring0. Onde fica o heap nesse caso?
 
-    heapLimit = (unsigned long) (P->Heap + P->HeapSize);
+    heapLimit = (unsigned long) (P->HeapStart + P->HeapSize);
 
-    if ( P->HeapPointer < P->Heap || P->HeapPointer >= heapLimit ){
+    if ( P->HeapPointer < P->HeapStart || 
+         P->HeapPointer >= heapLimit )
+    {
         printf ("get_process_heap_pointer: heapLimit\n");
         goto fail;
     }

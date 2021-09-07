@@ -445,12 +445,21 @@ sendto_eventqueue (
 
 // Called by console_interrupt() in console.c
 
+// Is this the forground thread?
+// #bugbug: Não estamos usando o parâmetro tid.
+// Lembrando que numa interrupção de teclado,
+// não temos o contexto salvo. Então não podemos chamar o
+// scheduler. Mas podemos acionar uma flag
+// que de alguma direção para o escalonador.
+
+// IN:
+// target thread, raw byte 
+
 int 
 xxxKeyEvent (
     int tid, 
     unsigned char raw_byte )
 {
-
 
 // #todo
 // Devemos considerar os marcadores de teclado extendido

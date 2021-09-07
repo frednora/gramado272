@@ -44,9 +44,9 @@ void show_process_information (void)
             printf("image-base =%x image-size =%d \n", 
                 p->Image, p->ImageSize );
             printf("heap-base  =%x heap-size  =%d \n", 
-                p->Heap,  p->HeapSize );
+                p->HeapStart,  p->HeapSize );
             printf("stack-base =%x stack-size =%d \n", 
-                p->Stack, p->StackSize );
+                p->StackStart, p->StackSize );
 
             //printf("dir-pa=%x dir-va=%x \n", 
             //    p->DirectoryPA, p->DirectoryVA );
@@ -62,57 +62,56 @@ void show_process_information (void)
     refresh_screen();
 }
 
-// usado pelo comando "current-process" no shell
-void show_currentprocess_info (void){
 
+// Usado pelo comando "current-process" no shell
+void show_currentprocess_info (void)
+{
     struct process_d  *Current;
 
 
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    if ( current_process < 0 || 
+         current_process >= PROCESS_COUNT_MAX )
     {
         //printf("show_process_information: current_process fail\n");
         return;
     }
 
+// Struct.
 
-	//Struct.
     Current = (void *) processList[current_process];
 
     if ( (void *) Current == NULL ){
         printf ("show_currentprocess_info: [FAIL] Current \n");
         return;
-    } else {
+    }
 
-		//Index.
-        printf ("PID={%d} PPID={%d} UID={%d} GID={%d} \n",
-            Current->pid, Current->ppid, Current->uid, Current->gid );
-		//Name
-        //printf ("Name={%s} \n", Current->name_address );
-        printf ("Name={%s} \n", Current->name );
-        
-		//Image Address.
-        printf ("ImageAddress={%x} \n", Current->Image );
+    if(Current->magic != 1234)
+        return;
 
-		//Directory Address. *IMPORTANTE.
-        //printf (">>DirectoryPA={%x} \n", Current->DirectoryPA );
-        //printf (">>DirectoryVA={%x} \n", Current->DirectoryVA );
+    //Index.
+    printf ("PID={%d} PPID={%d} UID={%d} GID={%d} \n",
+        Current->pid, Current->ppid, Current->uid, Current->gid );
 
-		//Heap and stack.
-        printf("Heap={%x}  HeapSize={%d KB}  \n", Current->Heap, 
-            Current->HeapSize );
+    //Name
+    //printf ("Name={%s} \n", Current->name_address );
+    printf ("Name={%s} \n", Current->name );
+ 
+    //Image Address.
+    printf ("ImageAddress={%x} \n", Current->Image );
 
-        printf("Stack={%x} StackSize={%d KB} \n", Current->Stack, 
-            Current->StackSize );
+    //Directory Address. *IMPORTANTE.
+    //printf (">>DirectoryPA={%x} \n", Current->DirectoryPA );
+    //printf (">>DirectoryVA={%x} \n", Current->DirectoryVA );
 
-		//...
-    };
+// Heap and stack.
+
+    printf("HeapStart={%x}  HeapSize={%d KB}  \n", 
+        Current->HeapStart, Current->HeapSize );
+    printf("StackStart={%x} StackSize={%d KB} \n", 
+        Current->StackStart, Current->StackSize );
+
+    //...
 
     refresh_screen();
 }
-
-
-
-
-
-
 

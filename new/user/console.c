@@ -293,7 +293,7 @@ console_interrupt(
 {
 
     //int TargetThread = foreground_thread;
-    int TargetThread = (target_thread & 0xFFFF);
+    int TargetThreadTID = (target_thread & 0xFFFF);
     int DeviceType   = device_type;
     int Data         = data;
 
@@ -310,8 +310,8 @@ console_interrupt(
 // #todo
 // Maybe we can set the idle thread if it fail.
 
-    if ( TargetThread < 0 ){
-        debug_print ("console_interrupt: [FAIL] TargetThread\n");
+    if ( TargetThreadTID < 0 ){
+        debug_print ("console_interrupt: [FAIL] TargetThreadTID\n");
         return;
     }
 
@@ -324,7 +324,14 @@ console_interrupt(
         case CONSOLE_DEVICE_KEYBOARD:
             debug_print("console_interrupt: input from keyboard device :)\n");
 
-            xxxKeyEvent(TargetThread,Data);
+            xxxKeyEvent(TargetThreadTID,Data);
+
+            // Lets end this round putting a given thread at the end
+            // of this round.
+
+            // #tested: No difference at all.
+            //if ( TargetThreadTID > 0 && TargetThreadTID < THREAD_COUNT_MAX )
+                //cut_round( threadList[TargetThreadTID] );
 
             break;
 

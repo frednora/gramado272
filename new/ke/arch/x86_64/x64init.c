@@ -256,7 +256,7 @@ void I_x64CreateInitialProcess (void)
     // using a shared area mapped for him.
 
     // #todo #bugbug
-    InitProcess->Heap = (unsigned long) g_extraheap1_va;
+    InitProcess->HeapStart = (unsigned long) g_extraheap1_va;
 
 // ===========================
 
