@@ -651,6 +651,46 @@ struct kernel_classes_d KernelClasses;
 // ...
 
 
+// Informações compartilhadas 
+// entre o kernel e um dado módulo.
+struct km_shared_info_d
+{
+// The entry point
+    unsigned long entry_point;
+
+// Procedure.
+    unsigned long dialog_address;
+
+// The pointer for a table of symbols exported
+// by this module.
+    unsigned long function_table_address;
+};
+
+struct kernel_module_d
+{
+    int used;
+    int magic;
+
+    int id;
+
+    char name[64];
+    size_t name_size;
+
+// Shared info
+    struct km_shared_info_d info;
+
+    int initialized;
+
+
+    struct thread_d *thread;
+};
+
+
+#define KMODULE_WS    0   // first of the list.
+#define KMODULE_MAX   8
+
+unsigned long kmList[KMODULE_MAX];
+
 
 //
 // == prototypes ==========================================
@@ -679,7 +719,7 @@ void I_x64ExecuteInitialProcess (void);
 
 // x64init.c
 void I_x64CreateKernelProcess(void);
-void I_x64CreateEarlyRing0IdleThread(void);
+void I_x64CreateWSControlThread(void);
 
 
 

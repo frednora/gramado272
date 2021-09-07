@@ -421,6 +421,13 @@ void DeviceInterface_PS2Mouse(void)
         refresh_screen();
     }
 
+
+    // #todo
+    // O bit 6 indica que é o primeir byte do pacote.
+    // Synchronize
+    //if(( *_byte & 64)==64) { count_mouse=0; };
+
+
 // Counter
     switch (count_mouse){
 

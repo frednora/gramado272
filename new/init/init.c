@@ -864,7 +864,7 @@ int kernel_main(int arch_type)
     // #debug
     // Show current process info.
     printf("\n");
-    printf("\n");
+    printf("KernelProcess:\n");
     current_process = KernelProcess->pid;
     show_currentprocess_info();
 
@@ -874,13 +874,14 @@ int kernel_main(int arch_type)
     //current_process = InitProcess->pid;
     //show_currentprocess_info();
 
-    // #debug
-    // Show current thread info.
+// #debug
+// Show the ws control thread.
+
     printf("\n");
-    printf("\n");
-    current_thread = EarlyRING0IDLEThread->tid;
+    printf("ws_thread: \n");
+    current_thread = (int) ws_thread->tid;
     show_thread_information();
-    
+
     // #fail
     //printf("\n");
     //printf("\n");

@@ -613,44 +613,102 @@ void I_x64CreateKernelProcess(void)
     
     fs_initialize_process_cwd ( KernelProcess->pid, "/" ); 
     
-    //...
+// ==================
+// The control thread.
+
+    I_x64CreateWSControlThread();
+
+
+// ====================
+
+// Initialize the kernel module list
+    int i=0;
+    for (i=0; i<KMODULE_MAX; i++)
+        kmList[i] = 0;
+
+// ====================
+// Setup the first kernel module.
+// It is not a dynlinked module.
+// This is just a loadable ring0 thread with shared symbols.
+
+    struct kernel_module_d *m;
+    
+    m = (struct kernel_module_d *) kmalloc( sizeof(struct kernel_module_d) );
+    if( (void*) m == NULL )
+        panic ("I_x64CreateKernelProcess: m");
+
+// name
+
+    char *name = "km::WindowServer";
+    size_t s=0;
+
+    memset(m->name,0,64);
+    mysprintf(m->name,name);
+    s = strlen(name);
+    m->name_size = s;
+    m->name[s] = 0;   // finalize
+
+//#debug
+    //printf ("String: {%s}\n",m->name);
+    //refresh_screen();
+    //while(1){}
+
+// See:
+// I_x64CreateWSControlThread()
+
+    m->thread = (struct thread_d *) ws_thread;
+
+// info
+    m->info.entry_point = (unsigned long) ws_thread->initial_rip;
+    m->info.dialog_address = 0;
+    m->info.function_table_address = 0;
+
+// Put it into the list.
+    m->id = KMODULE_WS;
+    kmList[KMODULE_WS] = (unsigned long) m;
+
+//done:
+    m->initialized = FALSE;
+    m->used  = TRUE;
+    m->magic = 1234;
 }
 
 
-void I_x64CreateEarlyRing0IdleThread(void)
+void I_x64CreateWSControlThread(void)
 {
-    debug_print ("I_x64CreateEarlyRing0IdleThread:\n");
+    debug_print ("I_x64CreateWSControlThread:\n");
 
 //
 // Thread
 //
 
-    // See: create.c
+// This is the control thread of the window server module.
+// See: create.c, thread.h.
 
-    EarlyRING0IDLEThread = (void *) create_tid0();
+    ws_thread = (void *) create_tid0();
 
 // struct
-    if ( (void *) EarlyRING0IDLEThread == NULL ){
-        panic ("I_x64CreateEarlyRing0IdleThread: EarlyRING0IDLEThread\n");
+    if ( (void *) ws_thread == NULL ){
+        panic ("I_x64CreateWSControlThread: EarlyRING0IDLEThread\n");
     }
 
 // validation
-    if ( EarlyRING0IDLEThread->used  != TRUE || 
-         EarlyRING0IDLEThread->magic != 1234 )
+    if ( ws_thread->used  != TRUE || 
+         ws_thread->magic != 1234 )
     {
-        panic ("I_x64CreateEarlyRing0IdleThread: EarlyRING0IDLEThread validation\n");
+        panic ("I_x64CreateWSControlThread: ws_thread validation\n");
     }
 
 // tid
-    if ( EarlyRING0IDLEThread->tid != SYSTEM_TID )
+    if ( ws_thread->tid != SYSTEM_TID )
     {
-        panic ("I_x64CreateEarlyRing0IdleThread: SYSTEM_TID");
+        panic ("I_x64CreateWSControlThread: SYSTEM_TID");
     }
 
 // owner pid
-    if ( EarlyRING0IDLEThread->ownerPID != GRAMADO_PID_KERNEL )
+    if ( ws_thread->ownerPID != GRAMADO_PID_KERNEL )
     {
-        panic ("I_x64CreateEarlyRing0IdleThread: GRAMADO_PID_KERNEL");
+        panic ("I_x64CreateWSControlThread: GRAMADO_PID_KERNEL");
     }
 
 
@@ -658,34 +716,32 @@ void I_x64CreateEarlyRing0IdleThread(void)
 // Memory
 //
 
-    EarlyRING0IDLEThread->pml4_VA  = KernelProcess->pml4_VA;
-    EarlyRING0IDLEThread->pml4_PA  = KernelProcess->pml4_PA;
+    ws_thread->pml4_VA  = KernelProcess->pml4_VA;
+    ws_thread->pml4_PA  = KernelProcess->pml4_PA;
 
-    EarlyRING0IDLEThread->pdpt0_VA = KernelProcess->pdpt0_VA;
-    EarlyRING0IDLEThread->pdpt0_PA = KernelProcess->pdpt0_PA;
+    ws_thread->pdpt0_VA = KernelProcess->pdpt0_VA;
+    ws_thread->pdpt0_PA = KernelProcess->pdpt0_PA;
 
-    EarlyRING0IDLEThread->pd0_VA   = KernelProcess->pd0_VA;
-    EarlyRING0IDLEThread->pd0_PA   = KernelProcess->pd0_PA;
+    ws_thread->pd0_VA   = KernelProcess->pd0_VA;
+    ws_thread->pd0_PA   = KernelProcess->pd0_PA;
 
 
-
-    // ?
-    // Set position.
-
-    EarlyRING0IDLEThread->position = KING;
+// ?
+// Set position.
+    ws_thread->position = KING;
 
 
 //
 // tss
 //
 
-    // #bugbug 
-    // #todo
+// #bugbug 
+// #todo
     
-    // EarlyRING0IDLEThread->tss = current_tss;
+    // ws_thread->tss = current_tss;
 
     set_thread_priority ( 
-        (struct thread_d *) EarlyRING0IDLEThread,
+        (struct thread_d *) ws_thread,
         PRIORITY_MIN );
 
     // #importante
@@ -700,18 +756,17 @@ void I_x64CreateEarlyRing0IdleThread(void)
 // Idle thread
 //
 
-    // Idle thread
-    // #todo
-    // We can use a method in the scheduler for this.
-    // Or in the dispatcher?
+// For now,
+// the control thread of the window server will be our idle thread.
+// But it is not actually a idle routine, 
+// it is a standard server code.
 
-    ____IDLE = (struct thread_d *) EarlyRING0IDLEThread;
-    
+    ____IDLE = (struct thread_d *) ws_thread;
 
 // This is the control thread of the kernel process.
 
     if ((void*)KernelProcess != NULL)
-        KernelProcess->control = (struct thread_d *) EarlyRING0IDLEThread;
+        KernelProcess->control = (struct thread_d *) ws_thread;
 }
 
 
@@ -928,8 +983,12 @@ int I_x64main (void)
 // And it is also the initial idle thread.
 // #todo: The kernel needs a standar sti/hlt idle thread.
 
-    PROGRESS("Kernel:1:7\n"); 
-    I_x64CreateEarlyRing0IdleThread();
+// #
+// Agora a rotina que cria o processo também cria
+// a thread.
+
+    //PROGRESS("Kernel:1:7\n"); 
+    //I_x64CreateWSControlThread();
 
 
 // ================================

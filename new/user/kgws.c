@@ -575,6 +575,10 @@ xxxKeyEvent (
 // Tratar as mensagens.
 // Traduzir rawbyte em evento.
 
+// #test
+    //int isDown=0;
+    //isDown = !(Keyboard_RawByte & 0x80);
+
 
 //key_released:
     // ================================================

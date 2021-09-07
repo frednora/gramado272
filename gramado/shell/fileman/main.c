@@ -233,6 +233,16 @@ int filemanProcedure(
                     return 0;
                     break;
 
+                case 0x4B: 
+                    printf ("LEFT\n"); 
+                    return 0;
+                    break;
+
+                case 0x4D: 
+                    printf ("RIGHT\n"); 
+                    return 0;
+                    break;
+
                 // Teclas de digitação.
                 default:
                     barInputChar( (int) long1 );
