@@ -1996,30 +1996,33 @@ int serviceClientEvent(void)
 // The parameters 
 int serviceNextEvent (int client_fd)
 {
+    struct gws_window_d *window;
+
 
     debug_print("serviceNextEvent: \n");
 
-// O cliente que está solicitando evento
-    if ( client_fd < 0 )
-    {
+// Invalid client socket.
+    if ( client_fd < 0 ){
         debug_print("serviceNextEvent: client_fd\n");
         return -1;
     }
 
-// a janela com o foco de entrada.
+// Window with focus
     int wid = window_with_focus;
 
+
 // invalid window
-    if (wid<0)
-    {
+// #todo: Put the focus on root?
+
+    if (wid<0){
         debug_print("serviceNextEvent: wid<0\n");
         return -1;
     }
 
+// Invalid window
+// #todo: Put the focus on root?
 
-// invalid window
-    if (wid>=WINDOW_COUNT_MAX)
-    {
+    if (wid >= WINDOW_COUNT_MAX){
         debug_print("serviceNextEvent: wid>=WINDOW_COUNT_MAX\n");
         return -1;
     }
@@ -2027,57 +2030,46 @@ int serviceNextEvent (int client_fd)
 
 // get window pointer
 
-    struct gws_window_d *window;
+    window = (struct gws_window_d *) windowList[wid];
 
-    window = windowList[wid];
-
-// Invalid window
-    if( (void*) window == NULL )
-    {
+// Invalid window pointer
+    if( (void*) window == NULL ){
         debug_print("serviceNextEvent: window\n");
         return -1;
     }
 
-
 // Invalid window
-    if( window->used != TRUE )
-    {
+    if( window->used != TRUE ){
         debug_print("serviceNextEvent: used\n");
         return -1;
     }
 
-
 // Invalid window
-    if( window->magic != 1234 )
-    {
+    if( window->magic != 1234 ){
         debug_print("serviceNextEvent: magic\n");
         return -1;
     }
 
 
-// o cliente autorizado a ler a janela com foco de entrada.
-    int owner_client = window->client_fd;
+// O cliente autorizado a ler a janela com foco de entrada.
+    int owner_client = (int) window->client_fd;
 
-// invalid owner client fd.
-    if (owner_client<0)
-    {
+// Invalid owner client fd.
+// #todo: Checar o limite superior.
+    if (owner_client<0){
         debug_print("serviceNextEvent: owner_client<0\n");
         return -1;
     }
-
 
 
 // check client.
 // The caller and the owner needs to be the same
 // or the caller will not be able to read the input.
 
-    if(client_fd != owner_client)
-    {
+    if(client_fd != owner_client){
         debug_print("serviceNextEvent: client_fd != owner_client\n");
         return -1;
     }
-
-
 
 //
 // Ok
@@ -2095,6 +2087,14 @@ int serviceNextEvent (int client_fd)
     {
         window->tail_pos = 0;
     }
+
+// Estamos tentando consumir 
+// mais do que foi colocado.
+// Não vamos ultrapassar o offset de escrita.
+
+    if ( window->tail_pos > window->head_pos )
+        window->tail_pos = window->head_pos;
+
 
 //
 // The message buffer

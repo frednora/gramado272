@@ -564,7 +564,7 @@ void I_x64CreateKernelProcess(void)
                                  NULL, NULL, NULL, 
                                  (unsigned long) 0x30000000, 
                                  PRIORITY_HIGH, 
-                                 (int) 0, 
+                                 (int) 0,        //ppid
                                  "KERNEL-PROCESS", 
                                  RING0,   
                                  (unsigned long ) gKernelPML4Address,
@@ -740,14 +740,22 @@ void I_x64CreateWSControlThread(void)
     
     // ws_thread->tss = current_tss;
 
+
+// Priority
+
     set_thread_priority ( 
         (struct thread_d *) ws_thread,
-        PRIORITY_MIN );
+        PRIORITY_MAX );
 
-    // #importante
-    // Sinalizando que ainda não podemos usar as rotinas que dependam
-    // de que o dead thread collector esteja funcionando.
-    // Esse status só muda quando a thread rodar.
+
+// Qauntum
+
+    ws_thread->quantum = QUANTUM_MAX;
+
+// #importante
+// Sinalizando que ainda não podemos usar as rotinas que dependam
+// de que o dead thread collector esteja funcionando.
+// Esse status só muda quando a thread rodar.
 
     dead_thread_collector_status = FALSE;
 

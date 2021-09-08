@@ -574,9 +574,9 @@ struct gws_window_d
     gws_ip_device_t ip_device;
 
 // para input do tipo teclado
-    unsigned long ip_x;
-    unsigned long ip_y;
-    unsigned long ip_color;
+    int ip_x;
+    int ip_y;
+    unsigned int ip_color;
 
     unsigned long width_in_bytes;
     unsigned long height_in_bytes;

@@ -219,9 +219,19 @@ typedef struct _gRep gRep;
 #define GWS_DrainInput            8080
 // ...
 
+//
 // #test
+//
+
 #define GWS_SwitchFocus    9090
-#define GWS_Compositor     9091    // Called by the kernel 30 times per second.
+
+// Called by the kernel x times per second.
+//#define GWS_Compositor     9091    
+#define GWS_RefreshDirtyRectangles  9091
+
+// Redraw all the windows. Back to front.
+#define GWS_UpdateDesktop  9092
+
 
 // =====================================================
 //--

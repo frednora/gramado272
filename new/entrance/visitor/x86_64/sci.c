@@ -2011,6 +2011,7 @@ void *sci2 (
         if(t->used != TRUE) { return NULL; }; //fail
         if(t->magic != 1234){ return NULL; }; //fail
         t->quantum = QUANTUM_FIRST_PLANE;
+        t->priority = PRIORITY_MAX;
         foreground_thread = (int) arg2;
         return NULL;
     }

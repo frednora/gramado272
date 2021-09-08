@@ -803,7 +803,7 @@ __ps_initialize_thread_common_elements(
 /*
  ******************************************************************
  * create_thread:
- *     Cria um thread para rodar em user mode. (just Ring 3) 
+ *     Cria um thread
  *
  * @todo: O processo ao qual o thread vai ser atribu�do deve ser passado 
  * via argumento, se o argumento for nulo, ent�o usa-se o 
@@ -852,7 +852,7 @@ struct thread_d *create_thread (
     struct thread_d   *Thread;   // Thread
     struct thread_d   *Empty;    // Empty slot
 
-    int ProcessID = -1;
+    pid_t ProcessID = -1;
 
 // Counter
     int i = USER_BASE_TID;
@@ -924,16 +924,14 @@ struct thread_d *create_thread (
     }
 
 
-	//@todo:
-	//Checar se a prioridade � um argumento v�lido.
-	//if( priority == 0 ){}
 
-    // #todo
-    // Filtrar o processo ao qual a thread pertencer�.
 
-    // #bugbug:
-    // Não sabemos a condição do processo atual para 
-    // permitirmos que ele seja o dono da thread.
+
+// #todo
+// Filtrar o processo ao qual a thread pertence.
+// #bugbug:
+// Não sabemos a condição do processo atual para 
+// permitirmos que ele seja o dono da thread.
 
     ProcessID = (int) pid;
 
@@ -942,23 +940,26 @@ struct thread_d *create_thread (
     {
         //#bugbug: Isso pode ser um problemão.
         panic("create_thread: pid");
-        ProcessID = current_process;
+        //ProcessID = current_process;
     }
-
-    // #todo: Check process validation.
-
 
 //
 // Process
 //
 
-	// Ja temos um PID para o processo que � dono da thread.
+// Ja temos um PID para o processo que � dono da thread.
 
     Process = (void *) processList[ProcessID]; 
     
     if ( (void *) Process == NULL ){
         panic ("create_thread: Process\n");
     }
+
+    if ( Process->used != TRUE  )
+        panic ("create_thread: Process->used\n");
+
+    if ( Process->magic != 1234 )
+        panic ("create_thread: Process->magic\n");
 
 
 //
@@ -976,9 +977,11 @@ struct thread_d *create_thread (
 
     memset( Thread, 0, sizeof(struct thread_d) );
 
-    // Belongs to this process.
-    Thread->ownerPID = (int) ProcessID; //pid;
+
+// Belongs to this process.
+    Thread->ownerPID = (pid_t) ProcessID;
     Thread->process = (void *) Process;
+
 
 //
 // Paging
@@ -1033,9 +1036,16 @@ struct thread_d *create_thread (
 
 // ==============
 
+// A prioridade base é fixa e 
+// a thread numca poderá ter sua prioridade rebaixada 
+// para menos que a prioridade base.
 
     Thread->base_priority = (unsigned long) PRIORITY_NORMAL;  //static
     Thread->priority      = (unsigned long) PRIORITY_NORMAL;  //dynamic
+
+// Se pertence ao kernel
+    if (Thread->ownerPID == GRAMADO_PID_KERNEL)
+        Thread->priority = (unsigned long) PRIORITY_MAX;  //dynamic
 
 // =====================
 

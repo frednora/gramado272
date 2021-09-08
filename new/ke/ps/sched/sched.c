@@ -131,8 +131,8 @@ int __scheduler_rr (unsigned long sched_flags)
 // Walking ...
 //
 
-    // READY threads in the threadList[].
- 
+// READY threads in the threadList[].
+
     for ( i=0; i < THREAD_COUNT_MAX; ++i )
     {
         TmpThread = (void *) threadList[i];
@@ -165,6 +165,13 @@ int __scheduler_rr (unsigned long sched_flags)
                 // Initialize counters.
                 TmpThread->runningCount = 0;
                 TmpThread->runningCount_ms = 0;
+                
+                // A prioridade nunca pode ser menor que sua prioridade b
+                //if(TmpThread->priority < TmpThread->base_priority)
+                    //TmpThread->priority = TmpThread->base_priority;
+                
+                //if (TmpThread->priority == PRIORITY_MAX)
+                    //TmpThread->quantum = QUANTUM_MAX;
                 
                 // The tmpConductor and it's next.
                 tmpConductor       = (void *) tmpConductor->next; 

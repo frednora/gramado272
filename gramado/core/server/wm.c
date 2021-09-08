@@ -1005,10 +1005,69 @@ __draw_char_into_the_window(
     unsigned char _string[4];
 
 
+
+// Invalid window
     if( (void*)window == NULL)
         return;
     if(window->magic!=1234)
         return;
+
+
+// Invalid char
+    if(ch<0)
+        return;
+
+
+// Invalid char
+// UP, LEFT, RIGHT, DOWN
+// #todo
+// Update input pointer for this window.
+    if( ch==0x48 || 
+        ch==0x4B || 
+        ch==0x4D || 
+        ch==0x50 )
+    {
+        // #todo: 
+        // Update input pointers for this window.
+        
+        // right
+        if(ch==0x4D)
+            window->ip_x++;
+
+        // down
+        if(ch==0x50)
+            window->ip_y++;
+
+        return;
+    }
+
+// #todo: 
+// Isso tem que voltar apagando.
+    if(ch==VK_BACK)
+    {
+        window->ip_x--;
+        if(window->ip_x < 0)
+            window->ip_x = 0;
+        
+        return;
+    }
+
+    if(ch==VK_TAB)
+    {
+        window->ip_x += 8;
+        //#todo limits
+        if(window->ip_x >= window->width_in_bytes)
+        {
+            window->ip_x = 0;
+            if(window->type == WT_EDITBOX_MULTIPLE_LINES)
+            {
+                window->ip_y++;
+                //#todo
+                //if(window->ip_y >= window->height_in_bytes)
+            }
+        }
+        return;
+    }
 
    _string[0] = (unsigned char) ch;
    _string[1] = 0;
@@ -1031,10 +1090,12 @@ __draw_char_into_the_window(
     if( window->type == WT_BUTTON )
         return;
 
-    // Isso pode receber char se tiver em modo de edição
+// #todo
+// Isso pode receber char se tiver em modo de edição.
     if( window->type == WT_ICON )
         return;
 
+// Editbox
     if( window->type == WT_EDITBOX ||
         window->type == WT_EDITBOX_MULTIPLE_LINES )
     {
@@ -1053,10 +1114,12 @@ __draw_char_into_the_window(
         window->ip_x++;
         if(window->ip_x >= window->width_in_bytes)
         {
-            window->ip_y++; 
+            if (window->type == WT_EDITBOX_MULTIPLE_LINES)
+                window->ip_y++; 
+            
             window->ip_x=0;
         }   
-   }
+    }
 }
 
 
@@ -1304,7 +1367,7 @@ wmProcedure(
              break;
 
          case GWS_SysKeyDown:
-             printf("wmProcedure: [?] GWS_SysKeyDown\n");
+             //printf("wmProcedure: [?] GWS_SysKeyDown\n");
              // Enfileirar a mensagem na fila de mensagens
              // da janela com foco de entrada.
              // O cliente vai querer ler isso.
@@ -1320,7 +1383,7 @@ wmProcedure(
          
          //
          case GWS_SwitchFocus:
-             printf("Switch "); fflush(stdout);
+             //printf("Switch "); fflush(stdout);
              __switch_focus();
              //printf("wmProcedure: [?] GWS_SwitchFocus\n");
              //next = window->next;
@@ -1345,6 +1408,8 @@ wmHandler(
     unsigned long arg3_rdx,
     unsigned long arg4_rcx )
 {
+
+    unsigned long r=0;
 
 // Final message
     struct gws_window_d  *w;
@@ -1379,9 +1444,22 @@ wmHandler(
 
     msg = (int) (arg2_rsi & 0xFFFF);
 
-    if ( msg == 9091){
+
+// #special
+// Refresh rectangles and exit.
+// GWS_RefreshDirtyRectangles
+
+    if ( msg == 9091 ){
         wmRefreshDirtyRectangles();
         return 0;  //important: We need to return.
+    }
+
+// #test
+// Redraw all the windows. Back to front.
+// GWS_UpdateDesktop
+    if ( msg == 9092 ){
+        wm_update_desktop();
+        return 0;
     }
 
 
@@ -1397,8 +1475,6 @@ wmHandler(
 //
 // Calling wmProcedure()
 //
-
-    unsigned long r=0;
 
     switch (msg){
 
@@ -1441,6 +1517,7 @@ do_process_message:
         return 0;
     }
 
+// Procedure
     r = (unsigned long) wmProcedure(
                             (struct gws_window_d *) w,
                             (int) msg,
@@ -1857,6 +1934,10 @@ int serviceCreateWindow (int client_fd)
 //===============================================
 
 
+//#test
+
+    if(Window->type == WT_OVERLAPPED)
+        wm_add_window_into_the_list(Window);
 
 
 // #test

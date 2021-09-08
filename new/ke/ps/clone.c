@@ -204,7 +204,8 @@ do_clone:
     //refresh_screen();
     //return -1;
 
-    // See: process.c
+// See: 
+// process.c
 
     Clone = (struct process_d *) __create_and_initialize_process_object();
 
@@ -226,8 +227,6 @@ do_clone:
 //
 
 
-
-
 // ==============================
 // pml4
 // A tabela pml4 usada pelo clone.
@@ -240,8 +239,8 @@ do_clone:
     }
 
     Clone->pml4_PA = (unsigned long) virtual_to_physical ( 
-                                              Clone->pml4_VA, 
-                                              gKernelPML4Address ); 
+                                         Clone->pml4_VA, 
+                                         gKernelPML4Address ); 
 
     // #debug
     // ok
@@ -365,6 +364,10 @@ do_clone:
     //refresh_screen();
     //while(1){}
 
+//
+// Copy thread structure.
+//
+
     Clone->control = (struct thread_d *) copy_thread_struct( p->control );
     if ( (void *) Clone->control == NULL ){
         panic ("clone_and_execute_process: [FAIL] copy_thread_struct \n");
@@ -438,9 +441,15 @@ do_clone:
         panic ("processCopyProcess: [FAIL] Clone->ImagePA\n");
     }
 
-    // Carregando a imagem do clone no buffer criado para ela.
 
-    // IN: name, image va.
+//
+// Load image
+//
+
+// Carregando a imagem do clone no buffer criado para ela.
+// IN: 
+// name, image va.
+
     Status = (int) __load_image(filename,(unsigned long) Clone->Image);
     if ( Status != 0 ){
         debug_print ("clone_and_execute_process: [FAIL] Couldn't load the file\n");
@@ -458,14 +467,14 @@ do_clone:
 
     // [4]
     debug_print ("clone_and_execute_process: [4] Check signature.\n");
-    printf      ("clone_and_execute_process: [4] Check signature.\n");
+    //printf      ("clone_and_execute_process: [4] Check signature.\n");
 
-    // Check ELF signature.
-    // OK. O comando existe e o arquivo foi carregado, mas 
-    // precisamos saber se a assinatura de ELF é válida.
-    // Assinatura ELF inválida. 
-    // Vamos matar a thread e o processo.
-    // See: fs.c
+// Check ELF signature.
+// OK. O comando existe e o arquivo foi carregado, mas 
+// precisamos saber se a assinatura de ELF é válida.
+// Assinatura ELF inválida. 
+// Vamos matar a thread e o processo.
+// See: fs.c
 
     Status = (int) fsCheckELFFile ( (unsigned long) Clone->Image );
     if ( Status < 0 ){
@@ -527,29 +536,26 @@ do_clone:
     //debug_print ("clone_and_execute_process:  This is a work in progress\n");
     //     printf ("clone_and_execute_process:  This is a work in progress\n");
     debug_print ("clone_and_execute_process: Calling CreateAndIntallPageTable \n");
-    printf      ("clone_and_execute_process: Calling CreateAndIntallPageTable :) \n");
+    //printf      ("clone_and_execute_process: Calling CreateAndIntallPageTable :) \n");
     //panic       ("clone_and_execute_process: [Breakpoint] CreateAndIntallPageTable \n");
-
 
 
 //
 // pt
 //
 
-    // Page table para a imagem.
-    // Vamos criar a pagetable e instalar o ponteiro da pegatable.
+// Page table para a imagem.
+// Vamos criar a pagetable e instalar o ponteiro da pegatable.
+// Mapeando a região usada pela imagem
+// com base no endereço físico que obtivemos anteriormente.
 
-    // Mapeando a região usada pela imagem
-    // com base no endereço físico que obtivemos anteriormente.
-
-    // =====================================
-    // Levels: PML4, PDPT, PD, PT
-    //
-    // PML4 - Page Map Level 4
-    // PDPT - Page Directory Pointer Table
-    // PD   - Page Directory
-    // PT   - Page Table    
-
+// =====================================
+// Levels: PML4, PDPT, PD, PT
+//
+// PML4 - Page Map Level 4
+// PDPT - Page Directory Pointer Table
+// PD   - Page Directory
+// PT   - Page Table    
 
     //#debug
     //printf (" :) \n");
@@ -685,14 +691,14 @@ do_clone:
     //while(1){}
 
 
-    // Configurando o endereço virtual padrão para aplicativos.
-    // Novo endereço virtual da imagem. 
-    // Conseguimos isso por causa da criação da pagetable, logo acima.
-    // # Caution
-    // Entry point and stack.
-    // We are clonning only the control thread.
-    // The entry point in the start of the image. 0x201000.
-    // And the stack ??
+// Configurando o endereço virtual padrão para aplicativos.
+// Novo endereço virtual da imagem. 
+// Conseguimos isso por causa da criação da pagetable, logo acima.
+// #caution
+// Entry point and stack.
+// We are clonning only the control thread.
+// The entry point in the start of the image. 0x201000.
+// And the stack ??
 
     Clone->Image        = (unsigned long) CONTROLTHREAD_BASE;        // 0x200000 
     Clone->control->rip = (unsigned long) CONTROLTHREAD_ENTRYPOINT;  // 0x201000
@@ -707,15 +713,11 @@ do_clone:
     Clone->processName_len = (size_t) sizeof(Clone->__processname);
 
 
-
     //#debug
     //ok
     //printf (" :) \n");
     //refresh_screen();
     //return 0;
-
-
-
 
 
 //
@@ -736,7 +738,7 @@ do_clone:
     */
 
 //
-// Clone
+// Clone thread
 //
 
     // [filho]
@@ -744,7 +746,6 @@ do_clone:
 
     // Used by spawn.c
     Clone->control->new_clone = TRUE;
-
 
 
 // #todo
@@ -757,12 +758,12 @@ do_clone:
     debug_print ("---------------------------------------------\n");
 
     printf ("clone_and_execute_process: [5] Done\n");
-    refresh_screen();
+    invalidate_screen();
+    //refresh_screen();
 
 //
 // Debug
 //
-
 
     //printf ("\n");
     //printf ("--[ Debug ]---------------------------------\n");
@@ -799,26 +800,29 @@ do_clone:
     //printf ("\n");
 
     // #debug
-    refresh_screen();
+    //refresh_screen();
     //while(1){}
     
     
     // Switch back
     //x64_load_pml4_table( old_pml4 );
 
-//
-// #todo
-//
 
-    // Ainda não selecionamos para execução.
-    // Então a thread de controle esta em INITIALIZED e não em STANDBY.
 
-    // Change the state to standby.
-    // This thread is gonna run in the next taskswitch.
+// priority
+    Clone->control->priority = PRIORITY_MAX;
+
+// quantum
+    Clone->control->quantum = QUANTUM_MAX;
+
+// Select for execution
+// Então a thread de controle esta em INITIALIZED e não em STANDBY.
+// Change the state to standby.
+// This thread is gonna run in the next taskswitch.
 
     SelectForExecution (Clone->control);
 
-    // Return child's PID.
+// Return child's PID.
 
     return (pid_t) Clone->pid;
 

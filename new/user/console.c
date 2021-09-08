@@ -1313,8 +1313,12 @@ int consoleCompareStrings(void)
         // Trampoline
         //wmWindowMananer_SendMessage();
         
-        wmSendInputToWindowManager(0,MSG_SYSKEYDOWN,VK_F1,0);
-        
+        //#test
+        wmSendInputToWindowManager(0,9092,0,0);  // update desktop
+        //wmSendInputToWindowManager(0,0,0,0);
+        //wmSendInputToWindowManager(0,0,0,0);
+        //wmSendInputToWindowManager(0,0,0,0);
+
         goto exit_cmp;
     }
 

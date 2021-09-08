@@ -244,6 +244,10 @@ gwsProcedure (
 
     int f12Status = -1;
 
+
+    if(msg<=0)
+        gws_yield();
+
     switch (msg){
 
         case MSG_CLOSE:
@@ -426,7 +430,8 @@ int main ( int argc, char *argv[] )
     gws_debug_print ("gws.bin: Create rectangle \n");
     printf          ("gws.bin: Create rectangle \n");
 
-    // first shot
+// ??
+// first shot
     gramado_system_call(897,0,0,0);
 
 
@@ -983,9 +988,9 @@ int main ( int argc, char *argv[] )
     };
     //=================================
 
-    // Isso ehestranho ... um cliente remoto nao deve poder fazer isso.
+    // Isso eh estranho ... um cliente remoto nao deve poder fazer isso.
     //gws_debug_print ("gws: Sending command to close the server. \n");
-    gws_async_command(client_fd,1,0,0);
+    //gws_async_command(client_fd,1,0,0);
     //exit(0);
 
     // Asking to server to send me an notification

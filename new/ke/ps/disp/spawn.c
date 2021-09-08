@@ -17,18 +17,16 @@ void __spawn_load_pml4_table(unsigned long phy_addr)
 void spawn_thread (int tid)
 {
     struct thread_d  *Target;
-    struct thread_d  *Next;
+
+    int next_tid = (int) (tid & 0xFFFF);
 
 
     debug_print ("spawn_thread:\n");
 
     // #debug
-    printf ("spawn_thread: SPAWN !\n");
-    refresh_screen();
+    //printf ("spawn_thread: SPAWN !\n");
+    //refresh_screen();
 
-
-    // The next will be the current thread.
-    Next = (void *) threadList[current_thread];
 
 //
 // Target 
@@ -36,16 +34,16 @@ void spawn_thread (int tid)
 
     debug_print ("spawn_thread: Target\n");
 
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
+    if ( next_tid < 0 || next_tid >= THREAD_COUNT_MAX )
     {
-        printf ("spawn_thread: TID=%d", tid );  
+        printf ("spawn_thread: next_tid=%d", next_tid );  
         die();
     }
 
-    Target = (void *) threadList[tid]; 
+    Target = (void *) threadList[next_tid]; 
 
     if ( (void *) Target == NULL ){
-        printf ("spawn_thread: Target TID={%d}", tid );  
+        printf ("spawn_thread: Target next_tid={%d}", next_tid );  
         die();
     }
 
@@ -54,27 +52,28 @@ void spawn_thread (int tid)
         panic("spawn_thread: Target validation");
     }
 
+// new clone
     if ( Target->new_clone == TRUE ){
-        printf ("spawn_thread: Spawning the control thread of a new clone\n");
-        refresh_screen();
+        debug_print ("spawn_thread: Spawning the control thread of a new clone\n");
+        //refresh_screen();
     }
-    
 
-    // Check tid validation
-    if (Target->tid != tid){
+
+// Check tid validation
+    if (Target->tid != next_tid){
         panic("spawn_thread: tid validation");
     }
 
     // State: Needs to be in Standby,
     if ( Target->state != STANDBY ){
-        printf ("spawn_thread: TID={%d} not in Standby\n", tid );
+        printf ("spawn_thread: TID={%d} not in Standby\n", next_tid );
         die();
     }
 
     // Saved:
     // If the context is saved, so it is not the first time.
     if ( Target->saved == TRUE ){
-        printf ("spawn_thread: Saved TID={%d}\n", tid );
+        printf ("spawn_thread: Saved TID={%d}\n", next_tid );
         die();
     }
 
@@ -111,10 +110,9 @@ void spawn_thread (int tid)
     
 
 
+// The next thread will be the window server.
 
-    // The current thread will be the next.
-
-    Target->next = (void *) Next; 
+    Target->next = (void *) ws_thread; 
 
 //
 // MOVEMENT 2 (Standby --> Running).
@@ -143,7 +141,7 @@ void spawn_thread (int tid)
     // Paranoia: Check state.
 
     if ( Target->state != RUNNING ){
-        printf ("spawn_thread: State TID={%d}\n", tid );
+        printf ("spawn_thread: State TID={%d}\n", next_tid );
         die();
     }
 

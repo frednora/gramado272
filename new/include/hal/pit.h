@@ -5,6 +5,11 @@
 #define ____PIT_H    1
 
 
+// Seconds      (s)  1
+// Milliseconds (ms) 1.000
+// Microseconds (µs) 1.000.000
+// Nanoseconds  (ns) 1.000.000.000
+
 //
 // Counting variables support.
 //
