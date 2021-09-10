@@ -255,59 +255,66 @@ int gws_initialize_library (void)
 // == Helper functions ====================================================
 //
 
-
-
 // == get next event ==========================
-int 
-__gws_get_next_event_request ( int fd )
+int __gws_get_next_event_request (int fd)
 {
     // Isso permite ler a mensagem na forma de longs.
     unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
 
-    int n_writes = 0;   // For sending requests.
+// Bytes sent.
+    int n_writes=0;
 
-
-//
-// Send request
-//
 
     gws_debug_print ("__gws_get_next_event_request: Writing ...\n");
 
-// parameters
-    message_buffer[0] = 0; 
+
+    if( fd<0 )
+        return -1;
+
+// The message.
+
+    message_buffer[0] = 0;
     message_buffer[1] = GWS_GetNextEvent;    // Message code.
     message_buffer[2] = 0;
     message_buffer[3] = 0;
-    //...
 
-// Send
+    message_buffer[4] = 0;
+    message_buffer[5] = 0;
+    // ...
 
+//  forever
     while (1){
         n_writes = send ( 
                        fd, 
                        __gws_message_buffer, 
                        sizeof(__gws_message_buffer), 
                        0 );
-        if(n_writes>0){ break; }
+        if (n_writes > 0)
+        {
+            break; 
+        }
     }
 
-    return 0; 
-    //return n_writes; 
+//done:
+    return (int) n_writes; 
 }
 
-struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *event )
-{
-    unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
-
-
+// response
 // #importante
 // As informações devem ficar aqui até que o
 // cliente pegue.
 // Um ponteiro será devolvido para ele.
 
+struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *event )
+{
+    unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
 
-    int n_reads = 0;    // For receiving responses.
+    int n_reads=0;
 
+
+// fd
+    if(fd<0)
+        return NULL;
 
 // crazy fail
     if( (void*) event == NULL )
@@ -368,7 +375,6 @@ struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *
     event->msg = 0;
     event->used = FALSE;
     event->magic = 0;
-
     return (struct gws_event_d *) event;
 
 
@@ -381,34 +387,41 @@ struct gws_event_d *__gws_get_next_event_response ( int fd, struct gws_event_d *
 process_event:
 
 // Get the message sent by the server.
-
-    //printf ("libgws: $\n");
-
-
-
-
-    wid      = (int) message_buffer[0];             // window id
-    msg_code = (int) message_buffer[1];             // message code: (It is an EVENT)
-    sig1 = (unsigned long) message_buffer[2];   // Signature 1: 1234
-    sig2 = (unsigned long) message_buffer[3];   // Signature 2: 5678
+    wid      = (int) message_buffer[0];        // window id
+    msg_code = (int) message_buffer[1];        // message code: (It is an EVENT)
+    sig1 = (unsigned long) message_buffer[2];  // Signature 1: 1234
+    sig2 = (unsigned long) message_buffer[3];  // Signature 2: 5678
 
 //
 // Checks
 //
 
 // #todo: Check if it is a REPLY message.
-    if ( msg_code != GWS_SERVER_PACKET_TYPE_EVENT ){
+    if ( msg_code != GWS_SERVER_PACKET_TYPE_EVENT )
+    {
         debug_print ("__gws_get_next_event_response: msg_code fail\n");
-        printf      ("__gws_get_next_event_response: msg_code fail\n");
+        //printf      ("__gws_get_next_event_response: msg_code fail\n");
+        event->msg = 0;
+        event->used = FALSE;
+        event->magic = 0;
+        return NULL;
     }
 
     if ( sig1 != 1234 ){
         debug_print ("__gws_get_next_event_response: sig1 fail\n");
-        printf      ("__gws_get_next_event_response: sig1 fail\n");
+        //printf      ("__gws_get_next_event_response: sig1 fail\n");
+        event->msg = 0;
+        event->used = FALSE;
+        event->magic = 0;
+        return NULL;
     }
 
     if ( sig2 != 5678 ){
         debug_print ("__gws_get_next_event_response: sig2 fail\n");
+        event->msg = 0;
+        event->used = FALSE;
+        event->magic = 0;
+        return NULL;
     }
 
 // The event properly.
@@ -434,11 +447,15 @@ process_event:
         // #debug
         //printf ("::: wid=%d msg=%d l1=%d l2=%d \n",
             //event->wid, event->msg, event->long1, event->long2 );
+
+        return (struct gws_event_d *) event;
     }
 
-
-    return (struct gws_event_d *) event;
+    event->used = FALSE;
+    event->magic = 0;
+    return NULL;
 }
+
 
 
 
@@ -766,16 +783,19 @@ __gws_change_window_position_request (
 }
 
 
-
-int 
-__gws_change_window_position_reponse ( int fd )
+// response
+int __gws_change_window_position_reponse (int fd)
 {
     unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0]; 
     int n_reads = 0;    // For receiving responses.
 
-    //
-    // Waiting for response. ==================
-    //
+
+    if (fd<0)
+        return -1;
+
+//
+// Waiting for response. ==================
+//
 
     // Espera para ler a resposta. 
     // Esperando com yield como teste.
@@ -2805,31 +2825,54 @@ struct gws_event_d *gws_get_next_event(int fd, struct gws_event_d *event)
 {
     struct gws_event_d *e;
     int value=0;
+    int status=0;
 
+
+    if( (void*) event == NULL )
+        return NULL;
+
+
+// Loop
+breathe_deep_seek_peace:
 
     if (fd<0){
         debug_print("gws_get_next_event: fd\n");
+        event->msg = 0;
         return NULL;
     }
 
 // Request
-    __gws_get_next_event_request (fd);
+    status = __gws_get_next_event_request (fd);
+    if(status<0){ event->msg = 0; return NULL; }
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
-    // Response
-    // Waiting to read the response.
+
+// Response
+// Waiting to read the response.
     while (1){
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
-        if (value == ACTION_REPLY ) { break; }
-        if (value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        if (value == ACTION_REPLY ){ break; }
+        if (value == ACTION_ERROR )
+        {
+            event->msg = 0;
+            return NULL;
+        }
     };
+
     e = (struct gws_event_d *) __gws_get_next_event_response (fd,event);
 
-    if( (void*) e == NULL )
-        debug_print("gws_get_next_event: fail\n");
+    //if( (void*) e == NULL ){
+        //debug_print("gws_get_next_event: e\n");
+        //goto breathe_deep_seek_peace;
+    //}
 
-    return (struct gws_event_d *) e;
+    if( event->msg <= 0){
+        debug_print("gws_get_next_event: event->msg\n");
+        goto breathe_deep_seek_peace;
+    }
+
+//done:
+    return (struct gws_event_d *) event;
 }
 
 

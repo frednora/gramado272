@@ -26,27 +26,43 @@ void task_switch (void)
     struct process_d  *TargetProcess;
     struct thread_d   *TargetThread;
 
-    pid_t pid = -1;
+    pid_t pid = (-1);
 
 
 //
 // Current thread
 //
-    // Check current thread limits.
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+
+// Check current thread limits.
+
+    if ( current_thread < 0 || 
+         current_thread >= THREAD_COUNT_MAX )
     {
         panic ("ts: current_thread\n");
     }
+
+// structure
 
     CurrentThread = (void *) threadList[current_thread]; 
 
     if ( (void *) CurrentThread == NULL ){
         panic ("ts: CurrentThread\n");
     }
-    
-    // #todo
-    // Check the thread's validation. 
-    // used and magic.
+
+// #todo
+// Check the thread's validation. 
+// used and magic.
+
+//#test
+    if ( CurrentThread->used != TRUE ){
+        panic ("ts: CurrentThread used\n");
+    }
+
+//#test
+    if ( CurrentThread->magic != 1234 ){
+        panic ("ts: CurrentThread magic\n");
+    }
+
 
 //
 // Current process
@@ -58,6 +74,8 @@ void task_switch (void)
         panic ("ts: pid\n");
     }
 
+// structure
+
     CurrentProcess = (void *) processList[pid];
 
     if ( (void *) CurrentProcess == NULL ){
@@ -65,14 +83,16 @@ void task_switch (void)
     }
 
     // validation
-    if ( CurrentProcess->used != TRUE && CurrentProcess->magic != 1234 )
+    if ( CurrentProcess->used != TRUE || 
+         CurrentProcess->magic != 1234 )
     {
         panic ("ts: CurrentProcess validation\n");
     }
 
-   // Update the global variable.
+// Update the global variable.
 
    current_process = (int) CurrentProcess->pid;
+   //current_process = (pid_t) CurrentProcess->pid;
 
 //
 //  == Conting =================================
@@ -166,12 +186,21 @@ The remainder ??
 
 // Chamamos o compositor com o contexto salvo.
 // O pit aciona essa flag a cada 32 ms.
-// See: sched.c
+// See: kgwm.c
 
         if (UpdateScreenFlag==TRUE){
             schedulerUpdateScreen();
         }
 
+// #test
+// Extra refresh
+// Redraw and flush stuff.
+
+        if( (CurrentThread->runningCount % 90) == 0 )
+        {
+            if( gUseWMCallbacks == TRUE)
+                wmSendInputToWindowManager(0,9091,0,0);
+        }
 
 		// #obs:
 		// A preempção acontecerá por dois possíveis motivos.
@@ -189,7 +218,8 @@ The remainder ??
             // e colocar ela no estado de pronta.
             // Coloca no estado de pronto e limpa a flag.
             // Em seguida vamos procurar outra.
-            if ( CurrentThread->state == RUNNING && CurrentThread->_yield == TRUE )
+            if ( CurrentThread->state == RUNNING && 
+                 CurrentThread->_yield == TRUE )
             {
                 CurrentThread->state  = READY;
                 CurrentThread->_yield = FALSE;

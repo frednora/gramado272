@@ -1578,12 +1578,22 @@ gwssrv_change_window_position (
 
 //================================
 
-// Redraw window
+int 
+gwssrv_redraw_childs(
+    struct gws_window_d *window);
 
+// Redraw overlapped window
+int 
+gwssrv_redraw_overlapped(
+    struct gws_window_d *window);
+
+
+// Redraw window
 int 
 gwssrv_redraw_window (
     struct gws_window_d *window, 
     unsigned long flags ); 
+
 
 int 
 update_window ( 
