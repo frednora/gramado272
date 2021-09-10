@@ -12,14 +12,10 @@
 #include <gws.h>
 
 
-// Why in this document?
 // IN: left, right, top, bottom.
 void
 DrawBorder( 
-    unsigned long l, 
-    unsigned long r, 
-    unsigned long t, 
-    unsigned long b,
+    unsigned long l, unsigned long r, unsigned long t, unsigned long b,
     int solid )
 {
     register int i=0;
@@ -275,7 +271,7 @@ void
 charBackbufferCharBlt ( 
     unsigned long x, 
     unsigned long y, 
-    unsigned int color, 
+    unsigned long color, 
     unsigned long c )
 {
     grBackbufferDrawCharTransparent ( x, y, color, c );
@@ -458,18 +454,22 @@ grBackbufferDrawChar (
     register int y2=0;
     register int x2=0;
 
-    char *char_address; 
+    char *work_char; 
     unsigned char bit_mask = 0x80;
 
 
-// Get the font pointer.
-// todo:
-// usar variavel g8x8fontAddress.
-// + Criar e usar uma estrutura para fonte.
-// + Usar o ponteiro para a fonte atual que foi carregada.
-// + Criar um switch para o tamanho da fonte.
-//   isso deveria estar na inicialização do módulo char.
-
+    /*
+     * Get the font pointer.
+     *
+     * @todo:
+     *     usar variavel g8x8fontAddress.	 
+     *     + Criar e usar uma estrutura para fonte.
+     *     + Usar o ponteiro para a fonte atual que foi carregada.
+     *     + Criar um switch para o tamanho da fonte.
+     *     isso deveria estar na inicialização do módulo char.
+     *     ...
+     */
+ 
     if ( gws_currentfont_address == 0 ||  
          gcharWidth <= 0 || 
          gcharHeight <= 0 )
@@ -480,18 +480,13 @@ grBackbufferDrawChar (
 
 		//#debug
 		//Estamos parando só para testes.
-
+		
         printf ("gws_draw_char: initialization fail\n");
         while(1){}
     }
 
-
-//
-// Font
-//
-
-//todo: 
-//Criar essas variáveis e definições.
+    //todo: 
+    //Criar essas variáveis e definições.
 
     switch (gfontSize){
 		
@@ -524,16 +519,18 @@ grBackbufferDrawChar (
 		    //gws_currentfont_address = (unsigned long) BIOSFONT8X8;    //ROM bios.
 		    //set_char_width(8);
 			//set_char_height(8);	
-            //gfontSize = FONT8X8;  //#todo: fução para configurar isso.
+            //gfontSize = FONT8X8;  //#todo: fução para configurar isso.			
             break;
     };
 
+	//tentando pintar um espaço em branco.
+    //Nas rotinas da biblioteca gráfica, quando encontram
+	//um espaço(32), nem manda para cá, apenas incrementam o cursor.
 
-// Char address:
-// O endereço do caractere sendo trabalhado.
+	// O caractere sendo trabalhado.
+	// Offset da tabela de chars de altura 8 na ROM.
 
-    char_address = (void *) gws_currentfont_address + (c * gcharHeight);
-
+    work_char = (void *) gws_currentfont_address + (c * gcharHeight);
 
 //
 // Draw
@@ -551,17 +548,16 @@ grBackbufferDrawChar (
         for ( x2=0; x2 < gcharWidth; x2++ )
         {
             grBackBufferPutpixel ( 
-                *char_address & bit_mask ? fgcolor: bgcolor, 
+                *work_char & bit_mask ? fgcolor: bgcolor, 
                 (x + x2), 
                 y );
 
             bit_mask = (bit_mask >> 1); 
         };
 
-        // Próxima linha das (y) linhas do caractere.
-        y++;
-        // Próximo byte do char. 
-        char_address++; 
+        // Próxima linha da (y) linhas do caractere.
+        y++; 
+        work_char++; 
     };
 }
 

@@ -145,7 +145,13 @@ typedef enum {
 
 struct gws_color_scheme_d
 {
+    //@todo: É preciso ainda definir esse tipo de objeto.
+	//definir em gdef.h
+	//object_type_t objectType;
+	//object_class_t objectClass;	
+
     int id;
+
     int used;
     int magic;
 
@@ -165,10 +171,9 @@ struct gws_color_scheme_d
 	//...
 };
 
-struct gws_color_scheme_d *GWSCurrentColorScheme;
-
-struct gws_color_scheme_d *GWSHumilityColorScheme; // Simples.
-struct gws_color_scheme_d *GWSPrideColorScheme;    // Colorido.
+struct gws_color_scheme_d* GWSCurrentColorScheme;
+struct gws_color_scheme_d* GWSHumilityColorScheme; // Simples.
+struct gws_color_scheme_d* GWSPrideColorScheme;    // Colorido.
 
 
 //
@@ -177,7 +182,7 @@ struct gws_color_scheme_d *GWSPrideColorScheme;    // Colorido.
 
 
 // #ordem
-// hardware, software
+// hadware, software
 
 unsigned long  ____BACKBUFFER_VA;
 unsigned long  ____FRONTBUFFER_VA;
@@ -241,7 +246,7 @@ struct vid_d vidConfig;
 // Conjunto de meditas consistentes
 // que caracterizam um estilo próprio.
 
-// The icon on title bar. (Consistent)
+// The icon on title bar.
 #define METRICS_ICON_LEFT    4
 #define METRICS_ICON_TOP     4
 
@@ -256,17 +261,11 @@ struct vid_d vidConfig;
 // área da janela de aplicativo.
 // Usado somente por overlapped window.
 #define METRICS_TITLEBAR_ORNAMENT_SIZE    1
-#define METRICS_TITLEBAR_HEIGHT    32
-
-#define METRICS_TOOLBAR_ORNAMENT_SIZE    1
-#define METRICS_TOOLBAR_HEIGHT    32
-
-#define METRICS_STATUSBAR_ORNAMENT_SIZE    1
-#define METRICS_STATUSBAR_HEIGHT    32
 
 // ...
 
 // ===============================================================
+
 
 
 

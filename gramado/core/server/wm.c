@@ -193,8 +193,6 @@ void __update_fps(void)
 // 0   = ok, no erros;
 // < 0 = not ok. something is wrong.
 
-// #painter
-
 int 
 wmDrawFrame ( 
     struct gws_window_d *parent,
@@ -236,7 +234,7 @@ wmDrawFrame (
 
     int Type=0;
 
-    unsigned long BorderSize = METRICS_BORDER_SIZE;  //default.
+    unsigned long BorderSize = (border_size & 0xFFFF);
 
     unsigned int  BorderColor1 = border_color1;
     unsigned int  BorderColor2 = border_color2;
@@ -312,54 +310,43 @@ wmDrawFrame (
 // Qual é o tipo da janela em qual precisamos
 // criar o frame. Isso indica o tipo de frame.
 
-// All the supported types here have a frame.
-    useFrame=TRUE;
-
     Type = window->type;
 
     switch (Type){
-
-    case WT_BUTTON:
-        useBorder=FALSE;
-        useIcon=FALSE; 
-        break;
-
-    case WT_EDITBOX:
-        useBorder=TRUE;
+    
+    case WT_EDITBOX:     
+        useFrame=TRUE; 
         useIcon=FALSE;
-        break;
-
-    case WT_OVERLAPPED:  
         useBorder=TRUE;
+        break;
+    
+    case WT_OVERLAPPED:  
+        useFrame=TRUE; 
+        useIcon=TRUE;
         useTitleBar=TRUE;  // Normalmente uma janela tem a barra de t[itulos.
         if ( window->style & 0x0001 ){ useTitleBar=FALSE; }    //maximized
         //if ( window->style & 0x0004 ){ useTitleBar=FALSE; }  //fullscreen
         useTitleString=TRUE;
-        useIcon=TRUE;
+        useBorder=TRUE;
         break;
-
-    // Unsupported type.
-    default:
-        useFrame=FALSE;
+    
+    case WT_BUTTON:      
+        useFrame=TRUE;
+        useIcon=FALSE; 
         break;
     };
 
-// This type doesn't have a frame.
-
     if ( useFrame == FALSE ){
-        gwssrv_debug_print ("wmDrawFrame: [ERROR] No frame\n");
-        return (-1);
+        gwssrv_debug_print ("wmDrawFrame: [ERROR] This type does not use a frame.\n");
+        return -1;
     }
 
 
-// ===============================================
-// editbox
-
+    // ===============================================
+    // editbox
+    
     if ( Type == WT_EDITBOX )
     {
-        window->borderUsed = FALSE;
-        window->border_size = 0;
-        BorderSize = (border_size & 0xFFFF);
 
         // #todo
         // The window structure has a element for border size
@@ -369,11 +356,14 @@ wmDrawFrame (
         // Se tiver o foco.
         if ( window->focus == TRUE ){
             BorderColor = COLOR_BLUE;
-            BorderSize = (BorderSize + 1);
+            BorderSize = 4;
         }else{
             BorderColor = COLOR_BLACK;  // COLOR_INACTIVEBORDER;
+            BorderSize = 2;
         };
-
+        
+        window->border_size = 0;
+        window->borderUsed = FALSE;
         if (useBorder==TRUE){
             window->border_color = BorderColor;
             window->border_size  = BorderSize;
@@ -382,25 +372,23 @@ wmDrawFrame (
 
         // Draw the border of an edit box.
 
-        // top
+        // board1, borda de cima e esquerda.
         rectBackbufferDrawRectangle( 
             window->left, window->top, 
             window->width, window->border_size, 
             window->border_color, TRUE,0 );
 
-        // left
         rectBackbufferDrawRectangle( 
             window->left, window->top, 
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
-        // right
+        // board2, borda direita e baixo.
         rectBackbufferDrawRectangle( 
             (window->left + window->width - BorderSize), window->top,  
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
-        // bottom
         rectBackbufferDrawRectangle ( 
             window->left, (window->top + window->height - window->border_size), 
             window->width, window->border_size, 
@@ -421,52 +409,54 @@ wmDrawFrame (
 
     if ( Type == WT_OVERLAPPED )
     {
-        window->borderUsed = FALSE;
-        window->border_size = 0;
-
-        // Consistent for overlapped.
-        BorderSize = METRICS_BORDER_SIZE;
 
         // #todo
-        // Maybe we need border size and padding size.
+        // Maybe we nned border size and padding size.
+        
+        // Consistente para overlapped.
+        BorderSize = METRICS_BORDER_SIZE;
+        // ...
+        
         // #todo
         // The window structure has a element for border size
         // and a flag to indicate that border is used.
         // It also has a border style.
 
+        // Se tiver o foco.
         if ( window->focus == TRUE ){
             BorderColor = COLOR_BLUE1;
         }else{
             BorderColor = COLOR_INACTIVEBORDER;
         };
 
+        window->border_size = 0;
+        window->borderUsed = FALSE;
         if (useBorder==TRUE){
             window->border_color = BorderColor;
             window->border_size  = BorderSize;
             window->borderUsed   = TRUE;
         }
 
-        // Boards
 
-        // top
+        // Quatro bordas de uma janela overlapped.
+         
+        // board1, borda de cima e esquerda.
         rectBackbufferDrawRectangle( 
             parent->left + window->left, parent->top + window->top, 
             window->width, window->border_size, 
             window->border_color, TRUE,0 );
 
-        // left
         rectBackbufferDrawRectangle( 
             parent->left + window->left, parent->top + window->top, 
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
-        // right
+        //board2, borda direita e baixo.
         rectBackbufferDrawRectangle( 
             (parent->left + window->left + window->width - window->border_size), (parent->top + window->top), 
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
-        // bottom
         rectBackbufferDrawRectangle ( 
             (parent->left + window->left), (parent->top + window->top + window->height - window->border_size), 
             window->width, window->border_size, 
@@ -475,7 +465,6 @@ wmDrawFrame (
         // #important:
         // The border in an overlapped window will affect
         // the top position of the client area rectangle.
-
         window->rcClient.top += window->border_size;
 
         //
@@ -502,10 +491,9 @@ wmDrawFrame (
         
         // Title bar
         // #todo: Essa janela foi registrada?
-
         if (useTitleBar == TRUE)
         {
-            window->titlebar_height = METRICS_TITLEBAR_HEIGHT;  //32;
+            window->titlebar_height = 32;
             window->titlebar_color = TitleBarColor; //0x00AC81
 
             tbWindow = (void *) xxxCreateWindow ( 
@@ -549,9 +537,9 @@ wmDrawFrame (
         // área da janela de aplicativo.
         // Usado somente por overlapped window.
         
-        window->frame.ornament_color1   = OrnamentColor1;
-        window->titlebar_ornament_color = OrnamentColor1;
-
+        window->frame.ornament_color1   = OrnamentColor1;  //COLOR_BLACK;
+        window->titlebar_ornament_color = OrnamentColor1;  //COLOR_BLACK;
+        
         rectBackbufferDrawRectangle ( 
             tbWindow->left, ( (tbWindow->top) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
             tbWindow->width, METRICS_TITLEBAR_ORNAMENT_SIZE, 
@@ -564,6 +552,7 @@ wmDrawFrame (
 
         // O posicionamento em relação
         // à janela é consistente por questão de estilo.
+        
         // See: bmp.c
         // IN: index, x, y.
 
@@ -609,7 +598,7 @@ wmDrawFrame (
         // #todo: Essa janela foi registrada?
         if ( window->style & 0x0008 )
         {
-            window->statusbar_height = METRICS_STATUSBAR_HEIGHT; //32;
+            window->statusbar_height = 32;
             window->statusbar_color = 0x00AC81;
 
             sbWindow = (void *) xxxCreateWindow ( 
@@ -634,6 +623,7 @@ wmDrawFrame (
                 return -1;
             }
         }
+
 
         // ok
         return 0;
@@ -689,20 +679,8 @@ void wm_flush_rectangle(struct gws_rect_d *rect)
 
 void wm_flush_window(struct gws_window_d *window)
 {
-
-    struct gws_window_d *child;
-
     if( (void*) window != NULL )
         gws_show_window_rect(window);
-
-/*
-    child = (struct gws_window_d *) window->child;
-    while( child != NULL){
-        gws_show_window_rect(child);
-        child = child->child;
-    };
-*/
-
 }
 
 
@@ -919,11 +897,6 @@ void wm_update_desktop(void)
 {
     struct gws_window_d *w;
 
-
-// #todo
-// Mostrar o background antes da pilha de janelas.
-// A pilha de janelas deve ser overlapped.
-
     w = (struct gws_window_d *) first_window;
 
     while(1){
@@ -933,18 +906,10 @@ void wm_update_desktop(void)
         // Just draw, don't show.
         if( (void*) w != NULL )
         {
-            if (w->type == WT_OVERLAPPED)
-                gwssrv_redraw_overlapped(w);
-            
-            //if (w->type != WT_OVERLAPPED)
-                //gwssrv_redraw_window(w,FALSE);
-            
-            //gwssrv_redraw_window(w,FALSE);
-            //gwssrv_redraw_childs(w);
-            
+            gwssrv_redraw_window(w,FALSE);
             invalidate_window(w);
         }
-
+        
         w = (struct gws_window_d *) w->next; 
     }; 
 }
@@ -972,29 +937,22 @@ void wm_add_window_into_the_list( struct gws_window_d *window)
     {
         first_window = (struct gws_window_d *) window;
         last_window  = (struct gws_window_d *) window;
-        
         //activate
         set_active_window(window->id);
-        
         return;
     }
 
 // Não é a primeira.
     if ( (void*) last_window != NULL )
     {
-        // Será a próxima.
         last_window->next = (struct gws_window_d *) window;
-        
-        // Também será a última.
         last_window = (struct gws_window_d *)last_window->next;
-        
-        // Fim da lista
         last_window->next = NULL;
-
-        // activate
+        //activate
         set_active_window(window->id);
     }
 }
+
 
 // not tested yet
 void wm_remove_window_from_list_and_kill( struct gws_window_d *window)
@@ -1483,7 +1441,9 @@ wmHandler(
 //
 // Message
 //
+
     msg = (int) (arg2_rsi & 0xFFFF);
+
 
 // #special
 // Refresh rectangles and exit.
@@ -1506,14 +1466,18 @@ wmHandler(
 //
 // Data
 //
+
     long1 = (unsigned long) arg3_rdx;
     long2 = (unsigned long) arg4_rcx;
+
 
 
 //
 // Calling wmProcedure()
 //
+
     switch (msg){
+
 
 // #important:
 // Mandaremos input somente para a janela com foco de entrada,
@@ -2394,75 +2358,6 @@ int serviceRefreshWindow (void){
 //
 //===================================================================
 //
-
-
-
-int 
-gwssrv_redraw_childs(
-    struct gws_window_d *window)
-{
-
-    struct gws_window_d *next;
-
-// fast validation
-
-    if ( (void *) window == NULL ){ return -1; }
-
-    if (window->used!=TRUE || window->magic!=1234)
-        return -1;
-
-// redraw list of childs.
-
-    next = (void*) window->child;
-
-    while( (void*) next != NULL )
-    {
-        gwssrv_redraw_window(next,TRUE);
-        next = (void*) next->child;
-    };
-
-    return 0;
-}
-
-
-
-
-int 
-gwssrv_redraw_overlapped(
-    struct gws_window_d *window)
-{
-
-    struct gws_window_d *next;
-    struct gws_window_d *next2;
-
-
-// fast validation
-
-    if ( (void *) window == NULL ){ return -1; }
-
-    if (window->used!=TRUE || window->magic!=1234)
-        return -1;
-
-    if ( window->type != WT_OVERLAPPED )
-        return -1;
-
-
-// redraw frame.
-    gwssrv_redraw_window(window,TRUE);
-
-// redraw list of childs.
-
-    next = (void*) window->child;
-
-    while( (void*) next != NULL )
-    {
-        gwssrv_redraw_window(next,TRUE);
-        next = (void*) next->child;
-    };
-
-    return 0;
-}
-
 
 // Let's redraw the window.
 // Called by serviceRedrawWindow().

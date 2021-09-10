@@ -950,7 +950,7 @@ int main ( int argc, char *argv[] )
 //
 
 
-//=================================
+    //=================================
     
     // get current thread
     // set foreground thread.
@@ -965,33 +965,28 @@ int main ( int argc, char *argv[] )
 
     gws_enable_input_method(1);
 
+    //=================================
 
-//=================================
-// Podemos chamar mais de um diálogo
-// Retorna TRUE quando o diálogo chamado 
-// consumiu o evento passado à ele.
-// Nesse caso chamados 'continue;'
-// Caso contrário podemos chamar outros diálogos.
+    // Podemos chamar mais de um diálogo
+    // Retorna TRUE quando o diálogo chamado 
+    // consumiu o evento passado à ele.
+    // Nesse caso chamados 'continue;'
+    // Caso contrário podemos chamar outros diálogos.
 
     while (1){
         if ( rtl_get_event() == TRUE )
         {
             //if( RTLEventBuffer[1] == MSG_QUIT ){ break; }
 
-            if( RTLEventBuffer[1] > 0 )
-            {
-                gwsProcedure ( 
-                    client_fd,
-                    (void*) RTLEventBuffer[0], 
-                    RTLEventBuffer[1], 
-                    RTLEventBuffer[2], 
-                    RTLEventBuffer[3] );
-            }
+            gwsProcedure ( 
+                client_fd,
+                (void*) RTLEventBuffer[0], 
+                RTLEventBuffer[1], 
+                RTLEventBuffer[2], 
+                RTLEventBuffer[3] );
         }
-        rtl_yield();
     };
-//=================================
-
+    //=================================
 
     // Isso eh estranho ... um cliente remoto nao deve poder fazer isso.
     //gws_debug_print ("gws: Sending command to close the server. \n");

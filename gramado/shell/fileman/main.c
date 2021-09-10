@@ -215,7 +215,7 @@ int filemanProcedure(
     unsigned long long2 )
 {
 
-    if(msg<=0)
+    if(msg<0)
         return -1;
 
 
@@ -664,17 +664,17 @@ int main ( int argc, char *argv[] ){
     lEvent.long1=0;
     lEvent.long2=0;
 
+    struct gws_event_d *ev;
+
     while(TRUE){
-        gws_get_next_event(client_fd,(struct gws_event_d *) &lEvent);
-        if( lEvent.msg > 0 )
-        {
-            filemanProcedure(
-                (int) client_fd,
-                (int) lEvent.wid,
-                (int) lEvent.msg,
-                (unsigned long) lEvent.long1,
-                (unsigned long) lEvent.long2 );
-        }
+        ev = (struct gws_event_d *) gws_get_next_event(client_fd,(struct gws_event_d *) &lEvent);
+        filemanProcedure(
+            (int) client_fd,
+            (int) lEvent.wid,
+            (int) lEvent.msg,
+            (unsigned long) lEvent.long1,
+            (unsigned long) lEvent.long2 );
+
         lEvent.msg = 0;
     };
 

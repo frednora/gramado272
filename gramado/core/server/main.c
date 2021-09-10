@@ -1167,7 +1167,6 @@ gwsProcedure (
 
     // #test
     // async command: 
-    
     case GWS_AsyncCommand:
         gwssrv_debug_print ("gwssrv: [2222] calling serviceAsyncCommand\n");
                   //printf ("gwssrv: [2222] calling serviceAsyncCommand\n");
@@ -2009,28 +2008,43 @@ int serviceNextEvent (int client_fd)
     }
 
 // Window with focus
-
     int wid = window_with_focus;
+
+
+// invalid window
+// #todo: Put the focus on root?
+
     if (wid<0){
         debug_print("serviceNextEvent: wid<0\n");
         return -1;
     }
+
+// Invalid window
+// #todo: Put the focus on root?
+
     if (wid >= WINDOW_COUNT_MAX){
         debug_print("serviceNextEvent: wid>=WINDOW_COUNT_MAX\n");
         return -1;
     }
 
-// Window pointer
+
+// get window pointer
 
     window = (struct gws_window_d *) windowList[wid];
+
+// Invalid window pointer
     if( (void*) window == NULL ){
         debug_print("serviceNextEvent: window\n");
         return -1;
     }
+
+// Invalid window
     if( window->used != TRUE ){
         debug_print("serviceNextEvent: used\n");
         return -1;
     }
+
+// Invalid window
     if( window->magic != 1234 ){
         debug_print("serviceNextEvent: magic\n");
         return -1;
@@ -2038,8 +2052,10 @@ int serviceNextEvent (int client_fd)
 
 
 // O cliente autorizado a ler a janela com foco de entrada.
-
     int owner_client = (int) window->client_fd;
+
+// Invalid owner client fd.
+// #todo: Checar o limite superior.
     if (owner_client<0){
         debug_print("serviceNextEvent: owner_client<0\n");
         return -1;
@@ -2062,7 +2078,6 @@ int serviceNextEvent (int client_fd)
 // Compose the response.
 // The response will be the next valid event found in the list.
 
-
 // Setup offset for the next event index.
     window->tail_pos++;
 
@@ -2078,12 +2093,8 @@ int serviceNextEvent (int client_fd)
 // Não vamos ultrapassar o offset de escrita.
 
     if ( window->tail_pos > window->head_pos )
-    {
         window->tail_pos = window->head_pos;
-        next_response[2] = 0;  // Signature
-        next_response[3] = 0;  // Signature
-        return -1;
-    }
+
 
 //
 // The message buffer
@@ -2131,7 +2142,6 @@ int serviceNextEvent (int client_fd)
     next_response[8] = (unsigned long) data8;  //long3
     next_response[9] = (unsigned long) data9;  //long4
 
-
 // ok
     debug_print("serviceNextEvent: done\n");
     return 0;
@@ -2176,8 +2186,8 @@ int serviceGetClientMessage(void)
 
 
 
-// Async
-// No reply.
+
+// No response.
 int serviceAsyncCommand (void)
 {
     //O buffer é uma global nesse documento.
@@ -2191,9 +2201,9 @@ int serviceAsyncCommand (void)
     unsigned long subrequest_id = 0;
     unsigned long Data = 0;
 
-//
-// parameters
-//
+    //
+    // parameters
+    //
 
     // window_id   = message_address[0];
     message_id     = message_address[1];   // message
@@ -2202,15 +2212,18 @@ int serviceAsyncCommand (void)
     Data           = message_address[4];
 
 
-// ...
+    // ...
 
 
-// Validate our message number.
+    // Validate our message number.
 
-    if (message_id != 2222){
+    if (message_id != 2222)
+    {
         gwssrv_debug_print ("serviceAsyncCommand: [ERROR] message id\n");
-        return (-1);
+                    printf ("serviceAsyncCommand: [ERROR] message id\n");
+        return -1;
     }
+
 
     // #debug
     // printf ("serviceAsyncCommand: [request %d] \n", request_id);
@@ -2222,7 +2235,10 @@ int serviceAsyncCommand (void)
         // Close all the clients and close the server.
         case 1:
             gwssrv_debug_print ("serviceAsyncCommand: [request 1]  Exit GWS\n");
-                        printf ("serviceAsyncCommand: [request 1] Closing server\n");
+                        //printf ("serviceAsyncCommand: [request 1] Closing server\n");
+            printf("serviceAsyncCommand: Exit GWS\n");
+            serviceExitGWS();
+            printf("serviceAsyncCommand: [FAIL] fail when closing the GWS\n");
             exit(0);
             break;
 
@@ -2272,7 +2288,6 @@ int serviceAsyncCommand (void)
                 return 0;
             }
             show_fps_window = FALSE;
-            return 0;
             break;
 
          // Register wm pid
@@ -2299,7 +2314,6 @@ int serviceAsyncCommand (void)
         
         case 9:
             set_window_with_focus(Data);
-            return 0;
             break;
 
         // ...

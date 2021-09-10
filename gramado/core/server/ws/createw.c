@@ -787,8 +787,6 @@ void *xxxCreateWindow (
 
     window->used   = TRUE;
     window->magic  = 1234;
-    
-    window->child = NULL;
 
 
 //
@@ -875,59 +873,22 @@ void *xxxCreateWindow (
 // Parent window
 //
 
-// Invalidate
-    Parent = NULL;
-    window->parent = NULL;
-
-// Invalid parent
-    if ( (void*) pWindow == NULL )
-    {
+    if ( (void*) pWindow == NULL ){
         debug_print ("xxxCreateWindow: [CHECK THIS] Invalid parent window\n");
-        Parent = NULL;
-        window->parent = NULL;
     }
-
-// Valid parent
-    if ( (void*) pWindow != NULL )
-    {
-        // fast validation
-        if( pWindow->magic == 1234 )
-        {
-            Parent         = (void *) pWindow;
-            window->parent = (void *) pWindow;
-            
-            // This is the firt child.
-            if ( (void*) Parent->child == NULL ){
-                
-                Parent->child = (void*) window;
-                Parent->child->child = NULL;
-            
-            // Not the first child.
-            } else if ( (void*) Parent->child != NULL ){
-            
-                // Encontra o último child.
-                while( (void*) Parent->child != NULL )
-                {
-                    Parent->child = (void*) Parent->child->child;
-                };
-
-                Parent->child = (void*) window;
-                Parent->child->child = NULL;
-            };
-        }
-    }
+    Parent = (void *) pWindow;
+    window->parent = Parent;
 
 // ===================================
 
 
-//#todo: 
-// é importante definir o procedimento de janela desde já.
-//senão dá problemas quando chamá-lo e ele naõ estiver pronto.
-//Procedure support.
-//#todo: Devemos receber esses parâmetros e configurar aqui.
-//#bugbug: Talvez isso será configurado na estrutura
-// de window class. Se é que termos uma.
-
+    //#todo: 
+    // é importante definir o procedimento de janela desde já.
+    //senão dá problemas quando chamá-lo e ele naõ estiver pronto.
+    //Procedure support.
+    //#todo: Devemos receber esses parâmetros e configurar aqui.
+    //#bugbug: Talvez isso será configurado na estrutura
+    // de window class. Se é que termos uma.
     //window->procedure = (unsigned long) &system_procedure;
     //window->wProcedure = NULL;  //Estrutura.
 
@@ -938,28 +899,35 @@ void *xxxCreateWindow (
 // == Status ============================
 //
 
-// Qual é o status da janela, se ela é a janela ativa ou não.
-//?? Devemos definir quais são os status possíveis da janela.
+    // Qual é o status da janela, se ela é a janela ativa ou não.
+    //?? Devemos definir quais são os status possíveis da janela.
 
-// Active 
+    // Active 
     if ( window->status == WINDOW_STATUS_ACTIVE )
-    {
+    { 
+        active_window = (int) window->id;  
+        //set_active_window(window); 
+        //window->active = WINDOW_STATUS_ACTIVE;
+        //window->status = (unsigned long) WINDOW_STATUS_ACTIVE;
         window->relationship_status = (unsigned long) WINDOW_REALATIONSHIPSTATUS_FOREGROUND; 
-        
-        // Se a janela mãe era a janela ativa.
-        if( (void*) window->parent != NULL ){
-            if(active_window == window->parent->id){
-                window->parent->status = WINDOW_STATUS_INACTIVE;
-            }
-        }
-        active_window = (int) window->id;
+    
+        //#todo
+        //window->z = 0;  //z_order_get_free_slot()
+        //...
     }
 
-// Inactive
-    if ( window->status == WINDOW_STATUS_INACTIVE )
+    // Inactive
+    if ( status == WINDOW_STATUS_INACTIVE )
     { 
+        //window->active = WINDOW_STATUS_INACTIVE;
+        //window->status = (unsigned long) WINDOW_STATUS_INACTIVE;
         window->relationship_status = (unsigned long) WINDOW_REALATIONSHIPSTATUS_BACKGROUND;
+   
+        //todo
+        //window->z = 0; //z_order_get_free_slot()
+        //...
     }
+
 
 
 //
@@ -1048,32 +1016,24 @@ void *xxxCreateWindow (
     window->y = WindowY;
 
 //++
-// ========================
 // Margens.
-// Deslocamento em relação a tela.
-// Vai depender se tem janela mãe ou não.
-
-// No caso de não termos uma parent.
-// Então o deslocamento é absoluto.
-    if( (void*) window->parent == NULL )
-    {
-        window->left = window->x;
-        window->top  = window->y; 
-    }
-
-// No caso de termos uma parent.
-// Então o deslocamento é relativo.
-    if ( (void*) window->parent != NULL )
+// Deslocamento em relação a tela. (Screen)
+// Vai depender do deslocamento da janela mãe.
+    if ( window->parent != NULL )
     {
         window->left = (window->parent->left + window->x); 
         window->top  = (window->parent->top  + window->y);
-    }
 
+// No caso da primeira janela de todas.
+    }
+    else
+    {
+        window->left = window->x;
+        window->top  = window->y; 
+    };
     window->right  = (unsigned long) ( window->left + window->width );
     window->bottom = (unsigned long) ( window->top  + window->height ); 
-// ========================
 //--
-
 
     if ( Maximized == TRUE || Fullscreen == TRUE )
     {
@@ -1590,7 +1550,7 @@ void *xxxCreateWindow (
 // Sombra:
 //     A sombra pertence à janela e ao frame.
 //     A sombra é maior que a própria janela.
-//     Janela fullscreen n~ao tem sombra.
+//     ?? Se estivermos em full screen não tem sombra ??
 
 // ========
 // 1
@@ -1617,17 +1577,38 @@ void *xxxCreateWindow (
             if (window->focus == 1){ __tmp_color = xCOLOR_GRAY1; }
             if (window->focus == 0){ __tmp_color = xCOLOR_GRAY2; }
 
-            // Draw rectangle.
-            gwssrv_debug_print ("xxxCreateWindow: Shadow rectangle\n");
-            rectBackbufferDrawRectangle ( 
-                (window->left +1),     (window->top +1), 
-                (window->width +1 +1), (window->height +1 +1), 
-                __tmp_color, TRUE, rop_flags );
+            //ok funciona
+            //rectBackbufferDrawRectangle ( window->left +1, window->top +1, 
+            //    window->width +1 +1, window->height +1 +1, 
+            //    __tmp_color, 1 ); 
+         
+            //test
+            //remeber: the first window do not have a parent.
+            if ( (void*) Parent == NULL )
+            { 
+                gwssrv_debug_print ("xxxCreateWindow: [Shadow] Parent\n"); 
+                //exit(1); 
+                rectBackbufferDrawRectangle ( 
+                    (window->left +1),     (window->top +1), 
+                    (window->width +1 +1), (window->height +1 +1), 
+                    __tmp_color, TRUE,
+                    rop_flags );   //rop_flags 
+            }
 
+            if ( (void*) Parent != NULL ){
+
+                rectBackbufferDrawRectangle ( 
+                    (window->left +1),     (window->top +1), 
+                    (window->width +1 +1), (window->height +1 +1), 
+                    __tmp_color, TRUE,
+                    rop_flags );  //rop_flags 
+            }
+            
             window->shadow_color = __tmp_color;
         }
 
         // E os outros tipos, não tem sombra ??
+   
         // Os outros tipos devem ter escolha para sombra ou não ??
         // Flat design pode usar sombra para definir se o botão 
         // foi pressionado ou não.
@@ -1680,14 +1661,35 @@ void *xxxCreateWindow (
             }
         }
 
-        // Draw rectangle.
-        gwssrv_debug_print ("xxxCreateWindow: Background rectangle\n"); 
-        rectBackbufferDrawRectangle ( 
-            window->left,  window->top, 
-            window->width, window->height, 
-            window->bg_color, TRUE, rop_flags );
+
+        // Draw 
+
+        //#bugbug
+        //Remember: The first window do not have a parent.
+
+        if ( (void*) Parent == NULL )
+        { 
+            gwssrv_debug_print ("xxxCreateWindow: [Background] Parent\n"); 
+            rectBackbufferDrawRectangle ( 
+                    window->left, window->top, 
+                    window->width, window->height, 
+                    window->bg_color, TRUE,
+                    rop_flags );  // rop_flags
+        }  
+
+        if ( (void*) Parent != NULL )
+        {
+            gwssrv_debug_print ("xxxCreateWindow: [Background] No Parent\n"); 
+            rectBackbufferDrawRectangle ( 
+                window->left, window->top, 
+                window->width, window->height, 
+                window->bg_color, TRUE,
+                rop_flags );  //rop_flags
+        }
     }
 
+    //#debug
+    //asm ("int $3");
 
 
 // Client area
@@ -1740,11 +1742,6 @@ void *xxxCreateWindow (
 
     if ( (unsigned long) type == WT_BUTTON )
     {
-
-        // #todo
-        // Call a library worker called draw_button()
-        // no structure in the parameters.
-
 
         //border color
         //o conceito de status e state
