@@ -2834,7 +2834,14 @@ int main (int argc, char **argv)
 
     while (running == TRUE)
     {
+
+        // Flush
+        wmRefreshDirtyRectangles();
+
         if (IsTimeToQuit == TRUE) { break; };
+
+
+       // Accept
 
         newconn = accept ( 
                       ____saved_server_fd,

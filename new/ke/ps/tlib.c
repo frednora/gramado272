@@ -69,7 +69,10 @@ void show_slots(void)
     int i=0;
 
     printf("\n");
-    printf("Thread info:\n");
+    //printf("Thread info: jiffies{%d} sec{%d} min{%d}\n", 
+        //jiffies, seconds, (seconds/60));
+
+    printf("Thread info: jiffies{%d} \n", jiffies );
 
     for ( i=0; i<THREAD_COUNT_MAX; i++ )
     {

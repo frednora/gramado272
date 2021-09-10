@@ -123,41 +123,16 @@ irq0_TIMER (void)
 
 
 // Presence of God!
-void DeviceInterface_PIT(void)
-{
-    unsigned long level;
-    
-    level = get_presence_level();
-
-// fix limits
-
-    if ( level == 0 )
-        level = 32;
-
-    if ( level > 1000 )
-        level = 32;
-
-
-    jiffies++;
-
-
-// Compositor
-    if ( (jiffies % level) == 0 ){
-        debug_print ("  -- TICK --  \n");
-        UpdateScreenFlag = TRUE;
-    }
-
-// Demo
-    if ( (jiffies % 32) == 0 ){
-        DemoFlag = TRUE;
-    }
-
 // Scheduler
 // Ignoramos a tid retornada pela rotina.
-    if ( (jiffies % 1000) == 0 ){
+void DeviceInterface_PIT(void)
+{
+    jiffies++;
+
+    if ( (jiffies % 1000) == 0 )
+    {
         KiScheduler();
     }
-
 }
 
 
@@ -228,6 +203,7 @@ void timerInit8253 ( unsigned int freq )
     out8 ( 0x40, (unsigned char)(period >> 8) & 0xFF );
     io_delay();
 
+// GLOBAL VARIABLE.
     sys_time_hz = (unsigned long) (freq & 0xFFFFFFFF);
 }
 
@@ -433,15 +409,12 @@ int timerInit (void)
     //?? Isso pertence a i386 ??
     //?? Quais máquinas possuem esse controlador ??
     
-	// #importante
-	// Começaremos com 100 HZ
-	// Mas o timer poderá ser atualizado por chamada.
-	// e isso irá atualizar a variável que inicializamos agora.
+// #importante
+// Começaremos com 100 HZ
+// Mas o timer poderá ser atualizado por chamada.
+// e isso irá atualizar a variável que inicializamos agora.
 
-    sys_time_hz = (unsigned long) HZ;
-
-    timerInit8253 ( sys_time_hz );
-
+    timerInit8253(HZ);
 
 
 	// #todo:
@@ -524,22 +497,16 @@ int early_timer_init (void)
 // == Hz ============================================
 //
 
-    // Let's setup the variable sys_time_hz.
-    // And setup the controler.
-    // We can use the default variable. 
-    // See> config.h
+// Setup the controller.
+// Let's setup the variable sys_time_hz.
+// And setup the controler.
+// We can use the default variable. 
+// See: config.h
 
-    // Changing the variable.
-    // set_systime_hz ( HZ * 4 );     // Slow
-    // set_systime_hz ( HZ * 6 );     // Normal
-    set_systime_hz ( DEFAULT_HZ );    // See: config.h
+    set_systime_hz(DEFAULT_PIT_FREQ);
+    timerInit8253 (DEFAULT_PIT_FREQ);
 
-    // Setup the controller.
-    timerInit8253 ( sys_time_hz );
-
-
-    // Quantum
-
+// Quantum
     set_current_quantum (QUANTUM_MIN);
     set_next_quantum (QUANTUM_MIN);
     set_quantum (QUANTUM_MIN);

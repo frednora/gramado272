@@ -430,8 +430,6 @@ int main ( int argc, char *argv[] )
     gws_debug_print ("gws.bin: Create rectangle \n");
     printf          ("gws.bin: Create rectangle \n");
 
-// ??
-// first shot
     gramado_system_call(897,0,0,0);
 
 
@@ -927,6 +925,9 @@ int main ( int argc, char *argv[] )
 //
 
 // #test
+// nem precisa ja que todas as rotinas que criam as janelas 
+// estao mostrando as janelas.
+
     gws_refresh_window (client_fd, main_window);
 
 

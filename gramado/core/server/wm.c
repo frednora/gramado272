@@ -1966,17 +1966,15 @@ int serviceCreateWindow (int client_fd)
     next_response[2] = 0;
     next_response[3] = 0;
 
-    // #debug
-    // Show the window. 
-    // Delete this in the future.
+
+
+//
+// Show
+//
 
     // #todo: We need a flag here. Came from parameters.
     // if( Show == TRUE )
     gws_show_window_rect(Window);
-
-    // #debug
-    // Show the screen.
-    //gws_show_backbuffer(); 
 
     gwssrv_debug_print ("serviceCreateWindow: done\n");
 
@@ -2962,7 +2960,8 @@ int gws_show_window_rect (struct gws_window_d *window)
 // Refresh rectangle
 //
 
-    // See: rect.c   
+// See: rect.c   
+
     debug_print("gws_show_window_rect: Calling gws_refresh_rectangle\n");
 
     gws_refresh_rectangle ( 

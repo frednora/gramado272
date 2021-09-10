@@ -166,11 +166,11 @@ The remainder ??
 
 // Chamamos o compositor com o contexto salvo.
 // O pit aciona essa flag a cada 32 ms.
-// See: sched.c
+// See: kgwm.c
 
-        if (UpdateScreenFlag==TRUE){
-            schedulerUpdateScreen();
-        }
+        //if (UpdateScreenFlag==TRUE){
+            //schedulerUpdateScreen();
+        //}
 
 
 		// #obs:

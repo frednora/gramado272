@@ -463,7 +463,7 @@ wmProcedure (
                     }
                     if (shift_status == TRUE){
                         Background_initialize();
-                        show_slots();
+                        show_slots(); //See: tlib.c
                         //pages_calc_mem();
                         refresh_screen();
                         //__kgwm_SendMessageToInitProcess(9217);  //gdeshell

@@ -123,9 +123,7 @@ sixth..     ide5, usually PCI, probed
 
 
 
-//#define DEFAULT_HZ 100
-//#define DEFAULT_HZ 600 
-#define DEFAULT_HZ 1000
+#define DEFAULT_PIT_FREQ  1000
 
 
 // Where are the types defines?

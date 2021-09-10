@@ -657,7 +657,7 @@ response_loop:
     
     // Se retornou 0, podemos tentar novamente.
     if (n_reads == 0){
-        gws_yield(); 
+        //gws_yield(); 
         goto response_loop;
     }
     
@@ -833,7 +833,7 @@ response_loop:
     
     // Se retornou 0, podemos tentar novamente.
     if (n_reads == 0){
-        gws_yield(); 
+        //gws_yield(); 
         goto response_loop;
     }
     
@@ -1011,7 +1011,7 @@ response_loop:
     
     // Se retornou 0, podemos tentar novamente.
     if (n_reads == 0){
-        gws_yield(); 
+        //gws_yield(); 
         goto response_loop;
     }
     
@@ -1196,7 +1196,7 @@ response_loop:
                   0 );
     
     if (n_reads<=0){
-        gws_yield(); 
+        //gws_yield(); 
         return 0;
         //goto response_loop;
     }
@@ -1647,7 +1647,7 @@ response_loop:
     
     // Se retornou 0, podemos tentar novamente.
     if (n_reads == 0){
-        gws_yield(); 
+        //gws_yield(); 
         goto response_loop;
     }
     
@@ -1999,7 +1999,7 @@ response_loop:
     
     // Se retornou 0, podemos tentar novamente.
     if (n_reads == 0){
-        gws_yield(); 
+        //gws_yield(); 
         goto response_loop;
     }
     
@@ -2302,7 +2302,7 @@ gws_plot0 (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_plot0_response(fd);
 
@@ -2341,7 +2341,7 @@ gws_plotcube (
         Value = rtl_get_file_sync ( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_plotcube_response(fd);
 
@@ -2381,7 +2381,7 @@ gws_plotrectangle (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_plotrectangle_response (fd);
 
@@ -2435,7 +2435,7 @@ gws_draw_char (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     // A sincronização nos diz que já temos um reply.
     response = __gws_drawchar_response ((int) fd);  
@@ -2493,7 +2493,7 @@ gws_draw_text (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
  
     response = __gws_drawtext_response ((int) fd);  
@@ -2720,7 +2720,7 @@ gws_change_window_position (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_change_window_position_reponse(fd);
 
@@ -2758,7 +2758,7 @@ gws_resize_window(
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_resize_window_reponse(fd);
 
@@ -2800,7 +2800,7 @@ gws_redraw_window (
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     __gws_redraw_window_reponse (fd);
 
@@ -2873,7 +2873,7 @@ int gws_refresh_window (int fd, int window )
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
 
     return (int) __gws_refresh_window_reponse(fd);
@@ -2991,7 +2991,7 @@ gws_create_window (
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
-        gws_yield();
+        //gws_yield();
     };
     // A sincronização nos diz que já temos um reply.
     wid = (int) __gws_createwindow_response(fd); 
@@ -3186,7 +3186,7 @@ void gws_enter_critical_section (void)
     while (TRUE){
         S = (int) gws_system_call ( 226, 0, 0, 0 );
         if ( S == 1 ){ goto done; }
-        gws_yield();
+        //gws_yield();
     };
 
     // Close the gate. turn FALSE.

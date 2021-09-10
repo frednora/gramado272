@@ -1409,9 +1409,10 @@ void consolePrompt (void)
     printf("\n");
     printf("$ ");
     
-    invalidate_screen();
-    //refresh_screen();
+    //invalidate_screen();
+    refresh_screen();
 }
+
 
 
 
