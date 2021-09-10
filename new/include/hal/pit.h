@@ -178,7 +178,10 @@ void DeviceInterface_PIT(void);
 // ====
 
 int timerTimer (void);
-void timerInit8253 ( unsigned long hz );
+
+
+void timerInit8253 ( unsigned int freq );
+
 
 void set_timeout ( unsigned long ticks );
 unsigned long get_timeout (void);

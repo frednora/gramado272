@@ -208,41 +208,30 @@ int timerTimer (void)
 //#importante 
 //Essa rotina poderá ser chamada de user mode,
 //talvez precisaremos de mais argumentos. 
- 
-void timerInit8253 ( unsigned long hz )
+
+void timerInit8253 ( unsigned int freq )
 {
-	// #todo:
-	// podemos fazer filtros.
+    unsigned int clocks_per_sec = (unsigned int) freq;
+    unsigned int period = (unsigned int) ( (3579545/3) / clocks_per_sec );
 
-    unsigned short clocks_per_sec = (unsigned short) hz;
-
-    unsigned short period =  ( (3579545L/3) / clocks_per_sec );
-
-    // Canal 0, LSB/MSB, modo 3, contar em binário.
+// Control uint16_t register
+// bits 7-6 = 0 - Set counter 0 (counter divisor),bit 5-4=11 LSB/MSB 16-bit
+// bit 3-1=x11 Square wave generator, bit 0 =0 Binary counter 16-bit
     out8 ( 0x43, 0x36 );
+    io_delay();
 
-    // LSB.
-    out8 ( 0x40, period & 0xFF ); 
-    //out8 ( 0x40, 0xA9 );  //test 1000
+// LSB
+    out8 ( 0x40, (unsigned char) (period & 0xFF) ); 
+    io_delay();
 
-    // MSB.
-    out8 ( 0x40, period >> 8 );
-    //out8 ( 0x40, 0x04 );   // test 1000
+// MSB
+    out8 ( 0x40, (unsigned char)(period >> 8) & 0xFF );
+    io_delay();
 
-
-	//#BUGBUG Não faremos isso aqui,
-	//faremos quando ermos spawn da idle thread.
-	//irq_enable(0x00); // Timer
-	
-	// #importante
-	// Isso será uma variável para fazermos testes de desempenho. 
-
-    // #??
-    // Onde isso foi definido.
-    // Podemos ter uma variável global com nome melhor?
-
-    sys_time_hz = (unsigned long) hz;
+    sys_time_hz = (unsigned long) (freq & 0xFFFFFFFF);
 }
+
+
 
 // set_timeout: #todo 
 void set_timeout ( unsigned long ticks )
