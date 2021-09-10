@@ -1185,6 +1185,7 @@ do_redraw:
 // local worker
 // Colocaremos uma mensagem na fila de mensagens 
 // da janela indicada via argumento.
+// :::: Coloca em tail.
 int
 __add_message_to_into_the_queue(
     struct gws_window_d *window,
@@ -1218,15 +1219,14 @@ __add_message_to_into_the_queue(
 //
 
 // next position
-    window->head_pos++;
+    window->tail_pos++;
 
 // end of list
-    if( window->head_pos < 0 || window->head_pos >= 32 )
-        window->head_pos = 0;
-
+    if( window->tail_pos < 0 || window->tail_pos >= 31 )
+        window->tail_pos = 0;
 
 // offset
-    int offset = (int) window->head_pos;
+    int offset = (int) window->tail_pos;
 
     offset = (int) (offset & 0xFF);
 

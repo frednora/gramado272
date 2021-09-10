@@ -1994,6 +1994,7 @@ int serviceClientEvent(void)
 
 // When a client get the next event from it's own queue.
 // The parameters 
+// :::: Retira em head.
 int serviceNextEvent (int client_fd)
 {
     struct gws_window_d *window;
@@ -2079,22 +2080,24 @@ int serviceNextEvent (int client_fd)
 // The response will be the next valid event found in the list.
 
 // Setup offset for the next event index.
-    window->tail_pos++;
+    window->head_pos++;
 
 // fim da lista.
 // circulando.
-    if (window->tail_pos < 0 || window->tail_pos >= 32)
+    if (window->head_pos < 0 || window->head_pos >= 31)
     {
-        window->tail_pos = 0;
+        window->head_pos = 0;
     }
 
 // Estamos tentando consumir 
 // mais do que foi colocado.
 // Não vamos ultrapassar o offset de escrita.
 
-    if ( window->tail_pos > window->head_pos )
-        window->tail_pos = window->head_pos;
-
+    if ( window->head_pos > window->tail_pos )
+    {
+        debug_print("serviceNextEvent: [FAIL] window->head_pos > window->tail_pos\n");
+        return -1;
+    }
 
 //
 // The message buffer
@@ -2108,7 +2111,7 @@ int serviceNextEvent (int client_fd)
 
 // The event
 
-    int offset = (int) window->tail_pos;
+    int offset = (int) window->head_pos;
     
     offset = (int) (offset & 0xFF);
 
@@ -2141,6 +2144,14 @@ int serviceNextEvent (int client_fd)
 // extra: not implemented yet
     next_response[8] = (unsigned long) data8;  //long3
     next_response[9] = (unsigned long) data9;  //long4
+
+
+    if(data5 <= 0)
+        debug_print("serviceNextEvent: Invalid message\n");
+
+    if(data5 > 0)
+        debug_print("serviceNextEvent: Valid message :)\n");
+
 
 // ok
     debug_print("serviceNextEvent: done\n");

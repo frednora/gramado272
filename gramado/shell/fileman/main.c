@@ -646,9 +646,6 @@ int main ( int argc, char *argv[] ){
          addressbar_window,
          addressbar_window );
 
-
-
-
 //
 // Events
 //
@@ -677,8 +674,6 @@ int main ( int argc, char *argv[] ){
 
         lEvent.msg = 0;
     };
-
-
 
     while(1){}
 

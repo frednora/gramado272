@@ -295,28 +295,24 @@ struct rtl_event_d *rtl_next_event (void)
 }
 
 
-//P (Proberen) testar.
+// P (Proberen) testar.
+// Pega o valor do spinlock principal.
+// Se deixou de ser 0 então posso entrar.
+// Se ainda for 0, continuo no while.
+// Yield thread if we have no message.
+// #todo: 
+// Mudar o nome da systemcall porque isso não é
+// um semáforo e sim um spinlock não atômico.
 void rtl_enter_critical_section (void)
 {
     int S=0;
 
-    // Pega o valor do spinlock principal.
-    // Se deixou de ser 0 então posso entrar.
-    // Se ainda for 0, continuo no while.
-    // Yield thread if we have no message.
-
     while (TRUE){
-
         S = (int) gramado_system_call ( 
                       SYSTEMCALL_GET_KERNELSEMAPHORE, 0, 0, 0 );
-
         if ( S == 1 ){ goto done; }
-
-        sc82 (265,0,0,0);
     };
-
-    //Nothing
-
+// Nothing
 done:
     //Muda para zero para que ninguem entre.
     gramado_system_call ( SYSTEMCALL_CLOSE_KERNELSEMAPHORE, 0, 0, 0 );
@@ -324,13 +320,19 @@ done:
 }
 
 
-//V (Verhogen)incrementar.
+// V (Verhogen) incrementar.
+// Hora de sair. Mudo para 1 para que outro possa entrar.
+// #todo: 
+// Mudar o nome da systemcall porque isso não é
+// um semáforo e sim um spinlock não atômico.
 void rtl_exit_critical_section (void)
 {
-	//Hora de sair. Mudo para 1 para que outro possa entrar.
-    gramado_system_call ( SYSTEMCALL_OPEN_KERNELSEMAPHORE, 0, 0, 0 );
+    gramado_system_call ( 
+        SYSTEMCALL_OPEN_KERNELSEMAPHORE, 
+        0, 
+        0, 
+        0 );
 }
-
 
 
 
