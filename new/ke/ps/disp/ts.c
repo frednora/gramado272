@@ -643,43 +643,22 @@ fail:
 
 void psTaskSwitch (void)
 {
-    //debug_print ("TS ");
 
-    // Check current process limits.
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    if ( current_process < 0 || 
+         current_process >= PROCESS_COUNT_MAX )
     {
-        printf ("psTaskSwitch: current_thread %d", current_process );
+        printf ("psTaskSwitch: current_process %d", current_process );
         die();
     }
 
-    // Check current thread limits.
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+    if ( current_thread < 0 || 
+         current_thread >= THREAD_COUNT_MAX )
     {
         printf ("psTaskSwitch: current_thread %d", current_thread ); 
         die();
     }
 
-#ifdef SERIAL_DEBUG_VERBOSE
-    //debug_print (".");
-    //debug_print ("ts ");
-#endif
-
-//
-// the real task switch.
-//
     task_switch();
-
-    // obs: 
-    // Nessa hora já temos um thread atual e um processo atual 
-    // selecionados. Podemos checar as variáveis para conferir se 
-    // não está fora dos limites. Se estiverem fora dos limites, 
-    // podemos usar algum método para selecionarmos outro processo 
-    // ou outra thread com limites válidos.
- 
-    // #importante:   
-    // Retornando para _irq0 em x86/hw.inc.
-
-    //debug_print ("TS_DONE \n");
 }
 
 

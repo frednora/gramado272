@@ -19,6 +19,9 @@
  *     2013 - Created by Fred Nora.
  */
 
+// See:
+// https://wiki.osdev.org/Programmable_Interval_Timer
+// https://en.wikipedia.org/wiki/Intel_8253
 
 /*
 I/O port     Usage
@@ -166,6 +169,42 @@ int timerTimer (void)
 }
 
 /*
+// read back
+unsigned read_pit_count(void);
+unsigned read_pit_count(void) 
+{
+	unsigned count = 0;
+ 
+	// Disable interrupts
+	cli();
+ 
+	// al = channel in bits 6 and 7, remaining bits clear
+	outb(0x43,0b0000000);
+ 
+	count = inb(0x40);		// Low byte
+	count |= inb(0x40)<<8;		// High byte
+ 
+	return count;
+}
+*/
+
+/*
+void set_pit_count(unsigned count);
+void set_pit_count(unsigned count) 
+{
+	// Disable interrupts
+	cli();
+ 
+	// Set low byte
+	outb(0x40,count&0xFF);		// Low byte
+	outb(0x40,(count&0xFF00)>>8);	// High byte
+	return;
+}
+*/
+
+
+
+/*
  ******************************************
  * timerInit8253:
  *    @todo: Compreender melhor isso.
@@ -173,33 +212,64 @@ int timerTimer (void)
  * Seta a frequência de funcionamento do 
  * controlador 8253. "3579545 / 3" 
  * instead of 1193182 Hz. 
- * Pois o valor é mais preciso, considera até os 
- * quebrados. 
  * Reprograma o timer 8253 para operar 
  * à uma frequencia de "HZ".
  * Obs: Essa rotina substitui a rotina init_8253.
  */
- 
-//#importante 
-//Essa rotina poderá ser chamada de user mode,
-//talvez precisaremos de mais argumentos. 
 
+
+//ex: 
+// 0x36
+// 00 | 11 | 011 | 0
+// Channel 0 | word | square wave generator | 16bit binary
+
+/*
+Bits         Usage
+6 and 7      Select channel :
+                0 0 = Channel 0
+                0 1 = Channel 1
+                1 0 = Channel 2
+                1 1 = Read-back command (8254 only)
+4 and 5      Access mode :
+                0 0 = Latch count value command
+                0 1 = Access mode: lobyte only
+                1 0 = Access mode: hibyte only
+                1 1 = Access mode: lobyte/hibyte
+1 to 3       Operating mode :
+                0 0 0 = Mode 0 (interrupt on terminal count)
+                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+                0 1 0 = Mode 2 (rate generator)
+                0 1 1 = Mode 3 (square wave generator)
+                1 0 0 = Mode 4 (software triggered strobe)
+                1 0 1 = Mode 5 (hardware triggered strobe)
+                1 1 0 = Mode 2 (rate generator, same as 010b)
+                1 1 1 = Mode 3 (square wave generator, same as 011b)
+0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
+*/
+
+
+// VT8237
+// Compativel com intel 8254
 void timerInit8253 ( unsigned int freq )
 {
     unsigned int clocks_per_sec = (unsigned int) (freq & 0xFFFFFFFF);
-    unsigned int period = (unsigned int) ( (3579545/3) / clocks_per_sec );
 
+// para 1.1 MHz
+//The counter counts down to zero, then sends a hardware interrupt (IRQ 0) to the CPU.
+// 3579545/3
+
+    unsigned int period = (unsigned int) ( (1193182) / clocks_per_sec );
 
 // #debug
-
     //printf("Period %d\n",period);
     //refresh_screen();
     //while(1){}
 
 
-// Control uint16_t register
-// bits 7-6 = 0 - Set counter 0 (counter divisor),bit 5-4=11 LSB/MSB 16-bit
-// bit 3-1=x11 Square wave generator, bit 0 =0 Binary counter 16-bit
+// 0x36
+// 00 | 11 | 011 | 0
+// Channel 0 | word | square wave generator | 16bit binary
+
     out8 ( 0x43, (unsigned char) 0x36 );
     io_delay();
 
