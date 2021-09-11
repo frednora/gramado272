@@ -186,13 +186,21 @@ int timerTimer (void)
 
 void timerInit8253 ( unsigned int freq )
 {
-    unsigned int clocks_per_sec = (unsigned int) freq;
+    unsigned int clocks_per_sec = (unsigned int) (freq & 0xFFFFFFFF);
     unsigned int period = (unsigned int) ( (3579545/3) / clocks_per_sec );
+
+
+// #debug
+
+    //printf("Period %d\n",period);
+    //refresh_screen();
+    //while(1){}
+
 
 // Control uint16_t register
 // bits 7-6 = 0 - Set counter 0 (counter divisor),bit 5-4=11 LSB/MSB 16-bit
 // bit 3-1=x11 Square wave generator, bit 0 =0 Binary counter 16-bit
-    out8 ( 0x43, 0x36 );
+    out8 ( 0x43, (unsigned char) 0x36 );
     io_delay();
 
 // LSB

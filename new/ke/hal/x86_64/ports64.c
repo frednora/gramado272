@@ -8,44 +8,62 @@ unsigned char in8 (unsigned int port)
 {
     unsigned char ret=0;
  
-    asm volatile ("inb %%dx, %%al" : "=a"(ret): "d"(port) );
+    asm volatile (
+        "inb %w1, %b0"
+        : "=a" (ret)
+        : "d"  (port) );
 
-    return (unsigned char) ret;
+    return (unsigned char) (ret & 0xFF);
 }
-
 unsigned short in16 (unsigned int port)
 {
     unsigned short ret=0;
 
-    asm volatile ("inw %%dx, %%ax" : "=a" (ret) : "d" (port) );
+    asm volatile (
+        "inw %w1, %w0" 
+        : "=a" (ret) 
+        : "d" (port) );
 
-    return (unsigned short) ret;
+    return (unsigned short) (ret & 0xFFFF);
 }
-
 unsigned int in32 (unsigned int port)
 {
     unsigned int ret=0;
 
-    asm volatile ("inl %%dx,%%eax" : "=a" (ret) : "d"(port) );
+    asm volatile (
+        "inl %w1, %k0" 
+        : "=a" (ret) 
+        : "d"  (port) );
 
-    return (unsigned int) ret;
+    return (unsigned int) (ret & 0xFFFFFFFF);
 }
+
+//===============================
 
 void out8 ( unsigned int port, unsigned char data )
 {
-    asm volatile ("outb %%al, %%dx" :: "a" (data), "d" (port) );
+    asm volatile (
+        "outb %b0, %w1"
+        :  // Nothing
+        : "a" (data), "d" (port) );
 }
-
-
 void out16 (unsigned int port, unsigned short data)
 {
-    asm volatile ("outw %%ax, %%dx" :: "a" (data), "d" (port) );
+    asm volatile (
+        "outw %w0, %w1" 
+        :  // Nothing
+        : "a" (data), "d" (port) );
 }
-
 void out32 ( unsigned int port, unsigned int data )
 {
-    asm volatile ("outl %%eax, %%dx" :: "a" (data), "d" (port) );
+    asm volatile (
+        "outl %k0, %w1" 
+        :  // Nothing
+        : "a" (data), "d" (port) );
 }
+
+
+
 
 //
 // --------------
