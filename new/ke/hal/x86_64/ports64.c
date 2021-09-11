@@ -1,68 +1,82 @@
 
+// i/o ports
 
 #include <kernel.h>
 
 
-
-unsigned char in8 (unsigned int port)
+unsigned char 
+in8 (unsigned short port)
 {
     unsigned char ret=0;
  
     asm volatile (
-        "inb %w1, %b0"
-        : "=a" (ret)
-        : "d"  (port) );
+        "inb %%dx, %%al"
+        : "=a" ((unsigned char)ret)
+        : "d"  ((unsigned short)port) );
 
     return (unsigned char) (ret & 0xFF);
 }
-unsigned short in16 (unsigned int port)
+
+unsigned short 
+in16 (unsigned short port)
 {
     unsigned short ret=0;
 
     asm volatile (
-        "inw %w1, %w0" 
-        : "=a" (ret) 
-        : "d" (port) );
+        "inw %%dx, %%ax" 
+        : "=a" ((unsigned short)ret) 
+        : "d" ((unsigned short)port) );
 
     return (unsigned short) (ret & 0xFFFF);
 }
-unsigned int in32 (unsigned int port)
+unsigned int 
+
+in32 (unsigned short port)
 {
     unsigned int ret=0;
 
     asm volatile (
-        "inl %w1, %k0" 
-        : "=a" (ret) 
-        : "d"  (port) );
+        "inl %%dx, %%eax" 
+        : "=a" ((unsigned int)ret) 
+        : "d"  ((unsigned short)port) );
 
     return (unsigned int) (ret & 0xFFFFFFFF);
 }
 
 //===============================
 
-void out8 ( unsigned int port, unsigned char data )
+void 
+out8 ( 
+    unsigned short port, 
+    unsigned char data )
 {
     asm volatile (
-        "outb %b0, %w1"
+        "outb %%al, %%dx"
         :  // Nothing
-        : "a" (data), "d" (port) );
-}
-void out16 (unsigned int port, unsigned short data)
-{
-    asm volatile (
-        "outw %w0, %w1" 
-        :  // Nothing
-        : "a" (data), "d" (port) );
-}
-void out32 ( unsigned int port, unsigned int data )
-{
-    asm volatile (
-        "outl %k0, %w1" 
-        :  // Nothing
-        : "a" (data), "d" (port) );
+        : "a" ((unsigned char)data), "d" ((unsigned short)port) );
 }
 
+void 
+out16 (
+    unsigned short port, 
+    unsigned short data)
+{
+    asm volatile (
+        "outw %%ax, %%dx" 
+        :  // Nothing
+        : "a" ((unsigned short)data), "d" ((unsigned short)port) );
+}
 
+void 
+out32 ( 
+    unsigned short port, 
+    unsigned int data )
+{
+    asm volatile (
+        "outl %%eax, %%dx" 
+        :  // Nothing
+        : "a" ((unsigned int)data), "d" ((unsigned short)port) );
+}
 
 
 //
