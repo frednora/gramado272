@@ -502,7 +502,7 @@ xxxKeyEvent (
 
     debug_print("xxxKeyEvent:\n");
 
-    if (tid<0){
+    if (tid<0 || tid >= THREAD_COUNT_MAX){
         debug_print("xxxKeyEvent: tid\n");
         return (int) (-1);
     }
@@ -889,8 +889,24 @@ done:
 
     Event_LongRawByte = (unsigned long) ( Keyboard_RawByte & 0x000000FF );
 
+
+// Sending message to the foreground thread.
+    if (tid >= 0 || tid < THREAD_COUNT_MAX)
+    {
+        kgws_send_to_tid(
+            (int) tid,
+            (struct window_d *) Event_Window,    // opaque pointer
+            (int)               Event_Message,
+            (unsigned long)     Event_LongASCIICode,
+            (unsigned long)     Event_LongRawByte );
+    }
+
+// Process the event using the system's window procedures.
+// It can use the kernel's virtual console or
+// sent the evento to the loadable window server.
+
     wmProcedure(
-        (struct window_d *) Event_Window,
+        (struct window_d *) Event_Window,    // opaque pointer
         (int)               Event_Message,
         (unsigned long)     Event_LongASCIICode,
         (unsigned long)     Event_LongRawByte );

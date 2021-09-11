@@ -359,8 +359,8 @@ int main ( int argc, char *argv[] ){
 
     unsigned long wLeft   = 0;
     unsigned long wTop    = 0;
-    unsigned long wWidth  = w;  //(w >> 1);
-    unsigned long wHeight = h;
+    unsigned long wWidth  = w;     //(w >> 1);
+    unsigned long wHeight = h-40;  //h;
 
     if (current_mode == GRAMADO_JAIL ){
         wLeft=0;  wTop=0;  wWidth=w;  wHeight=h;
@@ -654,6 +654,7 @@ int main ( int argc, char *argv[] ){
 // Let's include the typed byte into the buffer
 // and using the string for calling a child process.
 
+/*
     struct gws_event_d lEvent;
     lEvent.used=0;
     lEvent.magic=0;
@@ -674,6 +675,31 @@ int main ( int argc, char *argv[] ){
 
         lEvent.msg = 0;
     };
+*/
+
+// use the thread's queue
+
+    rtl_focus_on_this_thread();
+
+    while (1){
+        if ( rtl_get_event() == TRUE )
+        {
+            // #debug on real machine
+            //printf("Event:"); fflush(stdout);
+            
+            //if( RTLEventBuffer[1] == MSG_QUIT ){ break; }
+
+            filemanProcedure ( 
+                (int) client_fd,
+                (int) RTLEventBuffer[0], 
+                (int) RTLEventBuffer[1], 
+                (unsigned long) RTLEventBuffer[2], 
+                (unsigned long) RTLEventBuffer[3] );
+
+            RTLEventBuffer[1] = 0;
+        }
+    };
+
 
     while(1){}
 

@@ -73,6 +73,7 @@ void show_slots(void)
         //jiffies, seconds, (seconds/60));
 
     printf("Thread info: jiffies{%d} \n", jiffies );
+    printf("Focus tid {%d}\n",foreground_thread);
 
     for ( i=0; i<THREAD_COUNT_MAX; i++ )
     {

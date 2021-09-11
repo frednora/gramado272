@@ -1166,7 +1166,32 @@ do_select:
     if( next->magic != 1234 )
         return;
 
+// Pede para o kernel mudar a foreground thread.
+    sc82 (
+        10011,
+        next->client_tid,
+        next->client_tid,
+        next->client_tid);
+
+// ==============================================
+
+// prepara o nome
+    int name_len = strlen(next->name);
+    if(name_len > 32){ name_len = 32; }
+    char w_name[64];
+    sprintf(w_name,"Focus on: ");
+    strncat(w_name,next->name,name_len);
+    w_name[63]=0;
+
+    // #test: notifica na barra de tarefas
+    wm_Update_TaskBar((char *) w_name);
+
+
+//=================================================
+
 do_redraw: 
+
+// redraw
 
     gwssrv_redraw_window(next,TRUE);
 
@@ -1936,8 +1961,26 @@ int serviceCreateWindow (int client_fd)
 
 //#test
 
+// prepara o nome
+    int name_len = strlen(Window->name);
+    if(name_len > 32){ name_len = 32; }
+    char w_name[64];
+    sprintf(w_name,"Application: ");
+    strncat(w_name,Window->name,name_len);
+    w_name[63]=0;
+
+
     if(Window->type == WT_OVERLAPPED)
+    {
+        // coloca na fila
         wm_add_window_into_the_list(Window);
+    
+        // #test: notifica na barra de tarefas
+        wm_Update_TaskBar((char *) w_name);
+    }
+
+
+
 
 
 // #test
@@ -3220,9 +3263,14 @@ int set_window_with_focus(int id)
     }
 
     window_with_focus = (int) id;
+    
+/*  
+//#test
+    struct gws_window_d *w;
+    w = (struct gws_window_d *) windowList[id];
+    sc82 (10011,w->client_tid,w->client_tid,w->client_tid);
+*/
 }
-
-
 
 
 // Pegando a z-order de uma janela.
@@ -3766,7 +3814,13 @@ int get_window_tid( struct gws_window_d *window)
 }
 */
 
-
+// teremos mais argumentos
+void wm_Update_TaskBar( char *string )
+{
+    gwssrv_redraw_window(__taskbar_window,TRUE);
+    dtextDrawText(__taskbar_window,8,8,COLOR_YELLOW,string);
+    gws_show_window_rect(__taskbar_window);
+}
 
 //
 // End.

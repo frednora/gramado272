@@ -1259,6 +1259,9 @@ wmHandler(
     unsigned long arg3_rdx,
     unsigned long arg4_rcx );
 
+
+void wm_Update_TaskBar( char *string );
+
 void yellow_status( char *string );
 
 

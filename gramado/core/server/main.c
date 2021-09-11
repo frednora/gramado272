@@ -125,6 +125,7 @@ gwsProcedure (
 
 int initGraphics(void);
 void create_background (void);
+void create_taskbar (void);
 
 void gwssrv_init_client_support (void);
 void init_client_struct ( struct gws_client_d *c );
@@ -605,9 +606,9 @@ void dispacher (int fd)
     }
     */
 
-    // #important
-    // We can handle only requests.
-    // Drop it!
+// #important
+// We can handle only requests.
+// Drop it!
 
     int value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
     if ( value != ACTION_REQUEST ){
@@ -1213,6 +1214,97 @@ gwsProcedure (
 }
 
 
+//
+
+void create_taskbar (void)
+{
+    unsigned long w = gws_get_device_width();
+    unsigned long h = gws_get_device_height();
+    int WindowId = -1;
+
+
+    gwssrv_debug_print ("gwssrv: create_taskbar\n");
+
+
+    if ( w==0 || h==0 )
+    {
+        gwssrv_debug_print ("create_taskbar: w h\n");
+        printf             ("create_taskbar: w h\n");
+        exit(1);
+    }
+
+
+    // The background window
+    // #todo
+    // Se estivermos em JAIL, podemos arriscar algum background melhor.
+    // Talvez alguma imagem.
+
+    __taskbar_window = (struct gws_window_d *) gwsCreateWindow ( 
+                                            WT_SIMPLE, 
+                                            0, //style
+                                            1, //status 
+                                            1, //view
+                                            "TaskBar",  
+                                            0, h-40, w, 40,   
+                                            gui->screen_window, 0, 
+                                            COLOR_RED, COLOR_RED );    
+
+
+    // #debug
+    // asm ("int $3");
+
+    if ( (void *) __taskbar_window == NULL )
+    {
+        gwssrv_debug_print ("create_taskbar: __taskbar_window\n"); 
+        printf             ("create_taskbar: __taskbar_window\n");
+        exit(1);
+        //return;
+    }
+
+    /*
+    // #debug
+    if ( __root_window->used != TRUE || __root_window->magic != 1234 )
+    {
+        gwssrv_debug_print ("create_background: __root_window validation\n"); 
+        printf             ("create_background: __root_window validation\n");
+        exit(1);
+        //return;
+    }
+    */
+
+
+    // Register.
+    WindowId = gwsRegisterWindow (__taskbar_window);
+
+    if (WindowId<0)
+    {
+        gwssrv_debug_print ("create_taskbar: Couldn't register window\n");
+        printf             ("create_taskbar: Couldn't register window\n");
+        exit(1);
+        //return;
+    }
+
+    //#debug
+    //asm ("int $3");
+
+    //__root_window->dirty = 1;
+
+
+    // See: 
+    // gws.c
+/*
+    if (current_mode == GRAMADO_JAIL)
+    {
+        gwssrv_debug_print ("gwssrv: create_taskbar: Calling refresh_screen\n");
+        //refresh_screen();
+    }
+*/
+
+    gwssrv_debug_print ("gwssrv: create_taskbar: done\n");
+
+    //#debug
+    //while(1){}
+}
 
 
 
@@ -1385,7 +1477,14 @@ int initGraphics (void){
     // #bugbug
     // This is creating the root window again.
 
+// cria a root window
     create_background();
+
+// cria a taskbar
+// ela vai nos mostrar qual janela eh a ativa ... e talvez o foco ... etc
+    create_taskbar();
+
+    wm_Update_TaskBar("Welcome!");
 
 //#debug
     //gws_show_backbuffer();

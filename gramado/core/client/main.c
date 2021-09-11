@@ -556,7 +556,7 @@ int main ( int argc, char *argv[] )
 
     main_window = gws_create_window (client_fd,
                       WT_SIMPLE, 1, 1, "gws-main",
-                      0, 0, w, h,
+                      0, 0, w, h-40,
                       0, 0, MYGREEN, MYGREEN);
 
     if (main_window<0){
@@ -583,7 +583,7 @@ int main ( int argc, char *argv[] )
     int tmp1;
     tmp1 = gws_create_window (client_fd,
                       WT_SIMPLE, 1, 1, "gws-status",
-                      0, h-40, w, 40,
+                      0, 0, w, 40,
                       0, 0, COLOR_GRAY, COLOR_GRAY);
 
     if (tmp1<0){
@@ -959,6 +959,7 @@ int main ( int argc, char *argv[] )
     // See: rtl.c
     //int cThread = (int) pthread_self();
     //sc82 (10011,cThread,cThread,cThread);
+
     // rtl_focus_on_this_thread();
     
     // Enable input method number 1.
