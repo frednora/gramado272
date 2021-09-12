@@ -1209,10 +1209,19 @@ struct gws_surface_d *rootSurface;
 //
 
 
+// interpolation
+/*
+unsigned int 
+interpolate_color(
+    unsigned int color1, 
+    unsigned int color2, 
+    unsigned int fraction );
+*/
+
+
+// transparence
 void gws_enable_transparence(void);
 void gws_disable_transparence(void);
-
-
 
 
 struct gws_surface_d *xxxCreateSurface( 

@@ -2,7 +2,8 @@
 // sci.c
 // Handlers for the system interrupts.
 
-#include <kernel.h>  
+//#include <kernel.h>  
+#include <newos.h>  
 
 //#define SERVICE_NUMBER_MAX  255
 
@@ -302,10 +303,9 @@ void *gde_extra_services (
     }
 
 
-
     // Returns the current runlevel.
     if ( number == 288 ){
-        return (void *) current_runlevel;
+        return (void *) newos_get_current_runlevel();
     }
 
 
@@ -315,13 +315,9 @@ void *gde_extra_services (
         return (void *) sys_serial_debug_printk ( (char *) arg2 );
     }
 
-
-    unsigned long __mm_size_mb = 0;
     if ( number == 292 ){
-        __mm_size_mb = ( memorysizeTotal/0x400);
-        return (void *) __mm_size_mb;
+        return (void *) newos_get_memory_size_mb();
     }
-
 
     // #bugbug: cuidado.
     // get boot info.
@@ -357,7 +353,7 @@ void *gde_extra_services (
     // Clear the screen.
     if (number==390)
     {
-        debug_print ("extra services: [390] :)\n");
+        debug_print ("gde_extra_services: [390] :)\n");
         //Background_initialize();
         return NULL;
     }
@@ -367,7 +363,7 @@ void *gde_extra_services (
     // Falha se tentamos pintar a tela toda.
     if (number==391)
     {
-        debug_print("sci0: [391]\n");
+        debug_print("gde_extra_services: [391]\n");
         drawDataRectangle ( 
             (unsigned long) message_address[0],    //x 
             (unsigned long) message_address[1],    //y
@@ -386,7 +382,7 @@ void *gde_extra_services (
     // OUT: pid
     if ( number == SYS_GET_WS_PID )
     {
-        debug_print("SYS_GET_WS_PID\n");
+        debug_print("gde_extra_services: SYS_GET_WS_PID\n");
 
         __desktop = ( struct desktop_d *) arg2;
 
@@ -417,7 +413,7 @@ void *gde_extra_services (
 
     if ( number == SYS_SET_WS_PID )
     {
-        debug_print("SYS_SET_WS_PID\n");
+        debug_print("gde_extra_services: SYS_SET_WS_PID\n");
         
         __desktop = ( struct desktop_d *) arg2;
 
@@ -479,7 +475,7 @@ void *gde_extra_services (
     // IN: desktop
     if ( number == SYS_GET_WM_PID )
     {
-       debug_print("SYS_GET_WM_PID\n");
+       debug_print("gde_extra_services: SYS_GET_WM_PID\n");
         // pega o wm de um dado desktop.
         __desktop = ( struct desktop_d *) arg2;
         if ( (void *) __desktop != NULL )
@@ -500,7 +496,7 @@ void *gde_extra_services (
     // IN: desktop, pid
     if ( number == SYS_SET_WM_PID )
     {
-       debug_print("SYS_SET_WM_PID\n");
+       debug_print("gde_extra_services: SYS_SET_WM_PID\n");
         __desktop = ( struct desktop_d *) arg2;
         if ( (void *) __desktop != NULL )
         {
@@ -655,25 +651,14 @@ void *gde_extra_services (
 
     // alarm()
     // See: sys.c
-    if ( number == 884 )
-    {
+    if ( number == 884 ){
         return (unsigned long) sys_alarm( (unsigned long) arg2 );
     }
 
-// Usado pelo malloc em ring3.
-    int number_of_pages=0;
-    if ( number == 891 )
-    {
-        if ( arg2 <= 4096 ){
-            return (void *) allocPages (1);
-        }
-
-        // Alinhando para cima.
-        number_of_pages = (int) ((arg2/4096) + 1);
-        
-        return (void *) allocPages (number_of_pages);
+    if ( number == 891 ){
+        debug_print("gde_extra_services: 891\n");
+        return (void *) newos_alloc_shared_ring3_pages ( (pid_t) current_process, (int) arg2 );
     }
-
 
     // Setup the thread's surface rectangle.
     if ( number == 892 )
@@ -915,19 +900,15 @@ void *gde_extra_services (
 // ======================================
 //
 
-    // Register callbacks sent by gwssrv.bin
-    // See: kgwm.c
+// Register callbacks sent by gwssrv.bin
     if ( number == 101234 )
     {
-        wmRegisterWSCallbacks(
+        return (void*) newos_register_ws_callbacks(
+            (pid_t) current_process,
             (unsigned long) arg2,
             (unsigned long) arg3,
             (unsigned long) arg4 );
-        return NULL;
     }
-
-
-
 
 // fail
     return NULL;
@@ -1412,11 +1393,9 @@ void *sci0 (
 
         // 84 - livre.
 
-        // 85
-        // See: sci/sys/sys.c
         case 85:
         //case SYS_GETPID: 
-            return (void *) sys_getpid();
+            return (void *) newos_getpid();
             break;
 
         // 86 - livre.
@@ -1430,25 +1409,16 @@ void *sci0 (
 
         // free: 91 92 93
 
-
         // 94
-        //REAL (coloca a thread em standby para executar pela primeira vez.)
-        // * MOVEMENT 1 (Initialized --> Standby).
         case SYS_STARTTHREAD:
             debug_print("sci0: SYS_STARTTHREAD\n");
-            //t = (struct thread_d *) arg2;
-            //sys_SelectForExecution (t);
-            SelectForExecution ( (struct thread_d *) arg2 );
-            return NULL;
+            return (void *) newos_start_thread ( (struct thread_d *) arg2 );
             break;
 
-
-        // 110 - Reboot.
-        // See: sci/sys/sys.c
+        // 110
         case SYS_REBOOT: 
             debug_print("sci0: SYS_REBOOT\n");
-            sys_reboot();
-            panic("sci0: SYS_REBOOT!");
+            newos_reboot(0);
             break;
 
 
@@ -1786,12 +1756,12 @@ void *sci0 (
         // =====================================
         // (250 ~ 255) - Info support.
 
-        // 250
-        // See: 
-        case SYS_GETSYSTEMMETRICS:
-            return (void *) sys_get_system_metrics ( (int) arg2 );
-            break;
 
+        // 250
+        case SYS_GETSYSTEMMETRICS:
+            debug_print ("sci0: SYS_GETSYSTEMMETRICS\n");
+            return (void *) newos_get_system_metrics ( (int) arg2 );
+            break;
 
 
         default: 
@@ -2045,7 +2015,7 @@ void servicesPutChar ( int c )
 }
 
 
-
+/*
 void nothing4(void){}
 void nothing5(void){}
 void nothing6(void){}
@@ -2054,21 +2024,7 @@ void nothing41(void){}
 void nothing51(void){}
 void nothing61(void){}
 void nothing71(void){}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*/
 
 
 
