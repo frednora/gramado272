@@ -35,15 +35,18 @@ struct scheduler_info_d SchedulerInfo;
 
 // ===============================================
 
-// Quantum in ms.
-#define QUANTUM_MIN    20
-#define QUANTUM_MAX    100
 
-// Aliases
+#define QUANTUM_Q1  1
+#define QUANTUM_Q2  2
+#define QUANTUM_Q3  3
+#define QUANTUM_MIN    QUANTUM_Q1
+#define QUANTUM_MAX    QUANTUM_Q3
+
+
+
+
 #define QUANTUM_BASE   QUANTUM_MIN
 #define QUANTUM_LIMIT  QUANTUM_MAX
-
-// Aliases
 #define QUANTUM_FIRST_PLANE   QUANTUM_MAX
 #define QUANTUM_SECOND_PLANE  QUANTUM_MIN
 

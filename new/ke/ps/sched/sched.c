@@ -191,9 +191,8 @@ int __scheduler_rr (unsigned long sched_flags)
 // Finalizing the list.
 // The tmpConductor and it's next.
     tmpConductor       = (void *) tmpConductor->next; 
-    //tmpConductor->next = NULL;               // Reescalona ao fim do round.
-    tmpConductor->next = (void *) ____IDLE;  // Reescalona quando o scheduler for chamado pelo timer.
-
+    tmpConductor->next = NULL;               // Reescalona ao fim do round.
+    //tmpConductor->next = (void *) ____IDLE;  // Reescalona quando o scheduler for chamado pelo timer.
 
 
 // done:

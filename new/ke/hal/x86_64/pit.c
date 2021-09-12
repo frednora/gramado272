@@ -139,10 +139,12 @@ void DeviceInterface_PIT(void)
 {
     jiffies++;
 
+/*
     if ( (jiffies % DEFAULT_PIT_FREQ) == 0 )
     {
         KiScheduler();
     }
+*/
 }
 
 

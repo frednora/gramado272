@@ -79,15 +79,20 @@
 // The priority can't be changed to a level below the base priority.
 //
 
-#define PRIORITY_LOW4      1  // 4
-#define PRIORITY_LOW3      2  // 3
-#define PRIORITY_LOW2      3  // 2
-#define PRIORITY_LOW1      4  // 1 
-#define PRIORITY_NORMAL    5  // 0 (Normal)
-#define PRIORITY_HIGH1     6  // 1
-#define PRIORITY_HIGH2     7  // 2
-#define PRIORITY_HIGH3     8  // 3
-#define PRIORITY_HIGH4     9  // 4
+#define PRIORITY_P1  1
+#define PRIORITY_P2  2
+#define PRIORITY_P3  3
+
+
+#define PRIORITY_LOW4      PRIORITY_P1
+#define PRIORITY_LOW3      PRIORITY_P1
+#define PRIORITY_LOW2      PRIORITY_P1
+#define PRIORITY_LOW1      PRIORITY_P1
+#define PRIORITY_NORMAL    PRIORITY_P1
+#define PRIORITY_HIGH1     PRIORITY_P1
+#define PRIORITY_HIGH2     PRIORITY_P1
+#define PRIORITY_HIGH3     PRIORITY_P1
+#define PRIORITY_HIGH4     PRIORITY_P1
 
 // Aliases
 #define PRIORITY_MIN       PRIORITY_LOW4
