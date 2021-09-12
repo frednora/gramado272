@@ -122,12 +122,12 @@ The remainder ??
 
 	//quanto tempo em ms ele rodou no total.
     CurrentThread->total_time_ms = 
-        (unsigned long) CurrentThread->total_time_ms + (1000/sys_time_hz);
+        (unsigned long) CurrentThread->total_time_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
 
 	//incrementa a quantidade de ms que ela está rodando antes de parar.
 	//isso precisa ser zerado quando ela reiniciar no próximo round.
     CurrentThread->runningCount_ms = 
-        (unsigned long) CurrentThread->runningCount_ms + (1000/sys_time_hz);
+        (unsigned long) CurrentThread->runningCount_ms + (DEFAULT_PIT_FREQ/sys_time_hz);
 
 
 
@@ -637,13 +637,11 @@ fail:
 */
 
 
-
 // Called by:
 // _irq0 in hw.asm
 
 void psTaskSwitch (void)
 {
-
     if ( current_process < 0 || 
          current_process >= PROCESS_COUNT_MAX )
     {

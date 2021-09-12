@@ -58,16 +58,12 @@ extern _contextR13
 extern _contextR14
 extern _contextR15
 
-
 extern _contextCPL
 
 ; ...
 
 ;================================
-
-extern _xxxxIRQ0_DEBUG_MESSAGE
 extern _irq0_TIMER
-extern _psTaskSwitch
 
 ; Capture context
 global _irq0
@@ -126,20 +122,6 @@ _irq0:
     ;; Que pilha as interrupçoes de softwar estao usando?
 
 
-; ===============================================================
-; #bugbug: 
-; Isso estava impedindo de rodar threads em ring 0.
-;
-    ;xor rax, rax
-    ;mov ax, word 0x10 
-    ;mov ds, ax
-    ;mov es, ax
-    ;mov fs, ax
-    ;mov gs, ax
-    ;mov ss, ax
-; ===============================================================
-
-
 ;
 ; Calls
 ;
@@ -151,22 +133,15 @@ _irq0:
     and rax, 3
     mov [_contextCPL], rax
 
+; Timer support. No task switch.
+; See: pit.c
 
-    ; Timer support. No task switch.
-    ; See: pit.c
-    call _irq0_TIMER    ; Tick
-
-    ; Task switching.
-    ; See: ts.c
-    call _psTaskSwitch   ; Task switching
-
-
+    call _irq0_TIMER
 
 ; Essa é a única interrupção que tem seu retorno
 ; na unit 3.
 
     jmp unit3Irq0Release
-
 ; --------------------------------------
 
 

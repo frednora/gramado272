@@ -122,6 +122,13 @@ __VOID_IRQ
 irq0_TIMER (void)
 {
     DeviceInterface_PIT();
+
+// See: ts.c
+    psTaskSwitch();
+
+// Nothing
+// It is up to the interrupt service routine to reset the latch. 
+// It does that by setting bit 7 of port 0x61 (system control port B).
 }
 
 
@@ -132,7 +139,7 @@ void DeviceInterface_PIT(void)
 {
     jiffies++;
 
-    if ( (jiffies % 1000) == 0 )
+    if ( (jiffies % DEFAULT_PIT_FREQ) == 0 )
     {
         KiScheduler();
     }
