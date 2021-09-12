@@ -165,6 +165,9 @@ void preinit_OutputSupport(void)
 // main
 //
 
+// Called by START in 
+// entrance/warden/unit0/x86_64/head_64.asm.
+
 int kernel_main(int arch_type)
 {
 

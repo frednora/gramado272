@@ -338,18 +338,33 @@ int init_threads (void){
 	
 	//@todo: H� mais vari�veis para serem inicializadas??!!
 
+//
+// Clear thread lists.
+//
 
-    // Clear thread list.
+// normal threads
     i=0;
     while ( i < THREAD_COUNT_MAX ){
         threadList[i] = (unsigned long) 0; 
         i++;
     };
 
+// i/o threads
+    i=0;
+    while ( i < THREAD_COUNT_MAX ){
+        io_threadList[i] = (unsigned long) 0; 
+        i++;
+    };
 
-	//
-	// @todo: Nada mais?
-	//
+// interactive threads
+    i=0;
+    while ( i < THREAD_COUNT_MAX ){
+        interactive_threadList[i] = (unsigned long) 0; 
+        i++;
+    };
+
+
+// ...
 
     return 0;
 }

@@ -873,12 +873,23 @@ struct thread_d *first_after_mouse_input;
 
 
 // #Atenção
-// Esse é a lista principal. Contém todas as threads.
- 
+
+
 // Número máximo de threads.
 #define THREAD_COUNT_MAX  1024 
+
+// Cada lista poderá usasr uma prioridadr diferente,
+// um quantum diferente e talvez ter uma frequencia de timer diferente.
+
+// Normal threads
 unsigned long threadList[THREAD_COUNT_MAX];
 
+// Threads doing some kind of i/o operations.
+unsigned long io_threadList[THREAD_COUNT_MAX];
+
+// Interactive threads.
+// Just like keyboard and windows with focus.
+unsigned long interactive_threadList[THREAD_COUNT_MAX];
 
 
 //
