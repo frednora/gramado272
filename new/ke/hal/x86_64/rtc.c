@@ -97,7 +97,7 @@ unsigned long get_time (void){
 
     time  = read_cmos_bcd(0);
     time += read_cmos_bcd(2) * 60;
-    time += read_cmos_bcd(4) * (60*60);	
+    time += read_cmos_bcd(4) * (60*60);
 
     return (unsigned long) time;
 }
@@ -130,8 +130,8 @@ unsigned long get_time (void){
  *	Limite de uma 'word' ??			
  */
 
-unsigned short rtcGetBaseMemory (void){
-
+unsigned short rtcGetBaseMemory (void)
+{
     unsigned short total = 0;
     unsigned char lowmem=0;
     unsigned char highmem=0;
@@ -149,6 +149,7 @@ unsigned short rtcGetBaseMemory (void){
 
     return (unsigned short) total;
 }
+
 
 /*
  * rtcGetExtendedMemory:

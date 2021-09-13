@@ -1,9 +1,13 @@
 
+// socket.c
 
 #include <kernel.h>  
 
 // Internal
 #define SYS_SOCKET_IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
+
+
+static int gramado_ports[GRAMADO_PORT_MAX];
 
 
 /*
@@ -14,98 +18,111 @@
  *     The status is: NOT CONNECTED.
  */
 
-// IN: ip and port.
-
-struct socket_d *create_socket_object (void)
+struct socket_d *create_socket_object(void)
 {
-    struct socket_d *s;
+    struct socket_d  *s;
     int i=0;
 
 
     s = (void *) kmalloc ( sizeof( struct socket_d ) );
-
     if ( (void *) s ==  NULL )
     {
         printf ( "create_socket_object: s \n");
         refresh_screen();
         return NULL;
-    
-    }else{
+    }
 
-        memset( s, 0, sizeof(struct socket_d) );
+// Clear the structure.
+    memset( s, 0, sizeof(struct socket_d) );
 
-        //s->objectType =
-        //s->objectClass =
+    //s->objectType =
+    //s->objectClass =
 
-        s->used   = TRUE;
-        s->magic  = 1234;
+    s->pid = (pid_t) current_process;
+    s->uid = (uid_t) current_user;
+    s->gid = (gid_t) current_group;
 
-        s->family   = 0;
-        s->type     = 0;
-        s->protocol = 0;
+// #todo
+    //s->addr = 0;
 
-        //s->ip = ip;
-        //s->port = port;
-        
-        // The socket needs to be initialized 
-        // in the disconnected state.
-        
-        s->state = SS_UNCONNECTED;
-        
-        s->private_file = (file *) 0;
-        
-        //s->addr = (struct sockaddr) 0;
+    s->family = 0;
+    s->type = 0;
+    s->protocol = 0;
 
-        s->pid = (pid_t) current_process;
-        s->uid = (uid_t) current_user;
-        s->gid = (gid_t) current_group;
+    s->ip = (unsigned int) 0;
+    s->port =  (unsigned short) 0;
 
-        // #bugbug
-        // It tells us that write() will copy 
-        // the data to the connected socket.
-        // Is this what we want?
-        
-        s->conn_copy = TRUE;  //YES, copy!
-        
-        // Initializing pointers.
-        // We don't want this kinda crash in the real machine.
-        
-        // Connection ponter.
-        // Its a pointer to another socket. Is it?
-        s->conn = (struct socket_d *) 0;
-        
-       // The server finds a place in the server_process->Objects[i].
-        s->clientfd_on_server = -1;
-        
-        // ...
-        
-        s->backlog_max = 1;
-        s->backlog_pos = 0;
-        for(i=0; i<32; i++){
-            s->pending_connections[i]=0;
-        }
+    // #todo
+    //s->ip_ipv4 = (unsigned int) 0;
+    //s->ip_ipv6 = (unsigned long) 0;
 
-        // ...
+
+// Initializing pointers.
+// We don't want this kinda crash in the real machine.
+        
+// Connection ponter.
+// Its a pointer to another socket. Is it?
+
+    s->conn = (struct socket_d *) 0;
+
+    s->backlog_max = 1;
+    s->backlog_pos = 0;
+    for(i=0; i<32; i++)
+    {
+        s->pending_connections[i]=0;
     };
+
+// Not yet.
+// listen() will set this flag.
+    s->AcceptingConnections = FALSE;
+
+// The socket needs to be initialized 
+// in the disconnected state.
+
+    s->state = SS_UNCONNECTED;
+
+
+// #bugbug
+// It tells us that write() will copy 
+// the data to the connected socket.
+
+    s->conn_copy = TRUE;  //YES, copy!
+
+
+// The server finds a place in the server_process->Objects[i].
+    s->clientfd_on_server = -1;
+
+    s->private_file = (file *) 0;
+
+    // ...
+
+    s->flags = 0;
+
+    s->used = TRUE;
+    s->magic = 1234;
 
     return (struct socket_d *) s;
 }
 
-unsigned long getSocketIP ( struct socket_d *socket ){
 
+unsigned long getSocketIP ( struct socket_d *socket )
+{
     if ( (void *) socket ==  NULL ){
         return 0;
+    } 
 
-    }else{ return (unsigned long) socket->ip; };
+    return (unsigned long) socket->ip; 
 }
 
-unsigned long getSocketPort ( struct socket_d *socket ){
-
+unsigned long getSocketPort ( struct socket_d *socket )
+{
     if ( (void *) socket ==  NULL ){
         return 0;
+    }
 
-    }else{ return (unsigned long) socket->port; };
+    return (unsigned long) socket->port; 
 }
+
 
 // Get the pointer for the socket structure 
 // given the fd.
@@ -120,56 +137,32 @@ struct socket_d *get_socket_from_fd (int fd){
         return (struct socket_d *) 0;
     }
 
-    // The process.
+// The process.
 
     p = (struct process_d *) processList[current_process];
     
     if ( (void *) p == NULL){
         return (struct socket_d *) 0;
     }
-    
-    // The file.
-    
+
+// The file.
+
     _file = (file *) p->Objects[fd];    
     
     if ( (void *) _file == NULL){
         return (struct socket_d *) 0;
     }
 
-    // The structure.
+// The structure.
+// Get the pointer for the socket structure given the fd.
 
-    // Get the pointer for the socket structure 
-    // given the fd.
-    
     return (struct socket_d *) _file->socket;
 }
 
-int is_socket (file *f){
 
-    // Fail
-    if ( (void *) f == NULL ){ return (int) (-1); }
-
-    // Yes
-    if ( f->____object == ObjectTypeSocket ){ return TRUE; }
-        
-    // No
-    return FALSE;
-}
-
-int is_virtual_console (file *f){
-
-    // Fail
-    if ( (void *) f == NULL ){ return (int) (-1); }
-
-    // Yes
-    if ( f->____object == ObjectTypeVirtualConsole ){ return TRUE; } 
-   
-    // No
-    return FALSE;
-}
 
 // Show the private socket for a process.
-void show_socket_for_a_process (int pid){
+void show_socket_for_a_process (pid_t pid){
 
     struct process_d  *p;
     struct socket_d   *s;
@@ -205,7 +198,7 @@ void show_socket_for_a_process (int pid){
     if ( (void *) s == NULL ){
         printf("s\n");
         goto fail;
-        
+
     }else{
         if ( s->used != 1 || s->magic != 1234 ){
             printf ("socket validation\n");
@@ -213,9 +206,9 @@ void show_socket_for_a_process (int pid){
         }
     };
 
-    //
-    // Show !!
-    //
+//
+// Show !!
+//
       
     // sockaddr structure.  
     printf ("family %d \n",s->addr.sa_family);
@@ -644,19 +637,29 @@ fail:
 // Initialize socket list.
 int socket_init (void)
 {
-    // register?
     int i=0;
-
 
     for (i=0; i<32; i++){
         socketList[i] = (unsigned long) 0;
     };
 
+    socket_initialize_gramado_ports();
+
     // ...
+
     
     return 0;
 }
 
+int socket_initialize_gramado_ports(void)
+{
+    int i=0;
+    for (i=0; i<GRAMADO_PORT_MAX; i++)
+    {
+        gramado_ports[i] = 0;
+    };
+    return 0;
+}
 
 int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
 {
@@ -770,7 +773,7 @@ int socket_write ( unsigned int fd, char *buf, int count ){
 
 // Conjunto especiais de portas.
 // Usados apenas na famíla AF_GRAMADO.
-int socket_set_gramado_port (int port, int pid){
+int socket_set_gramado_port (int port, pid_t pid){
 
     //port
     if ( port<0 || port >31){
@@ -785,7 +788,7 @@ int socket_set_gramado_port (int port, int pid){
         return -1;
     }       
     
-    gramado_ports[port] = (int) pid;
+    gramado_ports[port] = (pid_t) pid;
 
     return 0;
 }
@@ -1000,12 +1003,33 @@ fail:
 
 // #todo
 // Pega um socket da lista de conexoes incompletas.
-// Essa eh uma implementacao tradicional
 // Nosso maior objetivo aqui eh retornar o fd arquivo de socket do cliente.
 
-     // #todo
-     // We need to create a new socket. Only this way the process
-     // will have a new file in p->Objects[].
+// #todo
+// We need to create a new socket. Only this way the process
+// will have a new file in p->Objects[].
+
+//
+// == todo =========================
+//
+
+// #solution
+// We create a new socket and connect this 
+// new socket with the client.
+// This way we can return the fd of the socket.
+// #obs:
+// When write() writes in the new socket, the data
+// will be copied to the client socket. But it can be only an option.
+
+/*
+ * From Linux 0.98.1:
+ * 
+ * For accept, 
+ * we attempt to create a new socket, 
+ * set up the link with the client, 
+ * wake up the client, then 
+ * return the new connected fd.
+ */
 
 int 
 sys_accept (
@@ -1013,30 +1037,6 @@ sys_accept (
     struct sockaddr *addr, 
     socklen_t *addrlen )
 {
-
-    //
-    // == todo =========================
-    //
-
-    // #solution
-    // We create a new socket and connect this 
-    // new socket with the client.
-    // This way we can return the fd of the socket.
-    // #obs:
-    // When the write() writes in the new socket, the data
-    // will be copied to the client socket. But it can be only an option.
-
-
-    /*
-     * From Linux 0.98.1:
-     * 
-     * For accept, 
-     * we attempt to create a new socket, 
-     * set up the link with the client, 
-     * wake up the client, then 
-     * return the new connected fd.
-     */
-
     struct process_d  *sProcess; //server process
 
     struct socket_d   *sSocket;  //server socket
@@ -1052,22 +1052,20 @@ sys_accept (
     // #debug
     debug_print ("sys_accept:\n");
 
-    //
-    // fd Server 
-    //
+//
+// fd Server 
+//
 
-    // #todo
-    // O argumento dá o descritor para o socket do servidor.
-    // A função accept seleciona um dos sockets da lista
-    // de conexões pendentes criadas por listen() e conecta
-    // com o socket do servidor.
-    // Ao fim devemos retornar o descritor do socket selecionado
-    // na lista de conexões pendentes.
+// #todo
+// O argumento dá o descritor para o socket do servidor.
+// A função accept seleciona um dos sockets da lista
+// de conexões pendentes criadas por listen() e conecta
+// com o socket do servidor.
+// Ao fim devemos retornar o descritor do socket selecionado
+// na lista de conexões pendentes.
 
     fdServer = sockfd;
 
-    // fd
-    // ?? Esse é o socket do servidor.
     if ( fdServer < 0 || fdServer >= NUMBER_OF_FILES )
     {
         debug_print ("sys_accept: [FAIL] fdServer\n");
@@ -1075,11 +1073,12 @@ sys_accept (
         return (int) (-EINVAL);
     }
 
+// Check addr structure.
+// #bugbug: 
+// Ainda não sabemos qual é a estrutura de endereços usada.
+// #bugbug: 
+// Ainda não estamos usando isso.
 
-    // Check addr structure.
-    // #bugbug: Ainda não sabemos qual é a estrutura de
-    // endereços usada.
-    // #bugbug: Ainda não estamos usando isso.
     if ( (void *) addr == NULL )
     {
         debug_print ("sys_accept: [FAIL] addr\n");
@@ -1087,10 +1086,12 @@ sys_accept (
         goto fail;
     }
 
-    //
-    // Current process. (The server)
-    //
-    
+//
+// Current process. (The server)
+//
+
+// accept() is called by the server.
+
     sProcess = (struct process_d *) processList[current_process];
  
     if ( (void *) sProcess == NULL )
@@ -1100,7 +1101,6 @@ sys_accept (
         goto fail;
     }
 
-
     if ( sProcess->used != TRUE || sProcess->magic != 1234 )
     {
         debug_print ("sys_accept: [FAIL] sProcess validation\n");
@@ -1109,10 +1109,10 @@ sys_accept (
     }
 
 
-    // file
-    // O objeto que se refere ao socket do servidor.
-    // The socket is a file and belongs to the process.
-    
+// file
+// O objeto que se refere ao socket do servidor.
+// The socket is a file and belongs to the process.
+
     sFile = (file *) sProcess->Objects[fdServer];
 
     if ( (void *) sFile == NULL )
@@ -1129,10 +1129,10 @@ sys_accept (
         goto fail;
     }
 
-
 // Is this file a socket?
 
-    if (sFile->____object != ObjectTypeSocket )
+    //if (sFile->____object != ObjectTypeSocket )
+    if ( is_socket(sFile) != TRUE )
     {
         debug_print ("sys_accept: sFile is not a socket object\n");
              printf ("sys_accept: sFile is not a socket object $\n");
@@ -1368,13 +1368,14 @@ sys_bind (
     // #debug
     debug_print ("sys_bind:\n");
 
-
+    // #debug
     if (Verbose==TRUE){
         printf("sys_bind: PID %d | fd %d | \n",
             current_process, sockfd );
     }
 
-    // fd
+// fd
+
     if ( sockfd < 0 || sockfd >= NUMBER_OF_FILES )
     {
         debug_print ("sys_bind: sockfd fail\n");
@@ -1382,7 +1383,8 @@ sys_bind (
         return (int) (-EINVAL);
     }
 
-    // Check addr structure.
+// Check addr structure.
+
     if ( (void *) addr == NULL )
     {
         debug_print ("sys_bind: addr fail\n");
@@ -1390,8 +1392,8 @@ sys_bind (
         goto fail;
     }
 
+// process
 
-    // process
     p = (struct process_d *) processList[current_process];
  
     if ( (void *) p == NULL )
@@ -1400,10 +1402,10 @@ sys_bind (
         printf      ("sys_bind: p fail\n");
         goto fail;
     }
- 
- 
-    // file
-    // O objeto do tipo socket.
+
+// file
+// O objeto do tipo socket.
+
     f = (file *) p->Objects[sockfd];
 
     if ( (void *) f == NULL )
@@ -1412,11 +1414,17 @@ sys_bind (
         printf      ("sys_bind: f fail\n");
         goto fail;
     }
-    
- 
-    // socket
-    // A estrutura de socket associada ao
-    // objeto do tipo socket.
+
+    if ( is_socket(f) != TRUE )
+    {
+        debug_print ("sys_bind: f is not a socket object\n");
+        printf      ("sys_bind: f is not a socket object\n");
+        goto fail;
+    }
+
+// socket
+// A estrutura de socket associada ao objeto do tipo socket.
+
     s = (struct socket_d *) f->socket;
 
     if ( (void *) s == NULL )
@@ -1426,26 +1434,26 @@ sys_bind (
         goto fail; 
     }
 
+//
+// family
+//
 
-    //
-    // family
-    //
-    
-    // Everything is ok.
-    // Binding the name to the socket.
-    // So now we need to include the 'name' into the socket structure
-    // respecting the socket's family.
-    // Each family has a different size?
+// Everything is ok.
+// Binding the name to the socket.
+// So now we need to include the 'name' into the socket structure
+// respecting the socket's family.
+// Each family has a different size?
 
-    //++
-    // AF_GRAMADO
-    if (s->addr.sa_family == AF_GRAMADO){
-
-        printf ("sys_bind: [AF_GRAMADO] Binding the name to the socket.\n");
+//++
+// AF_GRAMADO
+    if (s->addr.sa_family == AF_GRAMADO)
+    {
+        debug_print ("sys_bind: [AF_GRAMADO] Binding the name to the socket.\n");
 
         // Always 14.
         for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
 
+        // #debug
         if(Verbose==TRUE){
             printf ("sys_bind: process %d ; family %d ; len %d \n", 
                 current_process, addr->sa_family, addrlen  );
@@ -1454,41 +1462,43 @@ sys_bind (
         debug_print ("sys_bind: bind ok\n");
         return 0;
     }
-    //--
+//--
 
 
-    //++
-    // AF_UNIX ou AF_LOCAL
-    // See: http://man7.org/linux/man-pages/man7/unix.7.html
-    if (s->addr.sa_family == AF_UNIX){
+//++
+// AF_UNIX ou AF_LOCAL
+// See: http://man7.org/linux/man-pages/man7/unix.7.html
+    if (s->addr.sa_family == AF_UNIX)
+    {
         debug_print ("sys_bind: AF_UNIX not supported yet\n");
+        printf      ("sys_bind: AF_UNIX not supported yet\n");
         //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
         return -1;
     }
-    //--    
+//--    
 
 
-    //++
-    // AF_INET
-    if (s->addr.sa_family == AF_INET){
+//++
+// AF_INET
+    if (s->addr.sa_family == AF_INET)
+    {
         debug_print ("sys_bind: AF_INET not supported yet\n");
+        printf      ("sys_bind: AF_INET not supported yet\n");
         //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
         return -1;    
     } 
-    //--
+//--
 
 
-    // #fail
-    // A família é de um tipo não suportado.
-  
-    // DEFAULT:
+// #fail
+// A família é de um tipo não suportado.
+
     debug_print ("sys_bind: [FAIL] family not valid\n");
     printf      ("sys_bind: [FAIL] family not valid\n");
 
-   // fail
+// fail
 
 fail:
-
     debug_print ("sys_bind: [FAIL] Something is wrong!\n");
     printf      ("sys_bind: [FAIL] Something is wrong!\n");
     refresh_screen();
@@ -2106,6 +2116,9 @@ sys_getsockname (
  * 
  */
 
+// See:
+// https://man7.org/linux/man-pages/man2/listen.2.html
+
 /*
  The backlog argument defines the maximum length to which the queue of
  pending connections for sockfd may grow.  If a connection request
@@ -2115,24 +2128,25 @@ sys_getsockname (
  at connection succeed
 */
 
-// See:
-// https://man7.org/linux/man-pages/man2/listen.2.html
-
 // IN:
 // sockfd  = The fd of the server's socket.
 // backlog = The server tell us the the 'size of the list'.
 
 int sys_listen (int sockfd, int backlog) 
 {
+    struct process_d  *p;
+    file *f;
+    struct socket_d  *s;
     int n=0;
 
 
+// #debug
     debug_print ("sys_listen: [TODO]\n");
-
     printf      ("sys_listen: [TODO] fd=%d backlog=%d\n",
         sockfd, backlog);
 
 
+// sockfd  = The fd of the server's socket.
     if ( sockfd < 0 || sockfd >= NUMBER_OF_FILES )
     {
         debug_print ("sys_listen: [FAIL] fd\n");
@@ -2140,23 +2154,25 @@ int sys_listen (int sockfd, int backlog)
         return (int) (-EINVAL);
     }
 
-    // Wrong n. Ajusting to default.
+// backlog = The server tell us the the 'size of the list'.
+
+// Wrong n. Ajusting to default.
     if( backlog <= 0 )
     { 
         debug_print ("sys_listen: [FIXME] backlog fail\n");
         n=1; 
     }
 
-    // #hackhack
-    // We need to do something
+// #hackhack
+// We need to do something
     if( backlog > SOCKET_MAX_PENDING_CONNECTIONS )
     { 
         debug_print ("sys_listen: [ERROR] backlog overflow\n");
         panic       ("sys_listen: [ERROR] backlog overflow\n");
     }
 
-    // #hackhack
-    // We need to do something
+// #hackhack
+// We need to do something
     if( backlog > 8 )
     { 
         debug_print ("sys_listen: [FIXME] backlog too long\n");
@@ -2164,18 +2180,10 @@ int sys_listen (int sockfd, int backlog)
     }
 
 
-    //
-    // TODO !!!
-    //
+// We need to get the socket structure in the process structure.
+// We need to clean the list. Not here. when creating the socket.
 
-//
-// ==============================================
-//
-
-   
     /*
-    // We need to get the socket structure in the process structure.
-    // We need to clean the list. Not here. when creating the socket.
     //int i=0;
     //for(i=0; i<32; i++) { s->pending_connections[i] = 0;};
     // Updating the list support.
@@ -2183,21 +2191,32 @@ int sys_listen (int sockfd, int backlog)
     //s->backlog_pos = 0;        //current 
     */
 
-    struct process_d *p;
-    file *f;
-    struct socket_d *s;
-    
+
+//
+// ==============================================
+//
+
+// process
+
     p = (struct process_d *) processList[current_process];
- 
     if ( (void *) p == NULL )
     {
         debug_print ("sys_listen: p fail\n");
         printf      ("sys_listen: p fail\n");
         goto fail;
     }
- 
-    // sender's file
-    // Objeto do tipo socket.
+
+// #todo
+// updating the process structure.
+
+    //p->socket_pending_list_head
+    //p->socket_pending_list_tail
+    //p->socket_pending_list_max = backlog;
+
+// file 
+// sender's file
+// Objeto do tipo socket.
+
     f = (file *) p->Objects[sockfd];
 
     if ( (void *) f == NULL )
@@ -2207,47 +2226,52 @@ int sys_listen (int sockfd, int backlog)
         goto fail;
     }
 
-    //is socket??
-    
+// Is it a socket object?
+
     int __is = -1;
-    
+
     __is = is_socket ((file *)f);
-    if(__is != 1)
+    if(__is != TRUE)
     {
         debug_print ("sys_listen: f is not a socket\n");
         printf      ("sys_listen: f is not a socket\n");
         goto fail;
     }
 
+// This is right place for doing this.
 
-    // Pega a estrutura de socket associada ao arquivo.
-    // socket structure in the senders file.
+    //f->sync.can_accept = TRUE;
+
+// Socket structure.
+// Pega a estrutura de socket associada ao arquivo.
+// socket structure in the senders file.
+
     //s = (struct socket_d *) p->priv; 
-    s = (struct socket_d *) f->socket;   
-    
+    s = (struct socket_d *) f->socket; 
+
     if ( (void *) s == NULL )
     {
         debug_print ("sys_listen: s fail\n");
         printf      ("sys_listen: s fail\n");
         goto fail;
-        
-    }else{
+    }
 
-        // updating the socket structure.
-        s->backlog_max = backlog;
-        
-        // #todo
-        // updating the process structure.
-        
-        //p->socket_pending_list_head
-        //p->socket_pending_list_tail
-        //p->socket_pending_list_max = backlog;
-    };
+// updating the socket structure.
+
+    s->backlog_max = backlog;
+
+// This server is accepting new connections.
+    s->AcceptingConnections = TRUE;
 
     // ...
 
     debug_print ("sys_listen: [TODO] continue...\n");
-    printf      ("sys_listen: [TODO] continue...\n");
+    //printf      ("sys_listen: [TODO] continue...\n");
+
+    // ...
+
+//fake ok.
+    return 0;
 
 //
 // ==============================================

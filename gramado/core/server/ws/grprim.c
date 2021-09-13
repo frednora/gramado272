@@ -2459,6 +2459,37 @@ int servicepixelBackBufferPutpixel(void)
 }
 
 
+unsigned int 
+interpolate_color(
+    unsigned int color1, 
+    unsigned int color2, 
+    unsigned int fraction )
+{
+
+    unsigned int final_color=0;
+
+    unsigned char r1 = (unsigned char) (color1 >> 16) & 0xff;
+    unsigned char r2 = (unsigned char) (color2 >> 16) & 0xff;
+    
+    unsigned char g1 = (unsigned char) (color1 >> 8) & 0xff;
+    unsigned char g2 = (unsigned char) (color2 >> 8) & 0xff;
+    
+    unsigned char b1 = (unsigned char) color1 & 0xff;
+    unsigned char b2 = (unsigned char) color2 & 0xff;
+
+    final_color = (unsigned int)
+    (    
+        (unsigned int) ( (r2 - r1) * fraction + r1 ) << 16 | 
+        (unsigned int) ( (g2 - g1) * fraction + g1 ) <<  8 | 
+        (unsigned int) ( (b2 - b1) * fraction + b1 )
+    );
+    
+    return (unsigned int) final_color;
+}
+
+
+
+
 //
 // End.
 //

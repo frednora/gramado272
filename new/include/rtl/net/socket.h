@@ -14,10 +14,10 @@
 
 // == ports ====================================
 
-#define PORTS_WS 4040
-#define PORTS_NS 4041
-#define PORTS_FS 4042
-#define PORTS_WM 4043
+#define PORTS_WS  4040
+#define PORTS_NS  4041
+#define PORTS_FS  4042
+#define PORTS_WM  4043
 // ...
 
 //
@@ -42,7 +42,7 @@
 // ...
 #define GRAMADO_PORT_MAX 32
 
-int gramado_ports[GRAMADO_PORT_MAX];
+//int gramado_ports[GRAMADO_PORT_MAX];
 //--
 //=====================================================
 
@@ -350,11 +350,15 @@ struct mmsghdr {
 #define  SHUT_WR      1    /* Disallow further sends. */
 #define  SHUT_RDWR    2    /* Disallow further sends/receives. */
 
-/* Read using getsockopt() with SOL_SOCKET, SO_PEERCRED */
-struct sockpeercred {
-	uid_t		uid;		/* effective user id */
-	gid_t		gid;		/* effective group id */
-	pid_t		pid;
+/* 
+ * Read using getsockopt() with SOL_SOCKET, SO_PEERCRED 
+ */
+
+struct sockpeercred 
+{
+    uid_t uid;  /* effective user id */
+    gid_t gid;  /* effective group id */
+    pid_t pid;
 };
 
 typedef unsigned  socklen_t;
@@ -364,10 +368,10 @@ typedef unsigned  socklen_t;
 /*
  * Structure used for manipulating linger option.
  */
-struct	linger 
+struct linger 
 {
-    int	l_onoff;		/* option on/off */
-    int	l_linger;		/* linger time in seconds */
+    int l_onoff;     /* option on/off */
+    int l_linger;    /* linger time in seconds */
 };
 
 
@@ -389,7 +393,8 @@ struct	accept_filter_arg {
 // See:
 // http://alas.matf.bg.ac.rs/manuals/lspe/snode=25.html
 // not bsd.
-struct sockaddr{
+struct sockaddr 
+{
     //unsigned char   sa_len;
     unsigned short  sa_family;
     char            sa_data[14];
@@ -494,7 +499,7 @@ struct sockcred {
 /*
  **********************
  * socket_d:
- *     Socket strutuct.
+ *     Socket struct.
  */
 
 struct socket_d
@@ -502,53 +507,69 @@ struct socket_d
     object_type_t  objectType;
     object_class_t objectClass;
 
-
     int used;
     int magic;
 
-    // #test.
     int family;
     int type;
     int protocol;
-    
-    pid_t pid;  // Process
-    uid_t uid;  // User 
-    gid_t gid;  // Group
 
+// process, user, group.
+    pid_t pid;
+    uid_t uid; 
+    gid_t gid;
 
-    unsigned long  ip;
+// maybe
+    //struct sockpeercred  peercred;
+
+//
+// == Connection ====================
+//
+
+// ip and port.
+    unsigned int ip;
     unsigned short port;
 
-    //
-    // == Connection ====================
-    //
+    //unsigned int ip_ipv4;
+    //unsigned long ip_ipv6;
 
-    int state;   // SOCKET_CONNECTED, SOCKET_NOT_CONNECTED
 
-    struct socket_d *conn;
-       
-    // The list of pending connections
-    // updated by listen
+// The list of pending connections.
+// Updated by listen().
+
     int backlog_max;
     int backlog_pos;
     int pending_connections[32];
+
+// It indicates that this socket is currently
+// accepting new connections.
+// Updated by listen().
+    int AcceptingConnections;
+
+// State:
+//     SOCKET_CONNECTED, SOCKET_NOT_CONNECTED
+    int state;   
+
+// link
+// Current connection?
+    struct socket_d  *conn;
+
 
     // flag
     // write() copy the data to the connected socket.
     int conn_copy; 
     
 
-
-
     // The server finds a place in the server_process->Objects[i].
     int clientfd_on_server;
     
-    
+// ====================================
+
     // Nosso arquivo.
-    // Eh o objecto socket ??
+    // Eh o objeto socket ??
     file *private_file;
 
-    ///testing
+    //testing
     char magic_string[8];
 
 
@@ -561,11 +582,12 @@ struct socket_d
     struct sockaddr addr;
 
     // usada em endereços AF_INET
+    // Where is it defined?
     struct sockaddr_in addr_in; 
 };
-struct socket_d *CurrentSocket;
-struct socket_d *LocalHostHTTPSocket;
-//...
+struct socket_d  *CurrentSocket;
+struct socket_d  *LocalHostHTTPSocket;
+// ...
 
 
 // #todo:
@@ -583,9 +605,8 @@ struct socket_d *create_socket_object (void);
 unsigned long getSocketIP ( struct socket_d *socket );
 unsigned long getSocketPort ( struct socket_d *socket );
 struct socket_d *get_socket_from_fd (int fd);
-int is_socket (file *f);
-int is_virtual_console (file *f);
-void show_socket_for_a_process (int pid);
+
+void show_socket_for_a_process (pid_t pid);
 
 int 
 socket_gramado ( 
@@ -607,8 +628,10 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg );
 
 int socket_read ( unsigned int fd, char *buf, int count );
 int socket_write ( unsigned int fd, char *buf, int count );
-int socket_set_gramado_port (int port, int pid);
 
+
+int socket_set_gramado_port (int port, pid_t pid);
+int socket_initialize_gramado_ports(void);
 
 int 
 socket_unix ( 

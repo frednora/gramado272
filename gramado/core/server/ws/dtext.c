@@ -181,7 +181,7 @@ grDrawString (
 	//if ( cWidth == 0 || cHeight == 0 )
     if ( cWidth == 0 )
     {
-        //panic ("dtext-draw_string: cWidth");
+        //panic ("grDrawString: cWidth");
     
         //#debug
         //gde_message_box (3, "xxx","dtext-draw_string: cWidth");
@@ -191,21 +191,22 @@ grDrawString (
 
     //int size = sizeof(string);  
     //for ( Index=0; Index<size; Index++ )
-    
+
+// Draw
+
     for ( Index=0; string[Index] != 0; Index++ )
     {
         grBackbufferDrawCharTransparent ( 
             x, y, 
             (unsigned int) color, string[Index] );
 
-        //#todo: 
-        //   Conflito de tipo no argumento 4.
-        //   gcharWidth.
-        //my_buffer_char_blt( x, y, color, string[Index]);
-        //drawchar_transparent ( x, y, color, string[Index] );
-        
-		//#todo: 
-		//Tamanho do char. Usar variável.
+        // gradient
+        //if( string_flags & ? ){
+        //grBackbufferDrawCharTransparent ( 
+            //x, y, 
+            //(unsigned int) interpolate_color(COLOR_BLACK, color, x), 
+            //string[Index] );
+        //}
 
         x += cWidth;
     };

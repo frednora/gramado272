@@ -1,24 +1,46 @@
 
+// kstdio.c
 
 #include <kernel.h>
 
 
 
+int is_socket (file *f)
+{
+    // Fail
+    if ( (void *) f == NULL ){ return FALSE; }
+
+    // Yes
+    if ( f->____object == ObjectTypeSocket ){ return TRUE; }
+
+    // No
+    return FALSE;
+}
+
+int is_virtual_console (file *f){
+
+    // Fail
+    if ( (void *) f == NULL ){ return FALSE; }
+
+    // Yes
+    if ( f->____object == ObjectTypeVirtualConsole ){ return TRUE; } 
+   
+    // No
+    return FALSE;
+}
+
+
+
 
 /*
- *********************************************************
  * input:
  *     Coloca os caracteres digitados em um buffer, (string). 
  * Para depois comparar a string com outra string, que é um comando.
- * 
  *     Devemos nos certificar que input(.) não imprima nada.
  *
  * History:
  *     2015 - Created by Fred Nora.
  */
-
-
-
 
 // #bugbug
 // Acho que essa rotina em rin0 não é usada!

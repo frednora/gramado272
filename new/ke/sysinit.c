@@ -1,5 +1,5 @@
 
-// init.c
+// sysinit.c
 
 #include <kernel.h>
 
@@ -115,25 +115,21 @@ void init_globals (void)
 //
 // == ps ==============================================
 //
-    // =========================================
-    // Process, Thread.
-    // See: kernel.h
+
+// =========================================
+// Process, Thread.
+// See: kernel.h
     
     foreground_process = (int) 0;
     foreground_thread  = (int) 0;
     current_process    = (int) 0;
     current_thread     = (int) 0;
 
-//
-// == Network ===================================
-//
-    // =========================================
-    // Initialize the ports table used by the socket infrastruture.
-    // todo: Create socket_init_gramado_ports();
-    for (i=0; i<GRAMADO_PORT_MAX; i++)
-    {
-        gramado_ports[i] = 0;
-    };
+// Network
+// Initialize the ports table used by the socket infrastruture.
+
+    socket_initialize_gramado_ports();
+
 
 
 //
@@ -313,7 +309,7 @@ int I_init (void)
 
     PROGRESS("Kernel:2:6\n"); 
     debug_print ("I_init: network [FIXME]\n");
-    //networkInit();
+    networkInit();
 
 // ==========================
 // Initialize Platform structure.

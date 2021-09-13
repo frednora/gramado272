@@ -427,9 +427,8 @@ void *gde_extra_services (
                 
                 // What is the process listen to the port 11.
                 // use this one: socket_set_gramado_port(...)
-                gramado_ports[GRAMADO_WS_PORT] = (int) current_process;
-                
-                
+                socket_set_gramado_port(GRAMADO_WS_PORT,(pid_t)current_process);
+
                 // #test
                 // QUANTUM
                 __maximize_process_quantum(arg3);
@@ -505,7 +504,7 @@ void *gde_extra_services (
             {
                 //register_wm_process(arg3);
                  __desktop->wm = (pid_t) arg3;
-                gramado_ports[GRAMADO_WM_PORT] = (int) current_process;
+                socket_set_gramado_port(GRAMADO_WM_PORT,(pid_t)current_process);
                 return (void *) TRUE;  //ok 
             }
         }

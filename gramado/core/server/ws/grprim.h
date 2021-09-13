@@ -470,6 +470,15 @@ void grDCColorChg (
 // Pixel
 int servicepixelBackBufferPutpixel (void);
 
+
+// interpolation
+unsigned int 
+interpolate_color(
+    unsigned int color1, 
+    unsigned int color2, 
+    unsigned int fraction );
+
+
 #endif    
 
 

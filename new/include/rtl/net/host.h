@@ -107,7 +107,7 @@ struct host_info_d
     int used;
     int magic;
 
-    // Número identificador dentro da rede interna.
+// Número identificador desse host dentro da rede interna.
     int hostIdentifier;
 
     char __hostname[HOST_NAME_MAX];
@@ -119,18 +119,18 @@ struct host_info_d
     unsigned short hostVersionRevision;
     int hostArchitecture; //identificador de tipo de arquitetura. ex: (x86)
 
-
-    //IP
+// IP
     char hostIP[3];
     char *hostIPString;
 
-    //MAC
+// MAC
     char hostMAC[6];
     char *hostMACString;
-	
-	//...
+
+    // ...
 };
-struct host_info_d *HostInfo;
+
+struct host_info_d  *HostInfo;
 //...
 
 #endif    

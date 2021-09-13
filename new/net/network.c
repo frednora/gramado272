@@ -231,33 +231,27 @@ int networkGetStatus (void)
 
 int networkInit (void)
 {
+    void *tmp_buffer_address;
+    int i=0;
+
     debug_print ("networkInit: [TODO] [FIXME]\n");
-    
-    // #debug
-    return 0;
+ 
+ // Status.
+    networkSetstatus(FALSE);
 
-    // =====================================================
-
-    // #importante
-    // Essa é a flag que indica que a última inicialização foi feita.
-    // Aquela chamada por processos inicializadores em ring3.
-    // Com essa flag acionada o handler do nic poderá
-    // decodificar o buffer, caso contrário deve ignorar.
+// =====================================================
+// #importante
+// Essa é a flag que indica que a última inicialização foi feita.
+// Aquela chamada por processos inicializadores em ring3.
+// Com essa flag acionada o handler do nic poderá
+// decodificar o buffer, caso contrário deve ignorar.
 
     ____network_late_flag=0;
 
 
-
-    //
-    // buffers:
-    // We will create 32 buffers to receive data and
-    // 8 buffers to send data.
-    //
-    
-    // 
-
-    void *nbuffer;
-    int i=0;
+// buffers:
+// We will create 32 buffers to receive data and
+// 8 buffers to send data.
 
     debug_print ("networkInit: [FIXME] Initializing buffers for the NIC controller.\n");
 
@@ -266,149 +260,119 @@ int networkInit (void)
 
     NETWORK_BUFFER.initialized = FALSE;
 
-    // =====================================
-    // receive buffers
+// =====================================
+// receive buffers
 
     for (i=0; i<32; i++)
     {
-        nbuffer = (void*) newPage();
+        tmp_buffer_address = (void*) newPage();
         
-        if ((void *)nbuffer == NULL){
-            panic("networkInit: [FAIL] receive nbuffer\n");
+        if ((void *)tmp_buffer_address == NULL){
+            panic("networkInit: [FAIL] receive tmp_buffer_address\n");
         }
-        NETWORK_BUFFER.receive_buffer[i] = (unsigned long) nbuffer;
+        NETWORK_BUFFER.receive_buffer[i] = (unsigned long) tmp_buffer_address;
         NETWORK_BUFFER.receive_status[i] = FALSE;  //EMPTY
     };
     NETWORK_BUFFER.receive_tail =0;
     NETWORK_BUFFER.receive_head =0;
 
-    // ========================================
-    // send buffers
+// ========================================
+// send buffers
 
     for (i=0; i<8; i++)
     {
-        nbuffer = (void*) newPage();
+        tmp_buffer_address = (void*) newPage();
         
-        if((void *)nbuffer == NULL){
-            panic("networkInit: [FAIL] send nbuffer\n");
+        if((void *)tmp_buffer_address == NULL){
+            panic("networkInit: [FAIL] send tmp_buffer_address\n");
         }
-        NETWORK_BUFFER.send_buffer[i] = (unsigned long) nbuffer;
+        NETWORK_BUFFER.send_buffer[i] = (unsigned long) tmp_buffer_address;
         NETWORK_BUFFER.send_status[i] = FALSE;  //EMPTY 
     };
     NETWORK_BUFFER.send_tail =0;
     NETWORK_BUFFER.send_head =0;
 
-    // flag.
+// =====================================
+
+// flag
     NETWORK_BUFFER.initialized = TRUE;
 
-    // =====================================
+// =====================================
 
-    // Status.
-    networkSetstatus(0);
 
-    // =====================================
-    
-    // Host info struct. 
-    // See: include/rtl/net/host.h
+// =====================================
+// Host info struct. 
+// See: include/rtl/net/host.h
+
     debug_print ("networkInit: HostInfo \n");
 
     HostInfo = (struct host_info_d *) kmalloc( sizeof( struct host_info_d ) ); 
-
     if ( (void *) HostInfo == NULL ){
         panic("networkInit: HostInfo\n");
-    }else{
+    }
 
-        // #todo object header
+//
+// hostname
+//
 
-        HostInfo->used  = TRUE;
-        HostInfo->magic = 1234;
+    //HostInfo->__hostname[0] = 'h';
+    //HostInfo->hostName_len = (size_t) HOST_NAME_MAX;
 
-        //
-        // hostname
-        //
+    sprintf(HostInfo->__hostname,"gramado");
+    HostInfo->hostName_len = (size_t) strlen("gramado");
+    if ( HostInfo->hostName_len >= HOST_NAME_MAX ){
+        panic("networkInit: hostname\n");
+    }
 
-        //HostInfo->__hostname[0] = 'h';
-        //HostInfo->hostName_len = (size_t) HOST_NAME_MAX;
+// Version
 
-        sprintf(HostInfo->__hostname,"gramado");
-        HostInfo->hostName_len = (size_t) strlen("gramado");
-        if ( HostInfo->hostName_len >= HOST_NAME_MAX )
-        {
-            panic("networkInit: hostname\n");
-        }
+    HostInfo->hostVersion = NULL;
 
+// #todo
+// Call some helpers to get these values.
+// Maybe the init process needs to setup these values.
+// It's because these values are found in files.
 
-        HostInfo->hostVersion = NULL;
+    HostInfo->hostVersionMajor    = 0;
+    HostInfo->hostVersionMinor    = 0; 
+    HostInfo->hostVersionRevision = 0;
 
-        // #todo
-        // Call some helpers to get these values.
-        // Maybe the init process needs to setup these values.
-        // It's because these values are found in files.
+// #todo
+// Where is this information?
+    HostInfo->hostArchitecture    = 0; 
 
-        HostInfo->hostVersionMajor    = 0;
-        HostInfo->hostVersionMinor    = 0; 
-        HostInfo->hostVersionRevision = 0;
-
-        // #todo
-        // Where is this information?
-
-        HostInfo->hostArchitecture    = 0; 
-
-        // ...
-    };
+    HostInfo->used  = TRUE;
+    HostInfo->magic = 1234;
 
 
-    //
-    // == Socket =============================================
-    //
+//
+// == Socket =============================================
+//
 
-	// Criando socket para local host porta 80;
-	// Localhost (127.0.0.1):80 
-	// Configurando soquete atual.
-	
-	debug_print ("networkInit: LocalHostHTTPSocket \n");
+// Criando socket para local host porta 80;
+// Localhost (127.0.0.1):80 
+// Configurando soquete atual.
+
+    debug_print ("networkInit: LocalHostHTTPSocket \n");
 
     LocalHostHTTPSocket = (struct socket_d *) create_socket_object();  
-
     if ( (void *) LocalHostHTTPSocket == NULL ){
         panic ("networkInit: Couldn't create LocalHostHTTPSocket\n");
-    }else{
+    }
 
-        LocalHostHTTPSocket->ip   = 0;
-        LocalHostHTTPSocket->port = 0;
-        // ...
-        
-        CurrentSocket = (struct socket_d *) LocalHostHTTPSocket;
-    };
+    CurrentSocket = (struct socket_d *) LocalHostHTTPSocket;
+ 
 
-	// ...
-
-    // ??
-    // What is this?
-    
+// Initializes the socket list.
     socket_init();
 
-	// Status
-    networkSetstatus(1);
+// Status
+    networkSetstatus(TRUE);
 
+//done:
     debug_print ("networkInit: done\n");
-    
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -1,12 +1,15 @@
 
+// x64mm.h
 
 #ifndef __X64MM_H
 #define __X64MM_H    1
 
 
-
 // The virtual address of the kernel pml4 table.
 unsigned long gKernelPML4Address; 
+
+
+
 
 // Some useful data for memory management.
 
@@ -113,8 +116,6 @@ unsigned long windowzoneSize;
  * funcionam como pools de frames.
  */
 
-
-//typedef struct page_directory_d page_directory_t;
 struct page_directory_d
 {
     object_type_t  objectType;
@@ -174,7 +175,6 @@ unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX];
  *          Tamb�m pode ser compartilhada entre processo.(cuidado).
  */
 
-//typedef struct page_table_d page_table_t;
 struct page_table_d
 {
     object_type_t  objectType;
@@ -344,7 +344,7 @@ unsigned long fsbFreeFrames[FSB_FREEFRAMES_MAX];
 //
 
 //Um framepool tem 4MB de tamanho.
-#define MEMORY_PARTITION_SIZE (4 * MB)
+#define MEMORY_PARTITION_SIZE   (4 * MB)
 
 
 
@@ -402,6 +402,7 @@ typedef enum {
 */
 
 
+
 /*
  * mmblockCount:
  *     mm block support.
@@ -410,7 +411,6 @@ typedef enum {
  */
 
 unsigned long mmblockCount;
-
 
 
 /*
@@ -447,7 +447,7 @@ struct process_memory_info_d
 	
     unsigned long WorkingSet;  //Working Set.
     unsigned long Private;     //Mem�ria n�o compartilhada. 
-    unsigned long Shared;	   //Mem�ria compartilhada.
+    unsigned long Shared;      //Mem�ria compartilhada.
 	//...
 	
 	
@@ -542,21 +542,20 @@ struct memory_info_d *miMemoryInfo;
  *****************************************************************
  */ 
 
+// Essa estrutura � para gerenciar �reas de mem�ria alocadas dinamicamente 
+// dentro do heap do processo kernel. Alocadas em tempo de eecu��o.
+// @todo: 
+// Talvez n�o seja poss�vel mudar essa estrutura. �la � diferente.
+// Portanto n�o definiremos inada o tipo de objeto que ela � e nem a classe.
 
 struct mmblock_d 
 {
-	
-	// Essa estrutura � para gerenciar �reas de mem�ria alocadas dinamicamente 
-	// dentro do heap do processo kernel. Alocadas em tempo de eecu��o.
-	
-	// @todo: 
-	// Talvez n�o seja poss�vel mudar essa estrutura. �la � diferente.
-	// Portanto n�o definiremos inada o tipo de objeto que ela � e nem a classe.
-	
+
+
 	//object_type_t objectType;
 	//object_class_t objectClass;
-	
-    //Identificadores.	
+
+    //Identificadores.
 	unsigned long Header;      //Endere�o onde come�a o header do heap. *Importante.
 	unsigned long headerSize;  //Tamanho do header em bytes.
 	unsigned long Id;          //Id do header.
@@ -565,13 +564,13 @@ struct mmblock_d
 	
 	//Status.
 	unsigned long Free;           //Se o bloco esta livre ou n�o.
-	
-	//Mensuradores. (sizes).	
+
+	//Mensuradores. (sizes).
 	unsigned long requestSize;    //Tamanho, em bytes, da �rea solicitada.
 	unsigned long unusedBytes;    //Quantidade de bytes n�o usados na �rea do cliente.	
 	unsigned long userareaSize;   //Tamanho da �rea reservada para o cliente. 
-	                              //(request size + unused bytes). 
-								  
+                                  //(request size + unused bytes). 
+
 	//@todo: 
     //    Incluir quando poss�vel.
     // Lembrando que talvez o tamanho dessa estrutura seja fixo.
@@ -861,12 +860,10 @@ unsigned long g_kernel_nonpaged_memory;
 
 // Tipo de sistema baseado no tamanho da memoria.
 typedef enum {
-
     stNull,
     stSmallSystem,
     stMediumSystem,
     stLargeSystem,
-
 }mm_system_type_t;
 
 
@@ -928,6 +925,9 @@ unsigned long LARGE_extraheap3_pa;
 //extended = retornada pelo cmos.
 //total    = base + other + extended.
 
+// alias
+unsigned long memorysizeBaseMemoryViaCMOS;
+
 unsigned long memorysizeBaseMemory;
 unsigned long memorysizeOtherMemory;
 unsigned long memorysizeExtendedMemory;
@@ -938,13 +938,10 @@ unsigned long memorysizeInstalledPhysicalMemory;
 unsigned long memorysizeTotalPhysicalMemory;
 unsigned long memorysizeAvailablePhysicalMemory;
 
-//??
-// Quantidade de mem�ria em uso.
+// Used
 unsigned long memorysizeUsed;
 
-//??
-//Quantidade de mem�ria livre.
-// ? = total - used.
+// Free
 unsigned long memorysizeFree;
 
 

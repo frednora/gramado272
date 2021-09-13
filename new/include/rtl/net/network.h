@@ -50,6 +50,13 @@ struct network_device_d
 
 struct network_buffer_d
 {
+
+    int initialized;
+
+//
+// Receive
+//
+
     int receive_tail;
     int receive_head;
     unsigned long receive_buffer[32];
@@ -58,6 +65,11 @@ struct network_buffer_d
     // O status de cada buffer, se ele está vazio ou não.
     int receive_status[32];
 
+
+//
+// Send
+//
+
     int send_tail;
     int send_head;
     unsigned long send_buffer[8];
@@ -65,8 +77,6 @@ struct network_buffer_d
     // #test
     // O status de cada buffer, se ele está vazio ou não.
     int send_status[8];
-
-    int initialized;
 };
 
 struct network_buffer_d  NETWORK_BUFFER;
