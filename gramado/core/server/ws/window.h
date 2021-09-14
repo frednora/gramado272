@@ -1114,7 +1114,8 @@ struct gws_window_d  *__root_window;
 // If the window server has a taskbar.
 // maybe we don't need that.
 struct gws_window_d  *__taskbar_window; 
-struct gws_window_d  *__taskbar_button; 
+struct gws_window_d  *__taskbar_startmenu_button_window; 
+//char startmenu_string[32];
 
 struct gws_window_d  *keyboard_window;  // keyboard focus.
 struct gws_window_d  *mouse_window;     // ??

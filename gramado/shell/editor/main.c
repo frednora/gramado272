@@ -468,7 +468,7 @@ int main ( int argc, char *argv[] ){
     button = gws_create_window ( 
                  client_fd,
                  WT_BUTTON,1,1,"Save",
-                 (( w_width/8 )*6), 32 +4,     //(w-100-4), 4, //(640-100), 4, 
+                 (( w_width/8 )*6), 32 +4,
                  (( w_width/8 )*1), 32,
                  main_window, 0, COLOR_GRAY, COLOR_GRAY );
 

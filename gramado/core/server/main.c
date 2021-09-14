@@ -1243,7 +1243,7 @@ void create_taskbar (void)
                                             "TaskBar",  
                                             0, h-40, w, 40,   
                                             gui->screen_window, 0, 
-                                            COLOR_RED, COLOR_RED );    
+                                            COLOR_GRAY, COLOR_GRAY );    
 
 
     // #debug
@@ -1257,16 +1257,12 @@ void create_taskbar (void)
         //return;
     }
 
-    /*
-    // #debug
-    if ( __root_window->used != TRUE || __root_window->magic != 1234 )
+    if ( __taskbar_window->used != TRUE || __taskbar_window->magic != 1234 )
     {
-        gwssrv_debug_print ("create_background: __root_window validation\n"); 
-        printf             ("create_background: __root_window validation\n");
+        gwssrv_debug_print ("create_background: __taskbar_window validation\n"); 
+        printf             ("create_background: __taskbar_window validation\n");
         exit(1);
-        //return;
     }
-    */
 
 // Register
     WindowId = RegisterWindow(__taskbar_window);
@@ -1276,8 +1272,56 @@ void create_taskbar (void)
         printf             ("create_taskbar: Couldn't register window\n");
         exit(1);
     }
+    __taskbar_window->id = WindowId;
+
+    flush_window(__taskbar_window);
+    
+// =======================================================
+// start menu button
+
+    // create the button
+    __taskbar_startmenu_button_window = (struct gws_window_d *) CreateWindow ( 
+                                            WT_BUTTON, 
+                                            0, //style
+                                            1, //status 
+                                            1, //view
+                                            "Start",  
+                                            4, 4, 52, 28,   
+                                            __taskbar_window, 
+                                            0, 
+                                            COLOR_GRAY, COLOR_GRAY );    
+
+    if ( (void *) __taskbar_startmenu_button_window == NULL )
+    {
+        gwssrv_debug_print ("create_taskbar: __taskbar_startmenu_button_window\n"); 
+        printf             ("create_taskbar: __taskbar_startmenu_button_window\n");
+        exit(1);
+    }
+
+    if ( __taskbar_startmenu_button_window->used != TRUE || __taskbar_startmenu_button_window->magic != 1234 )
+    {
+        gwssrv_debug_print ("create_background: __taskbar_startmenu_button_window validation\n"); 
+        printf             ("create_background: __taskbar_startmenu_button_window validation\n");
+        exit(1);
+    }
+
+    int menu_wid; //provisorio
+// Register
+    menu_wid = RegisterWindow(__taskbar_startmenu_button_window);
+    if (menu_wid<0)
+    {
+        gwssrv_debug_print ("create_taskbar: Couldn't register __taskbar_window\n");
+        printf             ("create_taskbar: Couldn't register __taskbar_window\n");
+        exit(1);
+    }
+
+    flush_window(__taskbar_startmenu_button_window);
 
 
+// =======================================================
+
+    //while(1){}
+    
     //#debug
     //asm ("int $3");
 

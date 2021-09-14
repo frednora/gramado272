@@ -3915,8 +3915,17 @@ int get_window_tid( struct gws_window_d *window)
 void wm_Update_TaskBar( char *string )
 {
     redraw_window(__taskbar_window,TRUE);
-    dtextDrawText(__taskbar_window,8,8,COLOR_YELLOW,string);
-    gws_show_window_rect(__taskbar_window);
+    redraw_window(__taskbar_startmenu_button_window,TRUE);
+
+// text
+    dtextDrawText(
+        __taskbar_window,
+        100,
+        8,
+        COLOR_YELLOW,
+        string );
+
+    flush_window(__taskbar_window);
 }
 
 //
