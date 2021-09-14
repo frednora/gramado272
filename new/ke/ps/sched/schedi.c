@@ -724,6 +724,73 @@ void yield (int tid){
 
 
 
+void set_input_responder_tid(int tid)
+{
+    if( tid < 0 )
+        return;
+
+    if( tid >= THREAD_COUNT_MAX )
+        return;
+
+    // #todo
+    // We can check the struct validation
+
+// Set tid
+    input_responder_tid = (int) tid;
+
+// Set flag
+    flagUseThisInputResponder = TRUE;
+}
+
+
+
+// Let's check if one thread was selected to run imediatly
+// because we had an input event.
+// This way the reponder doesn't deed to wait the end 
+// of the round to run.
+
+// OUT:
+//  -1: No thread was selected
+// tid: The tid of the selected thread.
+
+int check_for_input_responder(void)
+{
+    struct thread_d *t;
+
+
+// No responder
+    if (flagUseThisInputResponder != TRUE )
+        return -1;
+
+    if( input_responder_tid < 0 )
+        return -1;
+
+    if( input_responder_tid >= THREAD_COUNT_MAX )
+        return -1;
+
+    t = (struct thread_d *) threadList[input_responder_tid];
+
+    if( (void*) t == NULL )
+        return -1;
+
+    if (t->used!=TRUE)
+        return -1;
+
+    if (t->magic!=1234)
+        return -1;
+
+// Cut the round
+// This way the scheduler will be called.
+
+    t->next = NULL;
+
+done:
+    flagUseThisInputResponder = FALSE;
+    // Return a valid tid
+    return (int) input_responder_tid;
+}
+
+
 /*
  * check_for_standby:
  *

@@ -297,6 +297,11 @@ int init_scheduler (unsigned long sched_flags)
 
     scheduler_lock();
 
+// Input responder.
+    flagUseThisInputResponder = FALSE;
+    input_responder_tid = -1;
+
+
 //
 // Scheduler policies
 //

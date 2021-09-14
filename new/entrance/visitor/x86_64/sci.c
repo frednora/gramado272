@@ -1988,6 +1988,8 @@ void *sci2 (
         t->quantum = QUANTUM_FIRST_PLANE;
         t->priority = PRIORITY_MAX;
         foreground_thread = (int) arg2;
+        // it will select the next input reponder.
+        set_input_responder_tid(foreground_thread);
         return NULL;
     }
 

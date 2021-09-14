@@ -1266,6 +1266,7 @@ do_select:
         return;
 
 // Pede para o kernel mudar a foreground thread.
+// Seleciona o pr'oximo input reponder.
     sc82 (
         10011,
         next->client_tid,
@@ -1379,6 +1380,18 @@ __add_message_to_into_the_queue(
         (int) window->client_tid, 
         (unsigned long) &message_buffer[0] );
 
+
+// Pede para o kernel mudar a foreground thread.
+// Seleciona o proximo input reponder.
+// #danger: 
+// Lembrando que vamos fazer um interrupçao estando dentro 
+// do handler da interrupçao de teclado.
+
+    sc82 (
+        10011,
+        window->client_tid,
+        window->client_tid,
+        window->client_tid);
 
 //done:
     debug_print("__add_message_to_into_the_queue: done\n");
@@ -2658,12 +2671,32 @@ redraw_window (
     gwssrv_debug_print ("redraw_window: Type Button\n");
     if ( (unsigned long) window->type == WT_BUTTON )
     {
-
+        //if ( (void*) window->parent == NULL )
+            //printf("redraw_window: [FAIL] window->parent\n");
+        
+        
+        /*
+        if ( (void*) window->parent != NULL )
+        {
+           wmDrawFrame ( 
+            (struct gws_window_d *) window->parent,  //parent.
+            (struct gws_window_d *) window,      //bg do botão em relação à sua parent. 
+            METRICS_BORDER_SIZE,       //border size
+            (unsigned int)COLOR_BLACK, //border color 1
+            (unsigned int)COLOR_BLACK, //border color 2
+            (unsigned int)COLOR_BLACK, //border color 3
+            (unsigned int)COLOR_BLACK, //ornament color 1
+            (unsigned int)COLOR_BLACK, //ornament color 2
+            1 );  //style
+        }
+        */
+        
         //border color
         //o conceito de status e state
         //está meio misturado. ja que estamos usando
         //a função de criar janela para criar botão.
         //#bugbug
+        
         switch( window->status )
         {
             case BS_FOCUS:
@@ -2695,12 +2728,13 @@ redraw_window (
                 border2 = GWS_COLOR_BUTTONSHADOW3;
                 break;
         };
+        
 
-
+        
         size_t tmp_size = (size_t) strlen ( (const char *) window->name );
         unsigned long offset = 
         ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) / 2 );
-       
+         
 
         //#debug
         //if ( (void*) window->parent == NULL ){
@@ -2711,6 +2745,7 @@ redraw_window (
         //if ( (void*) window->parent != NULL )
         //{
 
+            
             //board1, borda de cima e esquerda.
             rectBackbufferDrawRectangle ( 
                 window->left, window->top,  
@@ -2732,9 +2767,10 @@ redraw_window (
                  window->left, (window->top) + (window->height) -1,  
                  (window->width), 1, 
                  border2, 1, 0 );
-
+             
+             
             // Button label
-            gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
+            //gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
             /*
             if (Selected == 1){
                 grDrawString ( 

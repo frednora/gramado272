@@ -28,6 +28,7 @@ void task_switch (void)
 
     pid_t pid = -1;
 
+    int tmp_tid = -1;
 
 //
 // Current thread
@@ -294,9 +295,23 @@ The remainder ??
                 check_for_dead_thread_collector();
             }
 
-//
-// == Spawn thread ===============
-//
+
+
+            // Get a input responder if we have one.
+            // We will receive a valid tid.
+            // See: schedi.c
+
+            tmp_tid = (int) check_for_input_responder();
+            if( tmp_tid >= 0 && tmp_tid < THREAD_COUNT_MAX )
+            {
+                current_thread = (int) tmp_tid;
+                goto dispatch_current;
+            }
+            
+            //
+            // == Spawn thread ===============
+            //
+            
             // Check for a thread in standby.
             // In this case, this routine will not return.
             // See: ts/sched/schedi.c

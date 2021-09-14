@@ -82,6 +82,16 @@ unsigned long schedulerQueue[4];
 
 
 
+// ==========================================
+// Input responder
+// See: schedi.c
+int flagUseThisInputResponder;
+int input_responder_tid;
+int check_for_input_responder(void);
+void set_input_responder_tid(int tid);
+// ==========================================
+
+
 //
 // == prototypes ============
 //
