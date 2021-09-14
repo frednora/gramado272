@@ -279,25 +279,24 @@ struct gws_surface_d *xxxCreateSurface(
 void demoTerry(void)
 {
 
-
-     gwsCreateWindow ( 
+    CreateWindow ( 
          WT_SIMPLE, 
          0,  //style
          1,  //status
          1,  //view
-         "terry0",  
+         "demoTerry",  
          40-8, 40-8, 200+8+8, 320+8+8,   
          gui->screen_window, 0, 
          COLOR_WHITE, COLOR_WHITE );
 
 
      struct gws_window_d *terry;
-     terry = (struct gws_window_d *) gwsCreateWindow ( 
+     terry = (struct gws_window_d *) CreateWindow ( 
          WT_SIMPLE, 
          0,  //style
          1,  //status
          1,  //view
-         "terry",  
+         "demoTerry-2",  
          40, 40, 200, 320,   
          gui->screen_window, 0, 
          COLOR_WHITE, COLOR_WHITE );
@@ -880,6 +879,8 @@ void *xxxCreateWindow (
     }
     Parent = (void *) pWindow;
     window->parent = Parent;
+    window->child_list = NULL;
+
 
 // ===================================
 
@@ -1117,10 +1118,11 @@ void *xxxCreateWindow (
 		// backbuffer and front buffer.
 		//window->BackBuffer = (void *) g_backbuffer_va;
 		//window->FrontBuffer = (void *) g_frontbuffer_pa;
-		
-		
-	//Child window linked list.
-    window->childListHead = NULL;
+
+
+// The child list
+
+    window->child_list = NULL;
 
 
 //
@@ -1875,7 +1877,7 @@ void *xxxCreateWindow (
 
 // #todo: change name to 'const char *'
 
-void *gwsCreateWindow ( 
+void *CreateWindow ( 
     unsigned long type, 
     unsigned long style,
     unsigned long status, 
@@ -1902,8 +1904,7 @@ void *gwsCreateWindow (
     int ValidType=FALSE;
 
 
-
-    gwssrv_debug_print ("gwsCreateWindow: :)\n");
+    gwssrv_debug_print ("CreateWindow: :)\n");
 
 
 // See:
@@ -1928,7 +1929,7 @@ void *gwsCreateWindow (
     };
 
     if ( ValidType == FALSE ){
-        gwssrv_debug_print ("gwsCreateWindow: Invalid type\n");
+        gwssrv_debug_print ("CreateWindow: Invalid type\n");
         return NULL;
     }
 
@@ -1982,38 +1983,16 @@ void *gwsCreateWindow (
                            __rop_flags ); 
 
          if ( (void *) __w == NULL ){
-             gwssrv_debug_print ("gwsCreateWindow: xxxCreateWindow fail \n");
+             gwssrv_debug_print ("CreateWindow: xxxCreateWindow fail \n");
              return NULL;
          }
 
         // Pintamos simples, mas a tipagem será overlapped.
-        __w->type = WT_OVERLAPPED;   
+        __w->type = WT_OVERLAPPED;
 
-        // #todo: use a worker for that routine. 
-        
-        // Se essa for a primeira janela da lista.
-        // Não usaremos a rootwindow, pois não é overlapped.
-        if ( (void*) last_window == NULL )
-        {
-            first_window = (struct gws_window_d *) __w;
-            last_window  = (struct gws_window_d *) __w;
-            
-            //activate.
-            set_active_window(__w->id);
-            goto draw_frame;
-        }
+        wm_add_window_into_the_list(__w);
+        set_active_window(__w->id);
 
-        // Não é a primeira.
-        if ( (void*) last_window != NULL )
-        {
-            last_window->next = (struct gws_window_d *) __w;
-            last_window = (struct gws_window_d *)last_window->next;
-            last_window->next = NULL;
-            
-            //activate.
-            set_active_window(__w->id);
-        }
-        
         goto draw_frame;
     }
 
@@ -2038,7 +2017,7 @@ void *gwsCreateWindow (
                            desktopid, clientcolor, color, 0 ); 
 
          if ( (void *) __w == NULL ){
-             gwssrv_debug_print ("gwsCreateWindow: xxxCreateWindow fail \n");
+             gwssrv_debug_print ("CreateWindow: xxxCreateWindow fail \n");
              return NULL;
          }
 
@@ -2054,7 +2033,7 @@ void *gwsCreateWindow (
     //button
     if ( type == WT_BUTTON )
     {
-        gwssrv_debug_print ("[DEBUG]: gwsCreateWindow WT_BUTTON\n");
+        gwssrv_debug_print ("[DEBUG]: CreateWindow WT_BUTTON\n");
       
         //if ( (void*) pWindow == NULL ){ return NULL; }
 
@@ -2070,7 +2049,7 @@ void *gwsCreateWindow (
                            desktopid, clientcolor, color, 0 ); 
 
          if ( (void *) __w == NULL ){
-             gwssrv_debug_print ("gwsCreateWindow: xxxCreateWindow fail \n");
+             gwssrv_debug_print ("CreateWindow: xxxCreateWindow fail \n");
              return NULL;
          }
 
@@ -2093,7 +2072,7 @@ void *gwsCreateWindow (
                            desktopid, clientcolor, color, 0 );  
 
          if ( (void *) __w == NULL ){
-             gwssrv_debug_print ("gwsCreateWindow: xxxCreateWindow fail \n");
+             gwssrv_debug_print ("CreateWindow: xxxCreateWindow fail \n");
              return NULL;
          }
 
@@ -2103,7 +2082,7 @@ void *gwsCreateWindow (
 
 //type_fail:
 
-    gwssrv_debug_print ("gwsCreateWindow: [FAIL] type \n");
+    gwssrv_debug_print ("CreateWindow: [FAIL] type \n");
     return NULL;
     
     
@@ -2185,8 +2164,8 @@ draw_frame:
 //
 // level
 //
-    
-    // #test
+
+// #test
     
     if ( (void*) pWindow != NULL )
     {
@@ -2206,7 +2185,7 @@ draw_frame:
     __w->dirty = TRUE;
 
 //done:
-    gwssrv_debug_print ("gwsCreateWindow: done\n");
+    gwssrv_debug_print ("CreateWindow: done\n");
     return (void *) __w;
 }
 

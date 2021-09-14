@@ -73,17 +73,50 @@ unsigned long savedH=0;
 int gws (void);
 
 
+int game_status;
 
 // area de jogo
 int game_window;
-int player_x;
-int player_y;
 int game_width;
 int game_height;
+int player_x;
+int player_y;
+int prize_x;
+int prize_y;
+
+
 
 // barra de status
 int status_window;
 
+
+void init_cursor(int fd)
+{
+    player_x = game_width >> 1;
+    player_y = game_height >> 1;
+
+    gws_draw_char ( 
+        fd, 
+        game_window, 
+        player_x, 
+        player_y, 
+        COLOR_RED, 
+        'g' );
+}
+
+void init_prize(int fd)
+{
+    prize_x = (rand() % 50) << 3;
+    prize_y = (rand() % 50) << 3;
+
+    gws_draw_char ( 
+        fd, 
+        game_window, 
+        prize_x, 
+        prize_y, 
+        COLOR_RED, 
+        '+' );
+}
 
 void gameTestASCIITable(int fd,unsigned long w, unsigned long h)
 {
@@ -105,14 +138,62 @@ void gameTestASCIITable(int fd,unsigned long w, unsigned long h)
 }
 
 
+void you_win(int fd)
+{
+    printf("You win!\n");
+    gws_clone_and_execute("fileman.bin");
+    game_status = FALSE;
+}
+
+
+void check_victory(int fd)
+{
+    int p1 = prize_x - 10;
+    int p2 = prize_x + 10;
+
+    int p3 = prize_y - 10;
+    int p4 = prize_y + 10;
+
+    if (game_status != TRUE)
+        return;
+
+    if ( player_x > p1 && player_x < p2 && 
+         player_y > p3 && player_y < p4 )
+    {
+        you_win(fd);
+    }
+}
+
+void game_redraw(int fd)
+{
+    gws_redraw_window(fd, game_window, TRUE); 
+    gws_redraw_window(fd, status_window, TRUE);
+    gws_refresh_window(fd, game_window);
+    init_cursor(fd);
+    init_prize(fd);
+}
+
+
+void game_reinitialize(int fd)
+{
+    int status=0;
+    status=gameInitialize(fd,game_width,game_height);
+    if(status<0)
+        printf("game_reinitialize: fail\n");
+}
+
+
 //
 // initialize 'game' support.
 //
 
 int gameInitialize(int fd,unsigned long w, unsigned long h)
 {
-    player_x = 0;
-    player_y = 0;
+
+    game_status = FALSE;
+
+    init_cursor(fd);
+    init_prize(fd);
 
     // Test
     // O refresh da tela faz à cada letra, 
@@ -143,18 +224,32 @@ int gameInitialize(int fd,unsigned long w, unsigned long h)
     
     //...
     
+    
+    game_status = TRUE;
+
     return 0;
 }
 
-void updateStatusBar(int fd,unsigned long w, unsigned long h, int first_number, int second_number)
-{
-    gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_BLUE, 127 );
-    gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_BLUE, 127 );
-    
-    gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_YELLOW, first_number );
-    gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
 
+void 
+updateStatusBar(
+    int fd,
+    unsigned long w, 
+    unsigned long h, 
+    int first_number, 
+    int second_number)
+{
+
+// first box
+    gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_BLUE, 127 );
+// second box
+    gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_BLUE, 127 );
+// first number
+    gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_YELLOW, first_number );
+// second number
+    gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
 }
+
 
 // initialize via AF_GRAMADO.
 // Ainda nao podemos mudar isso para a lib, pois precisamos
@@ -307,12 +402,16 @@ gwsProcedure (
                     updateStatusBar(fd,savedW,savedH,0, 'D');
                     goto done; 
                     break;
+                
+                case '1':
+                    updateStatusBar(fd,savedW,savedH,'x','x');
+                    goto done;
+                    break;
  
-                // #bugbug: It does't work.
-                //case '1': 
-                    //gws_redraw_window(fd, game_window, 1); 
-                    //gws_refresh_window(fd, game_window);
-                    //break;
+                case '2': 
+                    game_redraw(fd);
+                    goto done;
+                    break;
                 
                 default:
                     printf("%c",long1); fflush(stdout);
@@ -383,6 +482,9 @@ gwsProcedure (
     // consumiu o evento passado à ele.
 
 done:
+
+    check_victory(fd);
+
     //return TRUE;
     return (int) gws_default_procedure(fd,0,msg,long1,long2);
 }
@@ -394,8 +496,10 @@ done:
 int main ( int argc, char *argv[] )
 {
 
-    // # config
+// #config
+
     int ShowCube = FALSE;
+    int launchChild = TRUE;
     // ...
 
 
@@ -680,84 +784,78 @@ int main ( int argc, char *argv[] )
     // Maybe the custon status bar can be a window.
 
     gws_debug_print ("gws.bin: 4 Testing Plot cube \n");
-    //printf          ("gws.bin: 4 Testing Plot cube \n");
+    //printf        ("gws.bin: 4 Testing Plot cube \n");
 
-    
-    int backLeft   = (-(w/4)); 
-    int backRight  =   (w/4);
-    int backTop    = (h/2);
-    int backBottom = (h/2) - 32;
-    
-    int frontLeft   = (-(w/2)); 
-    int frontRight  =   (w/2);
-    int frontTop    = -((h/2) - 32);
-    int frontBottom = -(h/2);
-    
 
-    /*
-    int backLeft   =  -100;
-    int backRight  =  -50;
-    int backTop    =   0;
-    int backBottom =  -50;
-    int frontLeft   = -300; 
-    int frontRight  = -200;
-    int frontTop    = -100;
-    int frontBottom = -200;
-    */
+// back
+    int backLeft   = (-(w/8)); 
+    int backRight  =   (w/8);
+    int backTop    = (60);
+    int backBottom = (10);
 
+// front
+    int frontLeft   = (-(w/8)); 
+    int frontRight  =   (w/8);
+    int frontTop    = -(10);
+    int frontBottom = -(60);
+
+// z ?
     int zTest = 0;
+    
+    int north_color = COLOR_RED;
+    int south_color = COLOR_BLUE;
 
-    struct gr_cube_d *cube;
+    struct gr_cube_d  *cube;
     cube = (void *) malloc( sizeof( struct gr_cube_d ) );
 
     //int Count=0;
     //for (Count=0; Count<100; Count = Count+10 ){
-    //zTest = zTest - 10;
+    //zTest = zTest + 10;
     if ( (void*) cube != NULL )
     {
         // =========
         // south (frente) 
-        cube->p[0].x = frontLeft; //-140;
-        cube->p[0].y = frontTop;  //-90;
+        cube->p[0].x = frontLeft; 
+        cube->p[0].y = frontTop; 
         cube->p[0].z = zTest;
-        cube->p[0].color = COLOR_YELLOW;
+        cube->p[0].color = south_color;
         
-        cube->p[1].x = frontRight; //140;
-        cube->p[1].y = frontTop;   //-90;
+        cube->p[1].x = frontRight; 
+        cube->p[1].y = frontTop;
         cube->p[1].z = zTest;
-        cube->p[1].color = COLOR_YELLOW;
+        cube->p[1].color = south_color;
         
-        cube->p[2].x = frontRight;  //140;
-        cube->p[2].y = frontBottom; //-100;
+        cube->p[2].x = frontRight;
+        cube->p[2].y = frontBottom;
         cube->p[2].z = zTest;
-        cube->p[2].color = COLOR_YELLOW;
+        cube->p[2].color = south_color;
         
-        cube->p[3].x = frontLeft;   //-140;
-        cube->p[3].y = frontBottom; //-100;
+        cube->p[3].x = frontLeft;
+        cube->p[3].y = frontBottom; 
         cube->p[3].z = zTest;
-        cube->p[3].color = COLOR_YELLOW;
+        cube->p[3].color = south_color;
 
         // ===========
         // north (trás)
-        cube->p[4].x = backLeft; //-140;
-        cube->p[4].y = backTop; //-90;
+        cube->p[4].x = backLeft;
+        cube->p[4].y = backTop;
         cube->p[4].z = zTest;
-        cube->p[4].color = COLOR_GREEN;
+        cube->p[4].color = north_color;
         
         cube->p[5].x = backRight; //140;
         cube->p[5].y = backTop; //-90;
         cube->p[5].z = zTest;
-        cube->p[5].color = COLOR_GREEN;
+        cube->p[5].color = north_color;
         
-        cube->p[6].x = backRight;  //140;
-        cube->p[6].y = backBottom; //-100;
+        cube->p[6].x = backRight;
+        cube->p[6].y = backBottom;
         cube->p[6].z = zTest;
-        cube->p[6].color = COLOR_GREEN;
+        cube->p[6].color = north_color;
         
-        cube->p[7].x = backLeft; //-140;
-        cube->p[7].y = backBottom; //-100;
+        cube->p[7].x = backLeft;
+        cube->p[7].y = backBottom;
         cube->p[7].z = zTest;
-        cube->p[7].color = COLOR_GREEN;
+        cube->p[7].color = north_color;
  
         // plot cube 
         if (ShowCube==TRUE){
@@ -939,12 +1037,15 @@ int main ( int argc, char *argv[] )
 // Podemos nesse momento ler alguma configuração
 // que nos diga qual interface devemos inicializar.
 
+    if(launchChild == TRUE){
+
 // Interface 1: File manager.
     gws_clone_and_execute("fileman.bin");
 
 // Interface 1: Test app.
     //gws_clone_and_execute("editor.bin");
 
+    }
 
 //
 // Input

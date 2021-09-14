@@ -162,7 +162,7 @@ void __update_fps(void)
  * 
  */
 
-// Called by gwsCreateWindow in createw.c
+// Called by CreateWindow in createw.c
 
 // #importante:
 // Essa rotina será chamada depois que criarmos uma janela básica,
@@ -513,7 +513,7 @@ wmDrawFrame (
             tbWindow->type = WT_SIMPLE;
             window->titlebar = tbWindow;
             // Register window
-            id = gwsRegisterWindow(tbWindow);
+            id = RegisterWindow(tbWindow);
             if (id<0){
                 gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
                 return -1;
@@ -617,7 +617,7 @@ wmDrawFrame (
             sbWindow->type = WT_SIMPLE;
             window->statusbar = sbWindow;
             // Register window
-            id = gwsRegisterWindow(tbWindow);
+            id = RegisterWindow(tbWindow);
             if (id<0){
                 gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
                 return -1;
@@ -806,7 +806,7 @@ void wmRefreshDirtyRectangles(void)
     {
         if ( __root_window->magic == 1234 )
         {
-                //gwssrv_redraw_window(tmp,FALSE);  //bugbug
+                //redraw_window(tmp,FALSE);  //bugbug
                 grDrawString(
                     __root_window->left, 
                     __root_window->top,
@@ -852,7 +852,7 @@ void wmRefreshDirtyRectangles(void)
                     // draw and invalidate.
                     //if (  tmp != __root_window )
                     //{
-                        //gwssrv_redraw_window(tmp,FALSE);  //bugbug
+                        //redraw_window(tmp,FALSE);  //bugbug
                         //invalidate_window(tmp);
                     //}
                     
@@ -860,7 +860,7 @@ void wmRefreshDirtyRectangles(void)
                     //{
                         //grDrawString(tmp->left,tmp->top,COLOR_GREEN,"x");
                         //tmp->bg_color = COLOR_GREEN;
-                        //gwssrv_redraw_window(tmp,FALSE);
+                        //redraw_window(tmp,FALSE);
                         //invalidate_window(tmp);
                     //}
                 }
@@ -897,7 +897,15 @@ void wm_update_desktop(void)
 {
     struct gws_window_d *w;
 
+
+// Root window
+    redraw_window(__root_window,TRUE);
+
+
     w = (struct gws_window_d *) first_window;
+
+    if ((void*)w==NULL)
+        return;
 
     while(1){
         
@@ -906,18 +914,108 @@ void wm_update_desktop(void)
         // Just draw, don't show.
         if( (void*) w != NULL )
         {
-            gwssrv_redraw_window(w,FALSE);
+            redraw_window(w,FALSE);
             invalidate_window(w);
         }
-        
+
         w = (struct gws_window_d *) w->next; 
     }; 
+
+    wm_Update_TaskBar("Gramado");
 }
+
+
+void set_focus(struct gws_window_d *window)
+{
+    if( (void*) window == NULL )
+        return;
+
+    if ( window->used != TRUE )
+        return;
+
+    if ( window->magic != 1234 )
+        return;
+
+// global variable
+
+    window_with_focus = window->id;
+
+// Pede para o kernel mudar a foreground thread.
+    sc82 (
+        10011,
+        window->client_tid,
+        window->client_tid,
+        window->client_tid);
+}
+
+void set_first_window( struct gws_window_d *window)
+{
+    first_window = (struct gws_window_d *) window;
+}
+
+struct gws_window_d *get_first_window(void)
+{
+    return (struct gws_window_d *) first_window;
+}
+
+
+void set_last_window( struct gws_window_d *window )
+{
+    if( (void*) window == NULL )
+         return;
+
+    wm_add_window_into_the_list(window);
+}
+
+
+struct gws_window_d *get_last_window(void)
+{
+    return (struct gws_window_d *) last_window;
+}
+
+
+void activate_first_window(void)
+{
+    if( (void*) first_window == NULL )
+        return;
+
+    if ( first_window->used != TRUE )
+        return;
+
+    if ( first_window->magic != 1234 )
+        return;
+
+    if ( first_window->type != WT_OVERLAPPED )
+        return;
+
+    set_active_window(first_window->id);
+}
+
+
+void activate_last_window(void)
+{
+    if( (void*) last_window == NULL )
+        return;
+
+    if ( last_window->used != TRUE )
+        return;
+
+    if ( last_window->magic != 1234 )
+        return;
+
+    if ( last_window->type != WT_OVERLAPPED )
+        return;
+
+    set_active_window(last_window->id);
+}
+
 
 
 // not tested yet
 void wm_add_window_into_the_list( struct gws_window_d *window)
 {
+    struct gws_window_d  *Next;
+
 
     if( (void*) window == NULL )
         return;
@@ -931,27 +1029,29 @@ void wm_add_window_into_the_list( struct gws_window_d *window)
     if ( window->type != WT_OVERLAPPED )
         return;
 
-// Se essa for a primeira janela da lista.
-// Não usaremos a rootwindow, pois não é overlapped.
-    if ( (void*) last_window == NULL )
+
+    Next = first_window;
+
+// somos a primeira da lista
+    if( (void*) Next == NULL )
     {
-        first_window = (struct gws_window_d *) window;
-        last_window  = (struct gws_window_d *) window;
-        //activate
-        set_active_window(window->id);
-        return;
+        first_window = window;
+        last_window  = window;
+        goto done;
     }
 
-// Não é a primeira.
-    if ( (void*) last_window != NULL )
+    while( (void*) Next->next != NULL)
     {
-        last_window->next = (struct gws_window_d *) window;
-        last_window = (struct gws_window_d *)last_window->next;
-        last_window->next = NULL;
-        //activate
-        set_active_window(window->id);
-    }
+        Next = Next->next;
+    };
+
+    Next->next = (struct gws_window_d *) window;
+
+done:
+    window->next = NULL;
+    set_active_window(window->id);
 }
+
 
 
 // not tested yet
@@ -970,7 +1070,6 @@ void wm_remove_window_from_list_and_kill( struct gws_window_d *window)
 
     while(1)
     {
-
         if( (void*) w == NULL )
             break;
 
@@ -1130,7 +1229,7 @@ void __switch_window(void)
 }
 */
 
-// Local worker
+
 void __switch_focus(void)
 {
 // Switch focus support.
@@ -1193,7 +1292,7 @@ do_redraw:
 
 // redraw
 
-    gwssrv_redraw_window(next,TRUE);
+    redraw_window(next,TRUE);
 
     // Activate app window
     if( next->type == WT_OVERLAPPED )
@@ -1413,11 +1512,10 @@ wmProcedure(
              //printf("wmProcedure: [?] GWS_SwitchFocus\n");
              //next = window->next;
              //window->focus = TRUE;
-             //gwssrv_redraw_window(window,1);
+             //redraw_window(window,1);
              return 0;
              break;
     };
-
 
     return 0;
 }
@@ -1482,6 +1580,7 @@ wmHandler(
 // #test
 // Redraw all the windows. Back to front.
 // GWS_UpdateDesktop
+
     if ( msg == 9092 ){
         wm_update_desktop();
         return 0;
@@ -1903,7 +2002,7 @@ int serviceCreateWindow (int client_fd)
 // See:
 // createw.c
 
-    Window = (struct gws_window_d *) gwsCreateWindow ( 
+    Window = (struct gws_window_d *) CreateWindow ( 
                                          type, 
                                          my_style,     // style
                                          1,     // status 
@@ -1915,13 +2014,13 @@ int serviceCreateWindow (int client_fd)
 
     if ( (void *) Window == NULL )
     {
-       gwssrv_debug_print ("gwssrv: gwsCreateWindow fail\n");
+       gwssrv_debug_print ("gwssrv: CreateWindow fail\n");
        next_response[1] = 0;
        return -1;
     }
 
 // Register window
-    id = gwsRegisterWindow(Window);
+    id = RegisterWindow(Window);
     if (id<0){
         gwssrv_debug_print ("gwssrv: serviceCreateWindow Couldn't register window\n");
         next_response[1] = 0;  // msg code.
@@ -2257,7 +2356,7 @@ int serviceRedrawWindow (void)
 
 // Redraw
 
-    gwssrv_redraw_window (
+    redraw_window (
         (struct gws_window_d *) window, 
         (unsigned long) flags );
 
@@ -2402,17 +2501,22 @@ int serviceRefreshWindow (void){
 
 // Let's redraw the window.
 // Called by serviceRedrawWindow().
-// IN: window pointer, show or not.
+
+// #todo
+// devemos repintar as janelas filhas, caso existam.
+
+// IN: 
+// window pointer, show or not.
 
 int 
-gwssrv_redraw_window ( 
+redraw_window ( 
     struct gws_window_d *window, 
     unsigned long flags )
 {
     unsigned int __tmp_color=0;
 
 
-    gwssrv_debug_print ("gwssrv_redraw_window:\n");
+    gwssrv_debug_print ("redraw_window:\n");
 
     if ( (void *) window == NULL ){ return -1; }
 
@@ -2425,7 +2529,7 @@ gwssrv_redraw_window (
 // A sombra é maior que a própria janela.
 // ?? Se estivermos em full screen não tem sombra ??
 
-    //gwssrv_debug_print ("gwssrv_redraw_window: Shadow\n");
+    //gwssrv_debug_print ("redraw_window: Shadow\n");
     if ( window->shadowUsed == 1 )
     {
 
@@ -2458,7 +2562,7 @@ gwssrv_redraw_window (
             //remeber: the first window do not have a parent.
             //if ( (void*) window->parent == NULL ){
  
-                //gwssrv_debug_print ("gwssrv_redraw_window: [Shadow] Parent"); 
+                //gwssrv_debug_print ("redraw_window: [Shadow] Parent"); 
                 //exit(1); 
                 rectBackbufferDrawRectangle ( 
                     (window->left +1), (window->top +1), 
@@ -2484,13 +2588,14 @@ gwssrv_redraw_window (
     } //fim do shadow
   
 
-    // ## Background ##
-    // Background para todo o espaço ocupado pela janela e pelo seu frame.
-    // O posicionamento do background depende do tipo de janela.
-    // Um controlador ou um editbox deve ter um posicionamento relativo
-    // à sua janela mãe. Já uma overlapped pode ser relativo a janela 
-    // gui->main ou relativo à janela mãe.
-    gwssrv_debug_print ("gwssrv_redraw_window: Background\n");
+// ## Background ##
+// Background para todo o espaço ocupado pela janela e pelo seu frame.
+// O posicionamento do background depende do tipo de janela.
+// Um controlador ou um editbox deve ter um posicionamento relativo
+// à sua janela mãe. Já uma overlapped pode ser relativo a janela 
+// gui->main ou relativo à janela mãe.
+
+    gwssrv_debug_print ("redraw_window: Background\n");
     if ( window->backgroundUsed == 1 )
     {
 
@@ -2533,7 +2638,7 @@ gwssrv_redraw_window (
         //#bugbug
         //Remember: The first window do not have a parent.
         //if ( (void*) window->parent == NULL ){ 
-            //gwssrv_debug_print ("gwssrv_redraw_window: [Background] Parent\n"); 
+            //gwssrv_debug_print ("redraw_window: [Background] Parent\n"); 
             //exit(1); 
             rectBackbufferDrawRectangle ( 
                 window->left, window->top, 
@@ -2562,7 +2667,7 @@ gwssrv_redraw_window (
     unsigned int border1=0;
     unsigned int border2=0;
 
-    gwssrv_debug_print ("gwssrv_redraw_window: Type Button\n");
+    gwssrv_debug_print ("redraw_window: Type Button\n");
     if ( (unsigned long) window->type == WT_BUTTON )
     {
 
@@ -2611,10 +2716,10 @@ gwssrv_redraw_window (
 
         //#debug
         //if ( (void*) window->parent == NULL ){
-            //gwssrv_debug_print ("gwssrv_redraw_window: [WT_BUTTON] Parent NULL\n"); 
+            //gwssrv_debug_print ("redraw_window: [WT_BUTTON] Parent NULL\n"); 
         //}
 
-        //gwssrv_debug_print ("gwssrv_redraw_window: Button Border\n"); 
+        //gwssrv_debug_print ("redraw_window: Button Border\n"); 
         //if ( (void*) window->parent != NULL )
         //{
 
@@ -2641,7 +2746,7 @@ gwssrv_redraw_window (
                  border2, 1, 0 );
 
             // Button label
-            gwssrv_debug_print ("gwssrv_redraw_window: [FIXME] Button label\n"); 
+            gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
             /*
             if (Selected == 1){
                 grDrawString ( 
@@ -2669,7 +2774,7 @@ gwssrv_redraw_window (
     //#todo:
     if ( (unsigned long) window->type == WT_EDITBOX )
     {
-        gwssrv_debug_print ("gwssrv_redraw_window: [TODO] Type Editbox\n");
+        gwssrv_debug_print ("redraw_window: [TODO] Type Editbox\n");
         //...
     }
     
@@ -2701,8 +2806,13 @@ update_window (
     struct gws_window_d *window, 
     unsigned long flags )
 {
-    return (int) gwssrv_redraw_window(window,flags);
+
+    if ( (void*) window == NULL )
+        return -1;
+
+    return (int) redraw_window(window,flags);
 }
+
 
 /*
  * =====================================================
@@ -3090,10 +3200,10 @@ struct gws_window_d *createwCreateRootWindow(void)
 
     debug_print("createwCreateRootWindow:\n");
 
-    // (root window)
-    // #bugbug: EStamos usado device info sem checar.
-    
-    w = (struct gws_window_d *) gwsCreateWindow ( 
+// (root window)
+// #bugbug: Estamos usado device info sem checar.
+
+    w = (struct gws_window_d *) CreateWindow ( 
                                     rootwindow_valid_type,  
                                     0, //style
                                     1, //status
@@ -3123,8 +3233,8 @@ struct gws_window_d *createwCreateRootWindow(void)
     w->used  = TRUE;
     w->magic = 1234;
 
-    // Register.
-    // WindowId = gwsRegisterWindow (__root_window);
+    // Register
+    // WindowId = RegisterWindow (__root_window);
 
     // if (WindowId<0){
     // gwssrv_debug_print ("create_background: Couldn't register window\n");
@@ -3163,7 +3273,7 @@ int gwsDefineInitialRootWindow ( struct gws_window_d *window )
 
 /*
  *******************************************************
- * gwsRegisterWindow: 
+ * RegisterWindow: 
  *     Register a window.
  */
  
@@ -3171,7 +3281,7 @@ int gwsDefineInitialRootWindow ( struct gws_window_d *window )
 // < 0 = fail.
 // > 0 = Ok. (index)
  
-int gwsRegisterWindow (struct gws_window_d *window)
+int RegisterWindow(struct gws_window_d *window)
 {
     //loop
     register int __slot=0;
@@ -3182,7 +3292,7 @@ int gwsRegisterWindow (struct gws_window_d *window)
 
     if ( (void *) window == NULL )
     {
-        //gws_debug_print ("gwsRegisterWindow: window struct\n");
+        //gws_debug_print ("RegisterWindow: window struct\n");
         return (int) -1;
     }
 
@@ -3194,8 +3304,8 @@ int gwsRegisterWindow (struct gws_window_d *window)
     windows_count++;
 
     if ( windows_count >= WINDOW_COUNT_MAX ){
-        //gws_debug_print ("gwsRegisterWindow: Limits\n");
-        printf ("gwsRegisterWindow: Limits\n");
+        //gws_debug_print ("RegisterWindow: Limits\n");
+        printf ("RegisterWindow: Limits\n");
         return -1;
     }
 
@@ -3345,8 +3455,7 @@ struct gwsssrv_menu_d *gwssrv_create_menu (
     menu->highlight = highlight;
     menu->itens_count = count;
 
-
-    window = (struct gws_window_d *) gwsCreateWindow ( 
+    window = (struct gws_window_d *) CreateWindow ( 
                                          WT_SIMPLE, 
                                          0,  //style
                                          1,  //status
@@ -3413,7 +3522,7 @@ struct gwsssrv_menu_item_d *gwssrv_create_menu_item (
 
     if( menu->window != NULL )
     {
-        window = (struct gws_window_d *) gwsCreateWindow ( 
+        window = (struct gws_window_d *) CreateWindow ( 
                                              WT_BUTTON,
                                              0, //style
                                              1, //status 
@@ -3817,7 +3926,7 @@ int get_window_tid( struct gws_window_d *window)
 // teremos mais argumentos
 void wm_Update_TaskBar( char *string )
 {
-    gwssrv_redraw_window(__taskbar_window,TRUE);
+    redraw_window(__taskbar_window,TRUE);
     dtextDrawText(__taskbar_window,8,8,COLOR_YELLOW,string);
     gws_show_window_rect(__taskbar_window);
 }

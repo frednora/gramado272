@@ -2488,6 +2488,13 @@ interpolate_color(
 }
 
 
+unsigned int invert_color(unsigned int color)
+{
+    unsigned int Color = (unsigned int) (color ^ 0x00FFFFFF);
+
+    return (unsigned int) Color;
+}
+
 
 
 //

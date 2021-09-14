@@ -1234,12 +1234,8 @@ void create_taskbar (void)
     }
 
 
-    // The background window
-    // #todo
-    // Se estivermos em JAIL, podemos arriscar algum background melhor.
-    // Talvez alguma imagem.
 
-    __taskbar_window = (struct gws_window_d *) gwsCreateWindow ( 
+    __taskbar_window = (struct gws_window_d *) CreateWindow ( 
                                             WT_SIMPLE, 
                                             0, //style
                                             1, //status 
@@ -1272,17 +1268,15 @@ void create_taskbar (void)
     }
     */
 
-
-    // Register.
-    WindowId = gwsRegisterWindow (__taskbar_window);
-
+// Register
+    WindowId = RegisterWindow(__taskbar_window);
     if (WindowId<0)
     {
         gwssrv_debug_print ("create_taskbar: Couldn't register window\n");
         printf             ("create_taskbar: Couldn't register window\n");
         exit(1);
-        //return;
     }
+
 
     //#debug
     //asm ("int $3");
@@ -1326,12 +1320,12 @@ void create_background (void)
     }
 
 
-    // The background window
-    // #todo
-    // Se estivermos em JAIL, podemos arriscar algum background melhor.
-    // Talvez alguma imagem.
+// The background window
+// #todo
+// Se estivermos em JAIL, podemos arriscar algum background melhor.
+// Talvez alguma imagem.
 
-    __root_window = (struct gws_window_d *) gwsCreateWindow ( 
+    __root_window = (struct gws_window_d *) CreateWindow ( 
                                             WT_SIMPLE, 
                                             0, //style
                                             1, //status 
@@ -1364,17 +1358,15 @@ void create_background (void)
     }
     */
 
-
-    // Register.
-    WindowId = gwsRegisterWindow (__root_window);
-
+// Register
+    WindowId = RegisterWindow(__root_window);
     if (WindowId<0)
     {
         gwssrv_debug_print ("create_background: Couldn't register window\n");
         printf             ("create_background: Couldn't register window\n");
         exit(1);
-        //return;
     }
+
 
     //#debug
     //asm ("int $3");

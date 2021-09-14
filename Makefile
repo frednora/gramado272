@@ -260,6 +260,10 @@ clean:
 	-rm -rf lib/rtl/obj/*.o
 	-rm -rf lib/lib/libgns/obj/*.o
 	-rm -rf lib/lib/libio01/obj/*.o
+
+	-rm -rf gramado/core/server/*.o
+	-rm -rf gramado/core/client/*.o
+
 	@echo "Success?"
 clean1: clean
 clean2:

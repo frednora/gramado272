@@ -763,27 +763,17 @@ struct gws_window_d
 // =========================================================
 // 11 
 // Navigation windows:
-// #todo: We need to select just some few pointer here.
 
+
+// The owner
+    struct gws_window_d  *parent;
+
+// We need to redraw all the child widnows.
+    struct gws_window_d  *child_list;
+
+// navigation
     struct gws_window_d  *next;
     struct gws_window_d  *prev;
-
-    // ??
-    struct gws_window_d  *child;    // next (again?)
-    struct gws_window_d  *parent;   // back (again?)
-    struct gws_window_d  *owner;    // parent (again?)
-
-// Child support.
-// obs: gosto mais de arrays.
-//Lista encadeada de janelas filhas.
-//Tamanho da lista.
-
-    struct gws_window_d  *childListHead;  
-    int childCount;
-
-// Parent support
-//(Número da janela mãe).
-    unsigned long parentid;
 
 // =========================================================
 
@@ -1208,7 +1198,8 @@ struct gws_surface_d *rootSurface;
 // == prototypes =====================================================
 //
 
-
+void __switch_focus(void);
+void set_focus(struct gws_window_d *window);
 
 // transparence
 void gws_enable_transparence(void);
@@ -1237,9 +1228,18 @@ void flush_frame(void);
 void wm_update_desktop(void);
 
 
+void set_first_window( struct gws_window_d *window);
+struct gws_window_d *get_first_window(void);
+
+void set_last_window( struct gws_window_d *window);
+struct gws_window_d *get_last_window(void);
+
+void activate_first_window(void);
+void activate_last_window(void);
+
 // list support
 // not tested yet
-void wm_add_window_into_the_list( struct gws_window_d *window);
+void wm_add_window_into_the_list( struct gws_window_d *window );
 void wm_remove_window_from_list_and_kill( struct gws_window_d *window);
 
 
@@ -1517,7 +1517,7 @@ void *xxxCreateWindow (
 // esse é o serviço de criação da janela.
 // talvez ampliaremos o número de argumentos
 
-void *gwsCreateWindow ( 
+void *CreateWindow ( 
     unsigned long type,
     unsigned long style, 
     unsigned long status, 
@@ -1548,8 +1548,7 @@ dtextDrawText (
     unsigned int color,
     unsigned char *string );
 
-
-int gwsRegisterWindow (struct gws_window_d *window);
+int RegisterWindow(struct gws_window_d *window);
 
 int get_active_window (void);
 void set_active_window (int id);
@@ -1584,7 +1583,7 @@ gwssrv_change_window_position (
 // Redraw window
 
 int 
-gwssrv_redraw_window (
+redraw_window (
     struct gws_window_d *window, 
     unsigned long flags ); 
 

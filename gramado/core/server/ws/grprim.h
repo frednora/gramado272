@@ -478,6 +478,7 @@ interpolate_color(
     unsigned int color2, 
     unsigned int fraction );
 
+unsigned int invert_color(unsigned int color);
 
 #endif    
 
