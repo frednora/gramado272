@@ -890,6 +890,12 @@ done:
     Event_LongRawByte = (unsigned long) ( Keyboard_RawByte & 0x000000FF );
 
 
+/*
+
+ #deprecated
+ The window procedure will send this message
+ to the thread associated with a window
+ 
 // Sending message to the foreground thread.
     if (tid >= 0 || tid < THREAD_COUNT_MAX)
     {
@@ -900,6 +906,8 @@ done:
             (unsigned long)     Event_LongASCIICode,
             (unsigned long)     Event_LongRawByte );
     }
+*/
+
 
 // Process the event using the system's window procedures.
 // It can use the kernel's virtual console or
@@ -914,7 +922,30 @@ done:
     return 0;
 }
 
+// service 112
+unsigned long
+sys_send_message_tid( 
+    int tid, 
+    unsigned long message_buffer )
+{
 
+    if( tid < 0 || tid >= THREAD_COUNT_MAX )
+        return 0;
+
+    if( message_buffer == 0 )
+        return 0;
+
+    unsigned long *event = (unsigned long *) message_buffer;
+
+    kgws_send_to_tid(
+        tid,         //tid
+        event[0],    //window
+        event[1],    //msg code
+        event[2],    //long1
+        event[3] );  //long2
+
+    return 0;
+}
 
 //==========
 /*

@@ -214,6 +214,12 @@ xxxKeyEvent (
     unsigned char raw_byte );
 
 
+// service 112
+unsigned long
+sys_send_message_tid( 
+    int tid, 
+    unsigned long message_buffer );
+
 int
 kgws_send_to_tid ( 
     int tid, 

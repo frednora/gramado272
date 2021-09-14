@@ -163,6 +163,40 @@ unsigned long rtl_to_ulong (long ch)
     return (unsigned long) ch;
 }
 
+
+unsigned long rtl_get_system_message(unsigned long message_buffer)
+{
+
+    if( message_buffer == 0 )
+        return 0;
+
+    gramado_system_call ( 111,
+        (unsigned long) message_buffer,
+        (unsigned long) message_buffer,
+        (unsigned long) message_buffer );
+    
+    return 0;
+}
+
+
+unsigned long rtl_send_system_message( int tid, unsigned long message_buffer)
+{
+
+    if( tid < 0 )
+        return 0;
+
+    if( message_buffer == 0 )
+        return 0;
+
+    gramado_system_call ( 112,
+        (unsigned long) (tid & 0xFFFFFFFF),
+        (unsigned long) message_buffer,
+        (unsigned long) message_buffer );
+    
+    return 0;
+}
+
+
 //=====================================
 
 // Get an event from the thread's event queue.
@@ -189,13 +223,16 @@ int xxxScanApplicationQueue(void)
     RTLEventBuffer[3] = 0;  //long2
     RTLEventBuffer[4] = 0;  //long3
  
+
     // Get event from the thread's event queue.
     rtl_enter_critical_section(); 
-    gramado_system_call ( 111,
-        (unsigned long) &RTLEventBuffer[0],
-        (unsigned long) &RTLEventBuffer[0],
-        (unsigned long) &RTLEventBuffer[0] );
+    rtl_get_system_message( (unsigned long) &RTLEventBuffer[0] );
+    //gramado_system_call ( 111,
+        //(unsigned long) &RTLEventBuffer[0],
+        //(unsigned long) &RTLEventBuffer[0],
+        //(unsigned long) &RTLEventBuffer[0] );
     rtl_exit_critical_section(); 
+
 
     // Check if it is a valid event.
 

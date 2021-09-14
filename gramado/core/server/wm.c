@@ -1318,7 +1318,18 @@ __add_message_to_into_the_queue(
     unsigned long long2 )
 {
 
+    // #todo
+    // Send message to the thread associated with this window.
+
+    // #deprecated ...
+    // Enviaremos mensagens para a fila na thread
+    // associada a essa janela.
+    // Indicado em client_tid.
+
+    unsigned long message_buffer[8];
+
     debug_print("__add_message_to_into_the_queue:\n");
+
 
 // Invalid window
 
@@ -1339,40 +1350,41 @@ __add_message_to_into_the_queue(
 
 
 //
-// Offset
-//
-
-// next position
-    window->tail_pos++;
-
-// end of list
-    if( window->tail_pos < 0 || window->tail_pos >= 31 )
-        window->tail_pos = 0;
-
-// offset
-    int offset = (int) window->tail_pos;
-
-    offset = (int) (offset & 0xFF);
-
-//
 // event
 //
 
 // standard
-    window->window_list[offset] = (int) window->id;      // wid
-    window->msg_list[offset]    = (int) (msg & 0xFFFF);  // message code
-    window->long1_list[offset]  = (unsigned long) long1;
-    window->long2_list[offset]  = (unsigned long) long2;
+    message_buffer[0] = (int) window->id;      // wid
+    message_buffer[1]    = (int) (msg & 0xFFFF);  // message code
+    message_buffer[2]  = (unsigned long) long1;
+    message_buffer[3]  = (unsigned long) long2;
 
 // extra
-    window->long3_list[offset] = 0;
-    window->long4_list[offset] = 0;
+    message_buffer[4] = 0;
+    message_buffer[5] = 0;
 
 
+
+    if( window->client_tid < 0)
+        return -1;
+
+//
+// Send
+//
+
+// IN:
+// tid, message buffer address
+
+    rtl_send_system_message( 
+        (int) window->client_tid, 
+        (unsigned long) &message_buffer[0] );
+
+
+//done:
     debug_print("__add_message_to_into_the_queue: done\n");
-
     return 0;
 }
+
 
 // Talvez precisaremos de mais parametros.
 unsigned long 
@@ -1496,7 +1508,7 @@ wmProcedure(
              // da janela com foco de entrada.
              // O cliente vai querer ler isso.
              __add_message_to_into_the_queue(
-                 (struct gws_window_d *)window,
+                 (struct gws_window_d *) window,
                  (int)msg,
                  (unsigned long)long1,
                  (unsigned long)long2);
@@ -1643,7 +1655,7 @@ do_process_message:
 
 // Procedure
     r = (unsigned long) wmProcedure(
-                            (struct gws_window_d *) w,
+                            (struct gws_window_d *) w, // window with focus
                             (int) msg,
                             (unsigned long) long1,
                             (unsigned long) long2 ); 
@@ -2042,6 +2054,12 @@ int serviceCreateWindow (int client_fd)
 
 // Initialized the input queue
 
+/*
+    // #deprecated ...
+    // Enviaremos mensagens para a fila na thread
+    // associada a essa janela.
+    // Indicado em client_tid.
+
     //int i=0;
     for ( i=0; i<32; ++i )
     {
@@ -2054,7 +2072,7 @@ int serviceCreateWindow (int client_fd)
     };
     Window->head_pos = 0;
     Window->tail_pos = 0;
-
+*/
 //===============================================
 
 
@@ -2255,41 +2273,11 @@ int serviceResizeWindow(void)
 
 int serviceDrawButton(void)
 {
-
     // Deprecated !!
     gwssrv_debug_print("serviceDrawButton: deprecated\n");
     printf            ("serviceDrawButton: deprecated\n");
     exit(1);
     return -1;
-
-    /*
-    //O buffer é uma global nesse documento.
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
-
-    unsigned long x=0;
-    unsigned long y=0;
-    unsigned long width=0;
-    unsigned long height=0;
-
-
-    x      = message_address[4]; 
-    y      = message_address[5]; 
-    width  = message_address[6]; 
-    height = message_address[7]; 
-    // ...
-
-    // #todo
-    // The label?
-    
-    gws_draw_button ("Label", 1,1,1, 
-        x, y, width, height, GWS_COLOR_BUTTONFACE3 );
-
-
-    // #bugbug
-    // Used for debug. We don't need this thing 
-    gws_show_backbuffer(); 
-    return 0;
-    */
 }
 
 

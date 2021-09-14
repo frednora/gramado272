@@ -489,16 +489,21 @@ struct gws_window_d
 // Message queue
 //
 
+/*
+    // #deprecated ...
+    // Enviaremos mensagens para a fila na thread
+    // associada a essa janela.
+    // Indicado em client_tid.
+
     int window_list[32];
     int msg_list[32];
     unsigned long long1_list[32];
     unsigned long long2_list[32];
     unsigned long long3_list[32];
     unsigned long long4_list[32];
-
     int head_pos;
     int tail_pos;
-
+*/
 
 //
 // Características dessa janela..
