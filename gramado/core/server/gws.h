@@ -99,6 +99,7 @@ int current_mode;
  
 #include "ws/dc.h"
 
+
 struct gws_graphics_d
 {
     int used;
@@ -177,9 +178,7 @@ struct gws_d
     // ...
 };
 
-// GWS - Gramado Window Server
-struct gws_d *gws;
-
+struct gws_d  *window_server;
 
 //
 // =============================================================

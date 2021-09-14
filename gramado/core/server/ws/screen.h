@@ -9,7 +9,6 @@ int refresh_valid_screen_flag;
 
 struct gws_screen_d
 {
-
     int id;
     int used;
     int magic;
@@ -21,14 +20,14 @@ struct gws_screen_d
     unsigned long bpp;    // bits per pixel
 
     unsigned long pitch;
-    
+
+// The origin at the center of the screen.
     unsigned long hotspot_x;
     unsigned long hotspot_y;
 
-    //origin
-    unsigned long min_x;   // 0 = hot spot
-    unsigned long min_y;   // 0 = hot spot
-    
+// The new limits when the origin is the center of the screen.
+    unsigned long min_x;
+    unsigned long min_y;
     unsigned long max_x;
     unsigned long max_y;
 

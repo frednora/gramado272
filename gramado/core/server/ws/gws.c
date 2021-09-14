@@ -305,54 +305,54 @@ unsigned long gws_get_device_height(void)
 
 int gwssrv_init_globals(void)
 {
-    //Loop to clear something
     register int i=0;
 
 //
-// Gramado mode.
+// Gramado mode
 //
 
-    // get gramado mode.
-    // jail, p1, home, p2, castle ...
-    // Check valiation and panic if fail.
+// get gramado mode.
+// jail, p1, home, p2, castle ...
+// Check validation and panic if fail.
  
     current_mode = gwssrv_get_system_metrics(130);
-    
-    if (current_mode<0){
-        printf ("gwssrv_init_globals: [PANIC] current_mode\n");
-        exit(1);
+
+    if (current_mode < 0)
+    {
+        printf ("gwssrv_init_globals: [FAIL] current_mode\n");
+        exit (1);
     }
 
-    //
-    // framebuffer and backbuffer.
-    //
+//
+// framebuffer and backbuffer.
+//
 
-    // buffers
-    // We need to find a better way to get these addresses,
-    // maybe a library. (direct framebuffer library thing)
-    // I guess it uses a shared memory allocator.That is why we can
-    // use these addresses.
-    // #test:
-    // We have the rtl included in this project,
-    // let's give rtl a chance for now.
-    
-    // #todo #todo
-    // Is this call using the sc82 syscall ? or the sc80 ?
-    // We need full access to the kernel structure.
+// buffers
+// We need to find a better way to get these addresses,
+// maybe a library. (direct framebuffer library thing)
+// I guess it uses a shared memory allocator.That is why we can
+// use these addresses.
+// #test:
+// We have the rtl included in this project,
+// let's give rtl a chance for now.
 
-    //____FRONTBUFFER_VA = (unsigned long) gwssrv_get_system_metrics(11);
-    //____BACKBUFFER_VA  = (unsigned long) gwssrv_get_system_metrics(12); // #todo: check
+// #todo
+// Is this call using the sc82 syscall ? or the sc80 ?
+// We need full access to the kernel structure.
 
     ____FRONTBUFFER_VA = (unsigned long) rtl_get_system_metrics(11);
     ____BACKBUFFER_VA  = (unsigned long) rtl_get_system_metrics(12);
 
 
-    // Screen
+// Screen
     __device_width  = (unsigned long) gwssrv_get_system_metrics(1);
     __device_height = (unsigned long) gwssrv_get_system_metrics(2);
     __device_bpp    = (unsigned long) gwssrv_get_system_metrics(9);
-    
-    // Saving
+
+
+// ==============================
+// Saving
+
     SavedX   = (unsigned long) __device_width;
     SavedY   = (unsigned long) __device_height;
     SavedBPP = (unsigned long) __device_bpp;
@@ -367,25 +367,20 @@ int gwssrv_init_globals(void)
         exit (1);
     }
 
-    // jail, p1, home, p2, castle ...
-    if (current_mode < 0)
-    {
-        printf ("gwssrv_init_globals: [FAIL] current_mode\n");
-        exit (1);
-    }
+// ==============================
 
 
-    //
-    // == buffers ======================================
-    //
-    
-    // #todo
-    // O tamanho dos backbuffers depende da resoluçao da tela.
-    // Pois temos 4MB alocados. 
-    // Talvez menos, por causa de alguma memoria compartilhada irregular.
+//
+// == buffers ======================================
+//
 
-    // #bugbug: Null pointers,    
-    for (i=0; i<MAX_SCREENS; ++i){ screens[i] = 0; }
+// Clear the list of pointers.
+
+    for (i=0; i<MAX_SCREENS; ++i){ 
+        screens[i] = 0; 
+    };
+
+// Setup pointers;
 
     screens[SCREEN_FRONTBUFFER] = (unsigned long) ____FRONTBUFFER_VA;
     screens[SCREEN_BACKBUFFER]  = (unsigned long) ____BACKBUFFER_VA;
@@ -398,19 +393,15 @@ int gwssrv_init_globals(void)
     }
 
 
-    // Refresh the device screen?
+// Flags for refresh
 
-    refresh_device_screen_flag = FALSE;
-
-    // Refresh the valid screen?
-    
+    refresh_device_screen_flag = FALSE;    
     refresh_valid_screen_flag = FALSE;
 
 
-    //background_color = xCOLOR_GRAY3;
-   
-   
-    // Color scheme: Humility
+// Color scheme
+// Color scheme: Humility
+
     gwssrv_initialize_color_schemes(ColorSchemeHumility);
     gwssrv_select_color_scheme(ColorSchemeHumility);
 
@@ -427,9 +418,10 @@ int gwssrv_init_globals(void)
  *
  */
 
+// Called by initGraphics() in main.c
+
 int gwsInit(void)
 {
-
     debug_print("gwsInit:\n");
 
     //paint_ready = FALSE;
@@ -438,130 +430,119 @@ int gwsInit(void)
     // Initializing globals.
     gwssrv_init_globals();
 
-    
-    // #todo
-    // Configurar as estruturas em ordem:
-    // Current display, current screen, current root window.
 
+// #todo
+// Configurar as estruturas em ordem:
+// Current display, current screen, current root window.
 
 //
 // == Display ===============================================
 //
 
     CurrentDisplay = (void *) malloc (sizeof(struct gws_display_d));
-    
-    if ( (void*) CurrentDisplay == NULL ){
 
+    if ( (void*) CurrentDisplay == NULL )
+    {
         debug_print("gwsInit: [FAIL] CurrentDisplay\n");
-        printf ("gwsInit: [FAIL] CurrentDisplay\n");
-        exit(1);
-        
-        // #todo: fail and exit.
-        //debug_print("gwsInit: [FAIL] CurrentDisplay\n");
-        //return -1;
-        //while(1);
- 
-    }else{
+        printf     ("gwsInit: [FAIL] CurrentDisplay\n");
+        exit(1); 
+    }
 
-        memset( CurrentDisplay, 0, sizeof(struct gws_display_d) );
+    memset( CurrentDisplay, 0, sizeof(struct gws_display_d) );
 
-        CurrentDisplay->used  = TRUE; 
-        CurrentDisplay->magic = 1234; 
-
-        CurrentDisplay->id = 0; //
-
-        // ??
-        CurrentDisplay->fd = 0;
-        
-        //...
-    };
+    CurrentDisplay->id = 0;
+    CurrentDisplay->fd = 0;
+    CurrentDisplay->used  = TRUE;
+    CurrentDisplay->magic = 1234;
+    //...
+// ===================================================
 
 
 //
 // == Screen ===============================================
 //
-    
+
     DeviceScreen  = (void *) malloc (sizeof(struct gws_screen_d));
 
-    if ( (void*) DeviceScreen == NULL ){
-
+    if ( (void*) DeviceScreen == NULL )
+    {
         debug_print("gwsInit: [FAIL] DeviceScreen\n");
-        printf("gwsInit: [FAIL] DeviceScreen\n");
+        printf     ("gwsInit: [FAIL] DeviceScreen\n");
         exit(1);
-        
-        // #todo: fail and exit.
-        //debug_print("gwsInit: [FAIL] DeviceScreen\n");
-        //return -1;
-        //while(1);
+    }
 
-    }else{
+    memset( DeviceScreen, 0, sizeof(struct gws_screen_d) );
 
-        memset( DeviceScreen, 0, sizeof(struct gws_screen_d) );
+    DeviceScreen->id = 0; 
+    DeviceScreen->flags = 0;
 
-        DeviceScreen->used  = TRUE;
-        DeviceScreen->magic = 1234;
+// #test
+// Configuramos algumas variaveis globais quando
+// chamamos a rotina de inicializaçao de globais.
+// See: gwssrv_init_globals().
 
-        DeviceScreen->id = 0; 
-        
-        //#todo:
-        DeviceScreen->flags = 0;
+    DeviceScreen->width  = (unsigned long) SavedX;
+    DeviceScreen->height = (unsigned long) SavedY;
+    DeviceScreen->bpp    = (unsigned long) SavedBPP;
 
-        // #test
-        // Configuramos algumas variaveis globais quando
-        // chamamos a rotina de inicializaçao de globais.
-        // See: gwssrv_init_globals().
-        
-        DeviceScreen->width  = SavedX;
-        DeviceScreen->height = SavedY;
-        DeviceScreen->bpp    = SavedBPP;  // bits per pixel
-        
-        // #todo
-        // Maybe we can check the validation of w h bpp.
-        
-        DeviceScreen->pitch = ( SavedX * (SavedBPP/8) );
+    DeviceScreen->pitch  =  (unsigned long) ( SavedX * SavedBPP );
 
-        // #todo: Cuidado, não queremos divisão por zero.
-        DeviceScreen->font_size   = 0;    //todo
-        DeviceScreen->char_width  = 0;    //todo
-        DeviceScreen->char_height = 0;    //todo
-        
-        // # ??
-        // We simply used gwssrv_get_system_metrics() to get these addresses.
-        // See: gwssrv_init_globals()
-        // We need to find a better way to get these addresses,
-        // maybe a library. (direct framebuffer library thing)
-        
-        DeviceScreen->backbuffer  = (void *) ____BACKBUFFER_VA;
-        DeviceScreen->frontbuffer = (void *) ____FRONTBUFFER_VA;
-        
-        // #todo
-        // Maybe we can check the validation of the buffers.
-        
-        
-        //DeviceScreen->hotspot_x = ( DeviceScreen->width  / 2 );
-        //DeviceScreen->hotspot_y = ( DeviceScreen->height / 2 );
-        DeviceScreen->hotspot_x = ( DeviceScreen->width  >> 1 );
-        DeviceScreen->hotspot_y = ( DeviceScreen->height >> 1 );
+// Checks
 
-        
-        // Limites para a tela em cruz. '+'
-        DeviceScreen->min_x = 0;
-        DeviceScreen->min_y = 0;
-        //DeviceScreen->max_x = ( DeviceScreen->width  / 2 );
-        //DeviceScreen->max_y = ( DeviceScreen->height / 2 );
-        DeviceScreen->max_x = ( DeviceScreen->width  >> 1 );
-        DeviceScreen->max_y = ( DeviceScreen->height >> 1 );
+    if( DeviceScreen->pitch == 0 )
+    {
+        debug_print("gwsInit: [FAIL] DeviceScreen->pitch \n");
+        printf     ("gwsInit: [FAIL] DeviceScreen->pitch \n");
+        exit(1);
+    }
 
-        //...
 
-        // The device screen will be the valid screen for now.
-        // Save the device screen in the diplay structure.
+// #todo: 
+// Cuidado, não queremos divisão por zero.
 
-        if ( (void *) CurrentDisplay != NULL ){
-            CurrentDisplay->device_screen = DeviceScreen;
-            CurrentDisplay->valid_screen  = DeviceScreen;
-        }
-    };
+    DeviceScreen->font_size   = 0;    //todo
+    DeviceScreen->char_width  = 0;    //todo
+    DeviceScreen->char_height = 0;    //todo
+
+// #?
+// We simply used gwssrv_get_system_metrics() to get these addresses.
+// See: gwssrv_init_globals()
+// We need to find a better way to get these addresses,
+ // maybe a library. (direct framebuffer library thing)
+
+    DeviceScreen->backbuffer  = (void *) ____BACKBUFFER_VA;
+    DeviceScreen->frontbuffer = (void *) ____FRONTBUFFER_VA;
+
+
+// Hotspot
+// Center of the screen
+
+    DeviceScreen->hotspot_x = ( DeviceScreen->width  >> 1 );
+    DeviceScreen->hotspot_y = ( DeviceScreen->height >> 1 );
+
+// The new limits when the origin is the center of the screen.
+
+    DeviceScreen->min_x = 0;
+    DeviceScreen->min_y = 0;
+    DeviceScreen->max_x = (unsigned long) ( DeviceScreen->width  >> 1 );
+    DeviceScreen->max_y = (unsigned long) ( DeviceScreen->height >> 1 );
+
+    //...
+
+// The device screen will be the valid screen for now.
+// Save the device screen in the diplay structure.
+
+    if ( (void *) CurrentDisplay != NULL )
+    {
+        CurrentDisplay->device_screen = DeviceScreen;
+        CurrentDisplay->valid_screen  = DeviceScreen;
+    }
+
+// Validation
+    DeviceScreen->used  = TRUE;
+    DeviceScreen->magic = 1234;
+
+// =================================================
 
     // font support.
     gwssrv_init_font();
@@ -633,64 +614,56 @@ int gwsInit(void)
 
 // ==============
 
-    // #bugbug
-    // Its is not a screen object. It is only a window object.
-    // It is the main window of the gui structure.
-    // The 'screen' window is the device screen and the
-    // main window is the desktop window.
+// #bugbug
+// Its is not a screen object. It is only a window object.
+// It is the main window of the gui structure.
+// The 'screen' window is the device screen and the
+// main window is the desktop window.
+// Where we created this object.
+// See: gui.h
+
+// gui structure.
+
+    if ( (void*) gui == NULL )
+    {
+        debug_print ("gwsInit: gui\n");
+        printf      ("gwsInit: gui\n");
+        exit(1);
+    }
 
     if ( (void *) gui != NULL )
     {
-        // screen
-        // Isso foi criado logo acima.
+        gui->_display      = (struct gws_display_d *) CurrentDisplay;
+        gui->_screen       = (struct gws_screen_d *)  DeviceScreen;
+        gui->screen_window = (struct gws_window_d *)  tmpRootWindow;
+        gui->main_window   = (struct gws_window_d *)  tmpRootWindow;
+    }
 
-        gui->_screen = DeviceScreen;
+// #todo
+    if ( (void*) gui->screen_window != NULL )
+    {
+        dtextDrawText ( 
+            (struct gws_window_d *) gui->screen_window,
+            8, 8, COLOR_RED, "gwsInit: Graphics ok" );
 
-        // display
-        // Isso foi criado logo acima.
+        //dtextDrawText ( 
+            //(struct gws_window_d *) gui->screen_window,
+            //8, 8, COLOR_RED, "Graphics ok" );
+    }
 
-        gui->_display = CurrentDisplay;
+// The kernel side will flush the surface rectangle 
+// into the framebuffer.
 
-        // Screen window and main window.
-        gui->screen_window = tmpRootWindow;
-        gui->main_window   = tmpRootWindow;
-    } 
+    // invalidate_surface_retangle();
 
+// #debug
+// Let's see the messages above.
 
-
-//
-// == Refresh =========================================
-//
-    
-    // #todo
-    // Configurar a estrutura de cliente.
-    // Inicializar a lista de clientes.
-    
-    // #kgws.
-    // Isso usa o kernel.
-    // #todo: 
-    // Acho que nessa hora ja temos uma rotina própria válida.
-
-    //paint_ready = TRUE;
-    
-    // See:
-    // This document.
- 
-    //gwssrv_show_backbuffer();
-    
-    // Validate the frame.
-    //validate();
-
-
-// invalidate the surface in ring0.
-    invalidate_surface_retangle();
-
-
-    debug_print("gwsInit: done. :)\n");
-
-    //asm ("int $3");
+    gwssrv_show_backbuffer();
     //while(1){}
-    
+
+    debug_print("gwsInit: done\n");
+
     return 0;
 }
 

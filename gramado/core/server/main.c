@@ -1311,7 +1311,6 @@ void create_background (void)
 
     gwssrv_debug_print ("gwssrv: create_background\n");
 
-
     if ( w==0 || h==0 )
     {
         gwssrv_debug_print ("create_background: w h\n");
@@ -1330,7 +1329,7 @@ void create_background (void)
                                             0, //style
                                             1, //status 
                                             1, //view
-                                            "gwssrv-bg",  
+                                            "RootWindow",  
                                             0, 0, w, h,   
                                             gui->screen_window, 0, 
                                             COLOR_BACKGROUND, COLOR_BACKGROUND );    
@@ -1344,22 +1343,20 @@ void create_background (void)
         gwssrv_debug_print ("create_background: __root_window\n"); 
         printf             ("create_background: __root_window\n");
         exit(1);
-        //return;
     }
 
-    /*
-    // #debug
     if ( __root_window->used != TRUE || __root_window->magic != 1234 )
     {
         gwssrv_debug_print ("create_background: __root_window validation\n"); 
         printf             ("create_background: __root_window validation\n");
         exit(1);
-        //return;
     }
-    */
+
 
 // Register
+
     WindowId = RegisterWindow(__root_window);
+
     if (WindowId<0)
     {
         gwssrv_debug_print ("create_background: Couldn't register window\n");
@@ -1371,11 +1368,8 @@ void create_background (void)
     //#debug
     //asm ("int $3");
 
-    //__root_window->dirty = 1;
-
-
-    // See: 
-    // gws.c
+// See: 
+// gws.c
 
     if (current_mode == GRAMADO_JAIL)
     {
@@ -1401,25 +1395,26 @@ void create_background (void)
 // The current display and the current screen.
 // Initialize the 3d support.
 
-int initGraphics (void){
-
+int initGraphics (void)
+{
     int __init_status = -1;
 
 
     debug_print("initGraphics\n");
-
-
     //printf("initGraphics: \n");
 
-    // Initialize the window server infrastructure.
-    // The current display and the current screen.
-    // See: gws.c
+    window_server->graphics_initialization_status = FALSE;
+
+
 
 //
+// gwsInit
+//
+
+// Initialize the window server infrastructure.
+// The current display and the current screen.
 // It will create the root window.
-//
-
-    //printf("initGraphics: [1] gwsInit() \n");
+// See: gws.c
 
     __init_status = gwsInit();
 
@@ -1429,45 +1424,6 @@ int initGraphics (void){
         printf      ("initGraphics: [PANIC] Couldn't initialize the graphics\n");
         exit(1);
     }
-
-    if ( (void*) gui == NULL ){
-        debug_print ("initGraphics: gui\n");
-        printf      ("initGraphics: gui\n");
-        exit(1);
-    }
-
-    //while(1){}
-
-    // #debug
-    // Se o background a seguir falhar, entao veremos
-    // pelo menos essa mensagem.
-    
-    // #bugbug #todo: 
-    // Isso só mostrou em GRAMADO_JAIL
-  
-    if ( (void*) gui->screen_window != NULL )
-    {
-        dtextDrawText ( 
-            (struct gws_window_d *) gui->screen_window,
-            8, 8, COLOR_RED, "Initializing graphics" );
-    
-        // invalidate the surface in ring0.
-        invalidate_surface_retangle();
-
-        //gws_show_backbuffer();
-    }
-
-// #debug
-
-    //while(1){}
-
-
-    // Create background.
-
-    //printf("initGraphics: [2] create_background() \n");
-
-    // #bugbug
-    // This is creating the root window again.
 
 // cria a root window
     create_background();
@@ -1967,6 +1923,8 @@ int initGraphics (void){
     //grDCColorChg ( CurrentDisplay, 0x00, 0x80 - 0x30 );
     //while(1){}
 
+    window_server->graphics_initialization_status = TRUE;
+
     debug_print("gwssrv: InitGraphics done\n");
     
     //printf     ("gwssrv: InitGraphics done *hang\n");
@@ -2438,6 +2396,60 @@ char *gwssrv_get_version(void)
 }
 
 
+void __init_ws_structure(void)
+{
+
+// The window server main struture.
+
+    window_server = (struct gws_d *) malloc ( sizeof( struct gws_d) );
+
+    if ( (void*) window_server == NULL )
+    {
+        gwssrv_debug_print("__init_ws_structure: [FAIL] window_server \n");
+        printf            ("__init_ws_structure: [FAIL] window_server \n");
+        exit(1);
+    }
+
+    memset( window_server, 0, sizeof(struct gws_d) );
+
+// Version
+    window_server->version_major = VERSION_MAJOR;
+    window_server->version_minor = VERSION_MINOR;
+
+    // strings
+    // #todo: we need to finalize these strings?
+
+// name
+    sprintf( window_server->name, "Gramado Window Server" );
+    strcat(window_server->name,"\0");
+
+// edition name
+    sprintf( window_server->edition_name, "Presence" );
+    strcat(window_server->edition_name,"\0");
+
+// version string
+    sprintf( window_server->version_string, "0.1" );
+    strcat(window_server->version_string,"\0");
+
+// We need to register the server in the host system.
+    window_server->registration_status = FALSE;
+
+// graphics initialization status.
+    window_server->graphics_initialization_status = FALSE;
+
+
+// Se devemos ou não lançarmos o primeiro client.
+// #todo: Pegaremos essa informação dos parâmetros.
+    window_server->launch_first_client = TRUE;
+
+// When to quit the window server.
+    window_server->quit = FALSE;
+    
+ // #todo
+    window_server->status = 0;
+}
+
+
 /*
  ******************************
  * main: 
@@ -2455,7 +2467,6 @@ char *gwssrv_get_version(void)
  *       In this moment we can send a response. It depends on the
  *       message found in the sockeck we readed.
  */
-
 
 int main (int argc, char **argv)
 {
@@ -2502,9 +2513,8 @@ int main (int argc, char **argv)
     //gws_enable_transparence();
     gws_disable_transparence();
 
-// ===============
 
-    //==================
+//==================
     struct sockaddr server_address;
     socklen_t addrlen;
 
@@ -2513,7 +2523,7 @@ int main (int argc, char **argv)
     server_address.sa_data[1] = 's';
 
     addrlen = sizeof(server_address);
-    //==================
+//==================
 
 
     // files.
@@ -2531,77 +2541,13 @@ int main (int argc, char **argv)
 // Window server
 //
 
-// The window server main struture.
-// See: ?
+    __init_ws_structure();
 
-    struct gws_d *window_server;
-    
-    window_server = (struct gws_d *) malloc ( sizeof( struct gws_d) );
+// ===============
 
-    if ( (void*) window_server == NULL )
-    {
-        gwssrv_debug_print("gwssrv.bin: [FAIL] window_server \n");
-        printf            ("gwssrv.bin: [FAIL] window_server \n");
-        exit(1);
-    }
-    
-    memset( window_server, 0, sizeof(struct gws_d) );
-    
-    // Saving the pointer.
-    
-    gws = window_server;
+// Used in this file?
+// Flag usada no loop.
 
-    // Version.
-    
-    window_server->version_major = VERSION_MAJOR;
-    window_server->version_minor = VERSION_MINOR;
-
-    // strings
-    // #todo: we need to finalize these strings?
-
-    // name
-
-    sprintf( window_server->name, "Gramado Window Server" );
-    strcat(window_server->name,"\0");
-    
-    // edition name
-
-    sprintf( window_server->edition_name, "Aurora" );
-    strcat(window_server->edition_name,"\0");
-
-    // version string
-    
-    sprintf( window_server->version_string, "0.1" );
-    strcat(window_server->version_string,"\0");
-
-
-    // We need to register the server in the host system.
-
-    window_server->registration_status = FALSE;
-
-    // graphics initialization status.
-
-    window_server->graphics_initialization_status = FALSE;
-
-
-    // Se devemos ou não lançarmos o primeiro client.
-    // #todo: Pegaremos essa informação dos parâmetros.
-
-    window_server->launch_first_client = TRUE;
-
-    // When to quit the window server.
-
-    window_server->quit = FALSE;
-    
-    // #todo
-    
-    window_server->status = 0;
-
-
-    // ===============
-
-    // Used in this file?
-    // Flag usada no loop.
     running = TRUE;
 
     /*
@@ -2797,18 +2743,11 @@ int main (int argc, char **argv)
 //
 
 // Draw something.
-// Init gws infrastructure.
-// Initialize the 3d graphics support.
-// Let's create the atandard green background.
+// Init ws infrastructure.
+// Initialize the '3D' graphics support.
+// Let's create the standard green background.
 
-    // #debug
-    //printf ("gwssrv: Init graphics\n");
-
-// Init graphics
     initGraphics();
-
-// Flag
-    window_server->graphics_initialization_status = TRUE;
 
     //gws_show_backbuffer();
     //while(1){}
@@ -2844,21 +2783,11 @@ int main (int argc, char **argv)
 // Client
 //
 
-    //debug_print ("gwssrc: Calling client $$$$$\n");
-
-/*
     if ( flagUseClient == TRUE )
     {
-        //rtl_clone_and_execute("gws.bin");
-        //rtl_clone_and_execute("gwm.bin");
-        //rtl_clone_and_execute("editor.bin");
+        //debug_print ("gwssrc: Calling client $\n");
         //rtl_clone_and_execute("terminal.bin");
-        //rtl_clone_and_execute("browser.bin");
-        //rtl_clone_and_execute("fileman.bin");
-        //rtl_clone_and_execute("logon.bin");
     }
-*/
-
 
 
 //
@@ -2884,8 +2813,6 @@ int main (int argc, char **argv)
 // socket que usaremos ... por isso poderemos fecha-lo
 // para assim obtermos um novo da próxima vez.
 
-// loop:
-    gwssrv_debug_print ("gwssrv: Entering main loop.\n");
 
 //#todo:
 // No loop precisamos de accept() read() e write();
@@ -2909,6 +2836,8 @@ int main (int argc, char **argv)
 // are sharing the process structure and the same memory space.
 // This is an unusual practice. :)
 
+    gwssrv_debug_print ("gwssrv: Exporting callback\n");
+
     gramado_system_call( 
         101234, 
         (unsigned long) &wmHandler, 
@@ -2923,17 +2852,16 @@ int main (int argc, char **argv)
 // + Accept connection from a client.
 // + Call the dispatcher to porcess the message.
 
+    gwssrv_debug_print ("gwssrv: Entering main loop.\n");
+
     while (running == TRUE)
     {
+        if (IsTimeToQuit == TRUE) { break; };
 
         // Flush
         wmRefreshDirtyRectangles();
 
-        if (IsTimeToQuit == TRUE) { break; };
-
-
        // Accept
-
         newconn = accept ( 
                       ____saved_server_fd,
                       (struct sockaddr *) &server_address, 
@@ -2956,7 +2884,6 @@ int main (int argc, char **argv)
             //close(newconn);
         }
     };
-
 // =======================================
 
     if (IsTimeToQuit != TRUE)
