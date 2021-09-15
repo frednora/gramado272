@@ -3585,13 +3585,18 @@ void gws_send_wm_magic ( int fd, int pid )
 }
 
 
-// Create the display structure and create the socket.
+
+// gws_open_display:
+// + (1) Create the display structure.
+// + (2) Create the socket file.
+// + (3) Connect to the window server.
+
 struct gws_display_d *gws_open_display(char *display_name)
 {
     struct gws_display_d *Display;
 
-    // ??
-    // O header está incluido?
+// ??
+// O header está incluido?
 
     struct sockaddr_in  addr_in;
 
@@ -3604,7 +3609,8 @@ struct gws_display_d *gws_open_display(char *display_name)
 
     int client_fd = -1;
 
-    // Create the display structure.
+// (1)
+// Create the display structure.
 
     Display = (struct gws_display_d *) malloc ( sizeof( struct gws_display_d ) );
     
@@ -3613,7 +3619,8 @@ struct gws_display_d *gws_open_display(char *display_name)
         return NULL;
     }
 
-    // Create the socket.
+// (2)
+// Create the socket file.
 
     client_fd = socket ( AF_INET, SOCK_STREAM, 0 );
     
@@ -3640,21 +3647,23 @@ struct gws_display_d *gws_open_display(char *display_name)
     }
 
 
-   // #bugbug 
-   // Loop infinito?
+// (3)
+// Connect to the window server.
 
     while (TRUE){
-        if (connect (client_fd, (void *) &addr_in, addrlen ) < 0)
-        {
+        if (connect (client_fd, (void *) &addr_in, addrlen ) < 0){
             gws_debug_print("gws_open_display: Connection Failed \n");
-            printf         ("gws_open_display: Connection Failed \n"); 
-        }else{ break; }; 
+            printf         ("gws_open_display: Connection Failed \n");
+        }else{ break; };
     };
 
+// Flag
     Display->connected = TRUE;
-    
+
+// Current display.
     gws_set_current_display(Display);
 
+// Return the display structure pointer.
     return (struct gws_display_d *) Display;
 }
 
@@ -3676,6 +3685,7 @@ void gws_close_display( struct gws_display_d *display)
 
     display = NULL;
 }
+
 
 int gws_set_current_display ( struct gws_display_d *display )
 {
@@ -3702,6 +3712,46 @@ void gws_flush_display ( struct gws_display_d *display )
 }
 */
 
+
+
+int application_start(void)
+{
+    struct gws_display_d *Display;
+
+// ============================
+// Open display.
+// IN: 
+// hostname:number.screen_number
+
+    Display = (struct gws_display_d *) gws_open_display("display:name.0");
+
+    if ( (void*) Display == NULL )
+    {
+        debug_print ("application_start: Couldn't open display\n");
+        printf      ("application_start: Couldn't open display\n");
+        exit(1);
+    }
+
+    if ( Display->fd <= 0 )
+    {
+        debug_print ("application_start: bad Display->fd\n");
+        printf      ("application_start: bad Display->fd\n");
+        exit(1);
+    }
+
+done:
+    // Return the socket for a
+    // connected client application
+    return (int) Display->fd;
+}
+
+
+void application_end(void)
+{
+    // #todo
+    // Close the current display.
+    exit(0);
+}
 
 
 int gws_enable_input_method(int method)

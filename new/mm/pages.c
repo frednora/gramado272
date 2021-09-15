@@ -854,14 +854,12 @@ int mm_fill_page_table(
 
 int mmSetUpPaging (void)
 {
-    // loops
     register unsigned int i=0;
 
-    // ============
-    
-    // Inicializando as variáveis de contagem de uso de memória ram.
-    // Talvez ja tenhamos feito isso antes, mas não tem problema.
-    
+// ============
+// Inicializando as variáveis de contagem de uso de memória ram.
+// Talvez ja tenhamos feito isso antes, mas não tem problema.
+
     memorysizeUsed = 0;
     memorysizeFree = 0;
     memorysizeUsed= 0;
@@ -876,8 +874,7 @@ int mmSetUpPaging (void)
     mm_used_extraheap2 = 0; 
     mm_used_extraheap3 = 0; 
     mm_used_frame_table = 0;
-    
-    // ============
+// ============
 
 
 // =========================================================
@@ -888,17 +885,16 @@ int mmSetUpPaging (void)
     // 0x0009C000 = Kernel pml4
 
 
-    // 9 9 9 9 12
-    // Agora as tabelas possuem 512 entradas,
-    // pois é isso o que dá pra ter com apenas 9 bits.
+// 9 9 9 9 12
+// Agora as tabelas possuem 512 entradas,
+// pois é isso o que dá pra ter com apenas 9 bits.
 
-    // #todo
-    // Precisamos encontra espaço na memória para kernel_pml4 e kernel_pdpt0.
-    // Precisamos criar 'worker functions' para essas rotinas repetitivas.
+// #todo
+// Precisamos encontra espaço na memória para kernel_pml4 e kernel_pdpt0.
+// Precisamos criar 'worker functions' para essas rotinas repetitivas.
 
-    // See:
-    // gpa.h for some physical addresses.
-
+// See:
+// gpa.h for some physical addresses.
 
 // =====================================
 // Levels: PML4, PDPT, PD, PT
@@ -908,8 +904,8 @@ int mmSetUpPaging (void)
 // PD   - Page Directory
 // PT   - Page Table
 
-    // Isso porque endereço físico e virtual são igual abaixo de 1 mb.
-    // 0x0009C000va = 0x0009C000pa
+// Isso porque endereço físico e virtual são igual abaixo de 1 mb.
+// 0x0009C000va = 0x0009C000pa
 
     gKernelPML4Address = KERNEL_PML4_VA;
 
@@ -978,7 +974,7 @@ int mmSetUpPaging (void)
 	// See:  gpa.h
 
 	//==============================================================
-	//                  ****    SMALL SYSTEMS    ****
+	//  SMALL SYSTEMS
 	//==============================================================
     SMALL_origin_pa      = (unsigned long) SMALLSYSTEM_ORIGIN_ADDRESS;
     SMALL_kernel_base_pa = (unsigned long) SMALLSYSTEM_KERNELBASE;
@@ -992,7 +988,7 @@ int mmSetUpPaging (void)
     SMALL_extraheap2_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP2_START;
     SMALL_extraheap3_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP3_START;
 	//==============================================================
-	//                  ****    MEDIUM SYSTEMS    ****
+	//  MEDIUM
 	//==============================================================
     MEDIUM_origin_pa      = (unsigned long) MEDIUMSYSTEM_ORIGIN_ADDRESS;
     MEDIUM_kernel_base_pa = (unsigned long) MEDIUMSYSTEM_KERNELBASE;
@@ -1006,7 +1002,7 @@ int mmSetUpPaging (void)
     MEDIUM_extraheap2_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP2_START;
     MEDIUM_extraheap3_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP3_START;
 	//==============================================================
-	//                  ****    LARGE SYSTEMS    ****
+	//  LARGE SYSTEMS
 	//==============================================================
     LARGE_origin_pa      = (unsigned long) LARGESYSTEM_ORIGIN_ADDRESS;
     LARGE_kernel_base_pa = (unsigned long) LARGESYSTEM_KERNELBASE;
@@ -1020,59 +1016,53 @@ int mmSetUpPaging (void)
     LARGE_extraheap2_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP2_START;
     LARGE_extraheap3_pa  = (unsigned long) LARGESYSTEM_EXTRAHEAP3_START;
 
-
 // =============================================================
 // Page tables
 // =============================================================
 // See:
 // gpa.h
 
+// O que temos logo abaixo s�o pequenas parti��es de mem�ria f�sica.
+// cada parti��o tem 1024 unsigned longs. o que d� 4KB cada. 
 
-	// O que temos logo abaixo s�o pequenas parti��es de mem�ria f�sica.
-	// cada parti��o tem 1024 unsigned longs. o que d� 4KB cada. 
-	
-	
-	// TABLES: 
-	//     Tabelas de p�ginas para o diret�rio do processo Kernel. Essas 
-	// tabelas j� foram criadas nesses endere�os f�sicos pelo Boot Loader. 
-	// Aqui o Kernel apenas reconfigura utilizando as mesmas localiza��es.
-	
-	
-	// Poder�amos alocar mem�ria para as page tables ??
-	// Sim, mas precisa ser um mecanismo que devolva o endere�o f�sico 
-	// de onde foi alocado mem�ria para a page table.
-	// Na verdade deve haver uma �rea de mem�ria reservada para a aloca��o 
-	// de page tables. Todas as que ser�o criadas ocupar�o muito espa�o.
+// TABLES: 
+//     Tabelas de p�ginas para o diret�rio do processo Kernel. Essas 
+// tabelas j� foram criadas nesses endere�os f�sicos pelo Boot Loader. 
+// Aqui o Kernel apenas reconfigura utilizando as mesmas localiza��es.
 
-	//
-	// SYSTEM MEMORY - NONPAGED POOLS 
-	//
-	
-	//*Importante:
-	// @todo: N�o mudar o endere�o onde essas tabelas foram construidas.
-	// Esses endere�os est�o bem organizados, essa ser� o in�cio da mem�ria 
-	// n�o paginada do processo kernel.
-	// Todas as p�ginas mapeadas aqui nunca ser�o enviadas para a mem�ria secund�ria 
-	// ou seja nunca mudar�o de endere�o f�sico.
-	//
-	// 0x0008F000 Tabela para mapear a parte mais baixa da mem�ria f�sica. Come�a em 0.
-	// 0x0008E000 Tabela para mapear a mem�ria usada pela imagem do kernel. Come�a em 0x100000.
-	// 0x0008D000 Tabela para mapear uma �rea em user mode onde rodam c�digos. Come�a em 0x400000.
-	// 0x0008C000 Tabela para mapear a vga. Come�a em 0xb8000.
-	// 0x0008B000 Tabela para mapear o frontbuffer, O come�o � passado pelo Boot.
-	// 0x0008A000 Tabela para mapear o backbuffer, o come�o � em (0x01000000 - 0x400000) no small system.
-	// 0x00089000 Tabela de p�ginas para o pagedpool.
+// Poder�amos alocar mem�ria para as page tables ??
+// Sim, mas precisa ser um mecanismo que devolva o endere�o f�sico 
+// de onde foi alocado mem�ria para a page table.
+// Na verdade deve haver uma �rea de mem�ria reservada para a aloca��o 
+// de page tables. Todas as que ser�o criadas ocupar�o muito espa�o.
 
-    // kernel mode. (Endere�os). 0x0008F000
-    // kernel mode. (O kernel). 0x0008E000
-    // user mode. 0x0008D000
-    // user mode. (vga). 0x0008C000
-    // user mode. (LFB). 0x0008B000
-    // user mode. (buffer). backbuffer 0x0008A000
-    // pagetable para o pagedpool 0x00089000
-    // um endere�o f�sico para a pagetable que mapear� os buffers.
+//
+// SYSTEM MEMORY - NONPAGED POOLS 
+//
 
+//Importante:
+// @todo: N�o mudar o endere�o onde essas tabelas foram construidas.
+// Esses endere�os est�o bem organizados, essa ser� o in�cio da mem�ria 
+// n�o paginada do processo kernel.
+// Todas as p�ginas mapeadas aqui nunca ser�o enviadas para a mem�ria secund�ria 
+// ou seja nunca mudar�o de endere�o f�sico.
+//
+// 0x0008F000 Tabela para mapear a parte mais baixa da mem�ria f�sica. Come�a em 0.
+// 0x0008E000 Tabela para mapear a mem�ria usada pela imagem do kernel. Come�a em 0x100000.
+// 0x0008D000 Tabela para mapear uma �rea em user mode onde rodam c�digos. Come�a em 0x400000.
+// 0x0008C000 Tabela para mapear a vga. Come�a em 0xb8000.
+// 0x0008B000 Tabela para mapear o frontbuffer, O come�o � passado pelo Boot.
+// 0x0008A000 Tabela para mapear o backbuffer, o come�o � em (0x01000000 - 0x400000) no small system.
+// 0x00089000 Tabela de p�ginas para o pagedpool.
 
+// kernel mode. (Endere�os). 0x0008F000
+// kernel mode. (O kernel). 0x0008E000
+// user mode. 0x0008D000
+// user mode. (vga). 0x0008C000
+// user mode. (LFB). 0x0008B000
+// user mode. (buffer). backbuffer 0x0008A000
+// pagetable para o pagedpool 0x00089000
+// um endere�o f�sico para a pagetable que mapear� os buffers.
 
     unsigned long *pt_ring0area    = (unsigned long *) PAGETABLE_RING0AREA; 
     unsigned long *pt_ring3area    = (unsigned long *) PAGETABLE_RING3AREA;
@@ -1087,52 +1077,45 @@ int mmSetUpPaging (void)
     // ...
 
 
-
-
     debug_print("mmSetUpPaging:\n");
-    
 
 
-	//
-	// SYSTEM MEMORY - PAGED POOLS 
-	//
+//
+// SYSTEM MEMORY - PAGED POOLS 
+//
 
+//Criaremos por enquanto apenas uma pagetable com mem�ria paginada.
+//unsigned long *paged_page_table = (unsigned long *) ??;  //BUFFER_PAGETABLE.	
 
-    //Criaremos por enquanto apenas uma pagetable com mem�ria paginada.
-    //unsigned long *paged_page_table = (unsigned long *) ??;  //BUFFER_PAGETABLE.	
+// Message. (verbose).
 
+// See:
+// gpa.h
 
-    // Message. (verbose).
+// #todo
+// Como esses são endereços físicos,
+// podemos usar nomes que indiquem que esses são endereços físicos.
+// Como por exemplo, nomes terminados em _PA.
 
+// Início da memória RAM.
+    unsigned long kernel_address = (unsigned long) SYSTEM_ORIGIN;
 
+// Início da imagem do kernel. (1 MB mark)
+    unsigned long kernel_base = (unsigned long) KERNEL_BASE;
 
-    // See:
-    // gpa.h
-    
-    // #todo
-    // Como esses são endereços físicos,
-    // podemos usar nomes que indiquem que esses são endereços físicos.
-    // Como por exemplo, nomes terminados em _PA.
- 
-    // Início da memória RAM.
-    unsigned long kernel_address = SYSTEM_ORIGIN;
+// User area, 0x02000000 (32 MB mark)
+// 32mb. (32*1024*1024) = 0x02000000.
+    unsigned long user_address = (unsigned long) USER_BASE;
 
-    // Início da imagem do kernel. (1 MB mark)
-    unsigned long kernel_base = KERNEL_BASE; 
+// frontbuffer
+// VESA LFB, foi passado pelo Boot Manager.
+    unsigned long lfb_address = (unsigned long) SavedLFB;
 
-    // User area, 0x02000000 (32 MB mark)
-    // 32mb. (32*1024*1024) = 0x02000000.
-    unsigned long user_address = USER_BASE;
-
-    // frontbuffer
-    // VESA LFB, foi passado pelo Boot Manager.
-    unsigned long lfb_address  = (unsigned long) SavedLFB;
-
-    // backbuffer 
-    // Endereço físico provisório para o backbuffer
-    // (para sistemas com pouca memória.)
-    // 16mb. (16*1024*1024) = 0x01000000.
-    unsigned long buff_address  = (unsigned long) 0x01000000; 
+// backbuffer 
+// Endereço físico provisório para o backbuffer
+// (para sistemas com pouca memória.)
+// 16mb. (16*1024*1024) = 0x01000000.
+    unsigned long buff_address = (unsigned long) 0x01000000; 
 
 
 //
@@ -1157,45 +1140,45 @@ int mmSetUpPaging (void)
 // ==================================================
 //
 
-    // Clear levels 4, 3 and 2.
+// Clear levels 4, 3 and 2.
 
-    // Clear level 4
+// Clear level 4
     for ( i=0; i < 512; i++ ){
         kernel_pml4[i] = (unsigned long) 0 | 2;
     };
 
-    // Clear level 3
+// Clear level 3
     for ( i=0; i < 512; i++ ){
        kernel_pdpt0[i] = (unsigned long) 0 | 2;
     };
 
-    // Clear level 2
+// Clear level 2
     for ( i=0; i < 512; i++ ){
         kernel_pd0[i] = (unsigned long) 0 | 2;
     };
-
 
 //
 // ============================
 //
 
-    // #bugbug
-    // Estaríamos dizendo que todas as entradas do primeiro diretorio
-    // esntão em ring0, e que todas as entradas do primeiro pdpt
-    // também estão?
- 
-    // pd >> pdpt
-    // Pointing the 'page directory' address 
-    // at the first entry in the 'page directory pointer table'.
+// #bugbug
+// Estaríamos dizendo que todas as entradas do primeiro diretorio
+// esntão em ring0, e que todas as entradas do primeiro pdpt
+// também estão?
+
+// pd >> pdpt
+// Pointing the 'page directory' address 
+// at the first entry in the 'page directory pointer table'.
 
     kernel_pdpt0[0] = (unsigned long) &kernel_pd0[0];
-    kernel_pdpt0[0] = (unsigned long) kernel_pdpt0[0] | 7; //3;
+    kernel_pdpt0[0] = (unsigned long) kernel_pdpt0[0] | 7;
 
-    // pdpt >> pml4
-    // Pointing the 'page directory pointer table' address 
-    // at the first entry in the kernel_pml4.
+// pdpt >> pml4
+// Pointing the 'page directory pointer table' address 
+// at the first entry in the kernel_pml4.
+
     kernel_pml4[0] = (unsigned long) &kernel_pdpt0[0];
-    kernel_pml4[0] = (unsigned long) kernel_pml4[0] | 7; //3;
+    kernel_pml4[0] = (unsigned long) kernel_pml4[0] | 7;
 
 //
 // ============================
@@ -1205,20 +1188,27 @@ int mmSetUpPaging (void)
 // PAGE TABLES.
 //
 
-    // Vamos criar algumas pagetables e apontá-las
-    // como entradas no diretório 'kernel_pd0'.
+// Vamos criar algumas pagetables e apontá-las
+// como entradas no diretório 'kernel_pd0'.
 
-    // Entries:
-    // 0 = Primeiros 2MB da memória RAM.
-    // 1 = Area em user mode que começa em 32MB da memória física.
-    // 384 = Imagem do kernel que começa em 1MB da memória física.
-    // 385 = frontbuffer. LFB
-    // 386 = backbuffer, começa na área de 16MB da memória física.
+// Entries:
+//   0 = Primeiros 2MB da memória RAM.
+//   1 = Area em user mode que começa em 32MB da memória física.
+// 384 = Imagem do kernel que começa em 1MB da memória física.
+// 385 = frontbuffer. LFB.
+// 386 = backbuffer. Começa na área de 16MB da memória física.
+// 387 = Paged pool area.
+// 388 = Heap pool.
+// 389 = extraheap1
+// 390 = extraheap2
+// 391 = extraheap3. The window server image.
+
 
 // =======================================
 // Primeiros 2MB.  0 ~ 0x1FFFFF
 // 0virt
 // RING0AREA_VA
+//   0 = Primeiros 2MB da memória RAM.
 Entry_0:
     mm_used_ring0_area = (1024 * 1);  //1mb, pois seremos sobrepostos pela imagem do kernel.  
     // mm_used_ring0_area = (1024 * 2);  
@@ -1255,6 +1245,7 @@ Entry_0:
 // Uma área em user mode. 0x00200000 ~ 0x003FFFFF
 // 0x00200000vir - Começa na marca de 32mb fis.
 // RING3AREA_VA
+//   1 = Area em user mode que começa em 32MB da memória física.
 Entry_1:
     mm_used_ring3_area = (1024 * 2);  //2mb
 
@@ -1284,6 +1275,7 @@ Entry_1:
 // A imagem do kernel.  0x30000000 ~ 0x301FFFFF
 // 0x30000000virt
 // KERNELIMAGE_VA
+// 384 = Imagem do kernel que começa em 1MB da memória física.
 Entry_384:
     mm_used_kernelimage = (1024 * 2);  //2mb
 
@@ -1312,6 +1304,7 @@ Entry_384:
 // frontbuffer - LFB  0x30200000 ~ 0x303FFFFF 
 // 0x30200000virt
 // FRONTBUFFER_VA
+// 385 = frontbuffer. LFB.
 Entry_385:
     mm_used_lfb = (1024 * 2);  
 
@@ -1345,6 +1338,7 @@ Entry_385:
 // backbuffer    0x30400000 ~ 0x305FFFFF
 // 0x30400000virt
 // BACKBUFFER_VA
+// 386 = backbuffer. Começa na área de 16MB da memória física.
 Entry_386:
     mm_used_backbuffer = (1024 * 2);  
 
@@ -1369,6 +1363,7 @@ Entry_386:
 // #test #todo : Paged pool area. 0x30600000 ~ 0x307FFFFF
 // 0x30600000
 // PAGEDPOOL_VA
+// 387 = Paged pool area.
 Entry_387:
     mm_used_pagedpool = (1024 * 2);  //2mb 
 
@@ -1391,6 +1386,7 @@ Entry_387:
 // ====================================================================
 // pool of heaps.
 // HEAPPOOL_VA
+// 388 = Heap pool.
 Entry_388:
     mm_used_heappool = (1024 * 2);  
 
@@ -1438,11 +1434,10 @@ Entry_388:
 // Extra heap used by the ring 3 init process.
 // See: x64init.c When we setup the Heap pointer.
 // InitProcess->Heap = (unsigned long) g_extraheap1_va; :)
-
 // 2048 KB = (2 MB).
-
 // heap
 // EXTRAHEAP1_VA
+// 389 = extraheap1
 Entry_389:
     mm_used_extraheap1 = (1024 * 2); 
     g_extraheap1_va = (unsigned long) EXTRAHEAP1_VA; //0x30A00000;
@@ -1452,8 +1447,10 @@ Entry_389:
         (unsigned long) &pt_extraheap1[0], (unsigned long) SMALL_extraheap1_pa, 
         (unsigned long) 7 ); 
 
-// compositor heap.
+
+// Not used?
 // EXTRAHEAP2_VA
+// 390 = extraheap2
 Entry_390:
     mm_used_extraheap2 = (1024 * 2); 
     g_extraheap2_va = (unsigned long) EXTRAHEAP2_VA; //0x30C00000;
@@ -1463,8 +1460,10 @@ Entry_390:
       (unsigned long) &pt_extraheap2[0], (unsigned long) SMALL_extraheap2_pa,
       (unsigned long) 3 );
 
-// comsositor.
+// The window server image.
+// See: gramado/core/server.
 // EXTRAHEAP3_VA
+// 391 = extraheap3
 Entry_391:
     mm_used_extraheap3 = (1024 * 2); 
     g_extraheap3_va = (unsigned long) EXTRAHEAP3_VA; //0x30E00000;

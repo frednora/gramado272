@@ -230,6 +230,7 @@ void *create_tid0(void)
 // Isso deve ir para uma estrutura de contexto.
 // Obs: rflags 0x0202.
 // Queremos que esse thread rode em ring0.
+// WS_ENTRYPOINT_VA
 
 // Stack frame
     kThread->ss     = 0x10 | 0; 

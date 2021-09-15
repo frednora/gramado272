@@ -158,6 +158,11 @@ unsigned short rtl_to_ushort (short ch)
     return (unsigned short) ch;
 }
 
+unsigned int rtl_to_uint (int ch)
+{
+    return (unsigned int) ch;
+}
+
 unsigned long rtl_to_ulong (long ch)
 {
     return (unsigned long) ch;
@@ -1676,6 +1681,20 @@ int rtl_clone_and_execute ( char *name )
     return (int) sc82 ( 900, (unsigned long) name, 0, 0 );
 }
 
+int rtl_spawn_process( const char *path )
+{
+    if ( (void *) path == NULL ){
+        printf ("rtl_spawn_process: [FAIL] name\n");
+        return -1;
+    }
+
+    if ( *path == 0 ){
+        printf ("rtl_spawn_process: [FAIL] *name\n");
+        return -1;
+    }
+
+    return (int) rtl_clone_and_execute((char*)path);
+}
 
 
 // get current thread
@@ -1689,6 +1708,10 @@ int rtl_focus_on_this_thread(void)
     return (int) cThread;
 }
 
+int rtl_focus_on_me(void)
+{
+    return (int) rtl_focus_on_this_thread();
+}
 
 void rtl_yield(void)
 {

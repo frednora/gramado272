@@ -103,6 +103,7 @@ int rtl_get_file_sync(int fd, int request);
 
 unsigned char  rtl_to_uchar  (char ch);
 unsigned short rtl_to_ushort (short ch);
+unsigned int   rtl_to_uint   (int ch);
 unsigned long  rtl_to_ulong  (long ch);
 
 //==========================================
@@ -257,9 +258,12 @@ ssize_t rtl_console_beep(void);
 
 int rtl_clone_and_execute ( char *name );
 
+int rtl_spawn_process( const char *path );
+
 // get current thread
 // set foreground thread.
 int rtl_focus_on_this_thread(void);
+int rtl_focus_on_me(void);
 
 void rtl_yield(void);
 

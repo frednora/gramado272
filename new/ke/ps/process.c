@@ -1020,8 +1020,8 @@ struct process_d *create_process (
         processNewPID = (int) GRAMADO_PID_BASE;
     }
 
-    // Base priority.
-    // Please, don't inherit base priority!
+// Base priority.
+// Please, don't inherit base priority!
 
     BasePriority = (unsigned long) PRIORITY_NORMAL; 
     Priority     = (unsigned long) priority;

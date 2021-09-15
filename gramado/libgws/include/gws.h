@@ -394,9 +394,17 @@ gws_async_command (
 
 void gws_send_wm_magic ( int fd, int pid );
 
-struct gws_display_d *gws_open_display(char *display_name);
 
+// ==========================
+
+// Display
+struct gws_display_d *gws_open_display(char *display_name);
 void gws_close_display( struct gws_display_d *display);
+
+// Application
+int application_start(void);
+void application_end(void);
+// ==========================
 
 
 int gws_enable_input_method(int method);

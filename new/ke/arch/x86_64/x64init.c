@@ -25,11 +25,12 @@ void x64init_load_pml4_table(unsigned long phy_addr)
 */
 
 
-
+// Create a process for the first ring3 client, called GWS.BIN
 // + Carrega a imagem do primeiro processo que vai rodar em user mode.
 // + Configura sua estrutura de processo.
 // + Configura sua estrutura de thraed.
 // Não passa o comando para o processo.
+// See: gramado/core/client
 
 void I_x64CreateInitialProcess (void)
 {
@@ -234,16 +235,16 @@ void I_x64CreateInitialProcess (void)
 
 
 
-    // This is a very good idea !
-    // The init process has a bigger heap than 
-    // the other ring3 processes.
+// This is a very good idea !
+// The init process has a bigger heap than 
+// the other ring3 processes.
 
-    //if ( g_extraheap1_va != EXTRAHEAP1_VA )
-    //{
-    //    debug_print("__x86StartInit: [ERROR] g_extraheap1_va != EXTRAHEAP1_VA\n");
-    //    while(1){}
-    //}
-
+    if ( g_extraheap1_va != EXTRAHEAP1_VA )
+    {
+        debug_print("I_x64CreateInitialProcess: [ERROR] g_extraheap1_va != EXTRAHEAP1_VA\n");
+        panic      ("I_x64CreateInitialProcess: [ERROR] g_extraheap1_va != EXTRAHEAP1_VA\n");
+        while(1){}
+    }
 
 // ===========================
 
@@ -532,6 +533,11 @@ void I_x64ExecuteInitialProcess (void)
 }
 
 
+// Create the kernel process.
+// It will create a process for two images:
+// KERNEL.BIN and GWSSRV.BIN.
+// See: gramado/core/server.
+
 void I_x64CreateKernelProcess(void)
 {
     debug_print ("I_x64CreateKernelProcess:\n");
@@ -539,6 +545,12 @@ void I_x64CreateKernelProcess(void)
     unsigned long fileret=1;
 
     unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (512 * 4096);
+
+//
+// Window server image.
+//
+
+// WS_IMAGE_VA
 
     fileret = (unsigned long) fsLoadFile ( 
                                   VOLUME1_FAT_ADDRESS, 
@@ -554,12 +566,16 @@ void I_x64CreateKernelProcess(void)
         panic      ("I_x64CreateInitialProcess: GWSSRV.BIN \n");
     }
 
+//
+// Kernel image.
+//
 
-    // IN: 
-    // Room, Desktop, Window
-    // base address, priority, ppid, name, iopl, page directory address.
-    // See: ps/action/process.c
-    
+// IN: 
+// Room, Desktop, Window
+// base address, priority, ppid, name, iopl, page directory address.
+// See: ps/action/process.c
+// KERNELIMAGE_VA
+ 
     KernelProcess = (void *) create_process ( 
                                  NULL, NULL, NULL, 
                                  (unsigned long) 0x30000000, 

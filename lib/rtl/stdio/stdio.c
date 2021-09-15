@@ -1191,14 +1191,14 @@ FILE *fopen ( const char *filename, const char *mode ){
 
 
 //
-// Open.
+// Open
 //
 
 // See:
 // fcntl.c
 
     fd = open (filename, flags, oflags);  
-    
+
     if (fd < 0){
         printf (" fopen: open() fail\n");
         return NULL;
@@ -6165,12 +6165,12 @@ void stdioInitialize(void)
 
     // #debug
     debug_print ("\n");
-    debug_print ("--------------------------\n");
-    debug_print ("stdioInitialize:\n");  
+    debug_print ("----------------\n");
+    debug_print ("stdioInitialize:\n");
 
 //
 // Pointers
-//    
+//
 
     //stdin  = (FILE *) &buffer0[0];
     //stdout = (FILE *) &buffer1[0];

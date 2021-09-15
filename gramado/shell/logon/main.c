@@ -168,11 +168,11 @@ SB_Update (
 int gws(void)
 {
 
-    // Vamos nos concetar com o processo identificado 
-    // com o nome 'ws'
-    // The port name is 'port:/ws'
+// Vamos nos concetar com o processo identificado 
+// com o nome 'ws'
+// The port name is 'port:/ws'
 
-    //==============================
+//==============================
     struct sockaddr addr; 
     int addrlen;
     
@@ -181,57 +181,60 @@ int gws(void)
     addr.sa_data[1] = 's';  
 
     addrlen = sizeof(addr);
-    //==============================
-    
-    
+//==============================
+
     int client_fd = -1;
-    
-    
-    
-    
-    gws_debug_print ("-------------------------\n"); 
-    printf          ("-------------------------\n"); 
-    gws_debug_print ("gws.bin: Initializing ...\n");
-    printf          ("gws.bin: Initializing ...\n");
 
 
-    //
-    // Socket
-    // 
+// #debug
+    gws_debug_print ("logon.bin: Initializing ...\n");
+    //printf          ("logon.bin: Initializing ...\n");
+
+
+// ==============================
+
+//
+// Socket
+// 
+
+// Create a socket. 
+// AF_GRAMADO = 8000
 
     // #debug
-    printf ("gws: Creating socket\n");
+    gws_debug_print ("logon: Creating socket\n");
 
-    // Create a socket. 
-    // AF_GRAMADO = 8000
     client_fd = socket ( AF_GRAMADO, SOCK_STREAM, 0 );
-    
-    if ( client_fd < 0 ){
-       gws_debug_print ("gws: [FAIL] Couldn't create socket\n");
-       printf          ("gws: [FAIL] Couldn't create socket\n");
+
+    if ( client_fd < 0 )
+    {
+       gws_debug_print ("logon: [FAIL] Couldn't create socket\n");
+       printf          ("logon: [FAIL] Couldn't create socket\n");
        exit(1);  //#bugbug Cuidado.
     }
 
-    //
-    // Connect
-    //
 
-    // Nessa hora colocamos no accept um fd.
-    // então o servidor escreverá em nosso arquivo.
-    // Tentando nos conectar ao endereço indicado na estrutura
-    // Como o domínio é AF_GRAMADO, então o endereço é "w","s".
+// ==============================
 
-    printf ("gws: Trying to connect to the address 'ws' ...\n");      
+//
+// Connect
+//
+
+// Tentando nos conectar ao endereço indicado na estrutura
+// Como o domínio é AF_GRAMADO, então o endereço é "w","s".
+// Nessa hora colocamos no accept um fd.
+// então o servidor escreverá em nosso arquivo.
+
+    // #debug
+    gws_debug_print ("logon: Trying to connect to the address 'ws' ...\n");      
 
     while (TRUE){
-        if ( connect (client_fd, (struct sockaddr *) &addr, addrlen ) < 0 )
-        { 
-            gws_debug_print ("gws: Connection Failed\n");
-            printf          ("gws: Connection Failed \n"); 
-            //exit(1);
+        if ( connect (client_fd, (struct sockaddr *) &addr, addrlen ) < 0 ){ 
+            gws_debug_print ("logon: Connection Failed\n");
+            printf          ("logon: Connection Failed\n"); 
         }else{ break; };
     };
 
+// ok
     return (int) client_fd;
 }
 
@@ -384,88 +387,30 @@ done:
 
 int main ( int argc, char *argv[] )
 {
-
     // # config
     int ShowCube = FALSE;
     // ...
-
 
     int client_fd = -1;
     int main_window = -1;
     
 
-    //================================
-    
-    // connection.
-    // Only connect. Nothing more.
-    
+// ================================
+// Connection.
+// Only connect. Nothing more.
+
     client_fd = gws();
 
-    if ( client_fd < 0 ){
-         gws_debug_print ("gws.bin: gws initialization fail \n");
-         printf          ("gws.bin: gws initialization fail \n");
+    if ( client_fd < 0 )
+    {
+         gws_debug_print ("logon.bin: Initialization fail \n");
+         printf          ("logon.bin: Initialization fail \n");
          exit(1);
     }
 
-    //===============
 
-    //========================================
-    
-    // Waiting ...
-    // Wait for the moment where the server says: 'yes'
-
-    gws_debug_print ("gws.bin:  \n");
-    //         printf ("gws.bin:  \n");
-
-
-    /*
-    rtl_set_file_sync( client_fd, SYNC_REQUEST_SET_ACTION, ACTION_ERROR );
-    int value = rtl_get_file_sync( client_fd, SYNC_REQUEST_GET_ACTION );
-    
-    printf ("VALUE {%d} \n", value);
-    
-    if( value == ACTION_ERROR )
-        printf("OK\n");
-
-    rtl_set_file_sync( client_fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    //close(client_fd);
-    //exit(0);
-    //while(1){}
-    */ 
-        
-    /*
-    char buf[32];
-    while (1)
-    {
-        read (client_fd, buf, 4);
-        
-        // Not yes
-        if( buf[0] != 'y')
-        { 
-            buf[4] = 0;
-            printf ("%s",buf); 
-            fflush(stdout);
-        }
-        
-        // yes!
-        if( buf[0] == 'y')
-        {
-            printf ("YES babe!\n");
-            break;
-            //exit(0);
-        }
-        
-        //gws_draw_char ( client_fd, 
-        //    main_window, 
-        //    w/3, 8, COLOR_RED, 'C' );
-    }
-    //================
-    */
-
-
-    //========================================
-    
-    // Metrics.
+// ========================================
+// Get system metrics.
 
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
@@ -482,11 +427,6 @@ int main ( int argc, char *argv[] )
     game_height = h;
     savedW      = w;
     savedH      = h;
-
-    //while(1){
-    // Hello
-    //gws_async_command(client_fd,3,0,0);
-    //}
 
 
 //

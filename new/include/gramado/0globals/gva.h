@@ -69,10 +69,18 @@
 #define BACKBUFFER_VA   0x0000000030400000
 #define PAGEDPOOL_VA    0x0000000030600000
 #define HEAPPOOL_VA     0x0000000030800000
+
+
 #define EXTRAHEAP1_VA   0x0000000030A00000
+
 #define EXTRAHEAP2_VA   0x0000000030C00000
+
+// The window server image
+// See: gramado/core/server
 #define EXTRAHEAP3_VA   0x0000000030E00000
 
+#define WS_IMAGE_VA       EXTRAHEAP3_VA
+#define WS_ENTRYPOINT_VA  0x0000000030E01000
 
 
 // The start of the kernel image virtual address.

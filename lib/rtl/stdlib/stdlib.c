@@ -548,6 +548,10 @@ int heapInit(void)
 // Heap test
 //
 
+// Pegamos o endereço do heap do processo.
+// Isso precisa ser um ponteiro em uma região em ring3
+// compartilhada com esse processo.
+
     unsigned char *heaptest = (unsigned char *) gramado_system_call ( 184, thisprocess_id, 0, 0 );
     if ( (void*) heaptest == NULL ){
         debug_print ("heapInit: [FAIL] heaptest \n");
