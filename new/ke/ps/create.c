@@ -6,12 +6,12 @@
 // create_tid0:
 //     This is the control thread of the window server.
 //     See: gwssrv.bin.
-
+// 0x0000000030A00000
 void *create_tid0(void)
 {
 
     struct thread_d  *kThread;
-    int TID = SYSTEM_TID;
+    int TID = WS_TID;
 
     // loops
     register int r=0;    // Wait reason.
@@ -237,7 +237,7 @@ void *create_tid0(void)
     kThread->rsp    = (unsigned long) ( earlyRing0IdleStack + (8*1024) );  //Stack
     kThread->rflags = 0x0202;    // # Atenção !!  
     kThread->cs     = 0x8 | 0; 
-    kThread->rip    = (unsigned long) 0x30E01000; //SMALLSYSTEM_EXTRAHEAP3_START+ 0x1000;  
+    kThread->rip    = (unsigned long) 0x30A01000; //SMALLSYSTEM_EXTRAHEAP3_START+ 0x1000;  
 
     kThread->initial_rip = (unsigned long) kThread->rip; 
 
@@ -339,13 +339,24 @@ void *create_tid0(void)
 }
 
 
+// 0x0000000030C00000
+void *create_tid1 (void)
+{
+    return NULL;
+}
+
+// 0x0000000030E00000
+void *create_tid2 (void)
+{
+    return NULL;
+}
 
 // ==================================================
-// create_tid1:
+// create_tid3:
 // The control thread of the first ws's client.
 // See: gws.bin
 
-void *create_tid1 (void)
+void *create_tid3 (void)
 {
     struct thread_d  *t;
     int TID = INIT_TID;
@@ -362,13 +373,13 @@ void *create_tid1 (void)
     void *__initStack;   
 
 
-    debug_print ("create_tid1:\n");
+    debug_print ("create_tid3:\n");
 
 
     // The init process.
 
     if ( (void *) InitProcess == NULL ){
-        panic ("create_tid1: InitProcess\n");
+        panic ("create_tid3: InitProcess\n");
     }
 
     // ??
@@ -379,7 +390,7 @@ void *create_tid1 (void)
     t = (void *) kmalloc( sizeof(struct thread_d) );
 
     if ( (void *) t == NULL ){
-        panic ("create_tid1: t\n");
+        panic ("create_tid3: t\n");
     } 
 
     // #todo
@@ -452,7 +463,7 @@ void *create_tid1 (void)
     __initStack = (void *) kmalloc (8*1024);
 
     if ( (void *) __initStack == NULL ){
-        panic ("create_tid1: __initStack\n");
+        panic ("create_tid3: __initStack\n");
     }
 
 //
@@ -462,7 +473,7 @@ void *create_tid1 (void)
     // pml4 physical address
     t->pml4_PA = (unsigned long ) InitProcess->pml4_PA;
     if ( t->pml4_PA == 0 ){
-        panic("create_tid1: t->pml4_PA\n");
+        panic("create_tid3: t->pml4_PA\n");
     }
 
     // Clean the 'wait reason'.
@@ -687,7 +698,7 @@ void *create_tid1 (void)
 
     SelectForExecution(t);    
 
-    debug_print ("create_tid1: done\n");
+    debug_print ("create_tid3: done\n");
 
     return (void *) t;
 }

@@ -177,7 +177,7 @@ void I_x64CreateInitialProcess (void)
     // Criamos um thread em ring3.
     // O valor de eflags é 0x3200.
 
-    InitThread = (void *) create_tid1();
+    InitThread = (void *) create_tid3();
 
 // struct
     if ( (void *) InitThread == NULL ){
@@ -233,31 +233,6 @@ void I_x64CreateInitialProcess (void)
     // [Scheduler stuff]
     next_thread = InitThread->tid;
 
-
-
-// This is a very good idea !
-// The init process has a bigger heap than 
-// the other ring3 processes.
-
-    if ( g_extraheap1_va != EXTRAHEAP1_VA )
-    {
-        debug_print("I_x64CreateInitialProcess: [ERROR] g_extraheap1_va != EXTRAHEAP1_VA\n");
-        panic      ("I_x64CreateInitialProcess: [ERROR] g_extraheap1_va != EXTRAHEAP1_VA\n");
-        while(1){}
-    }
-
-// ===========================
-
-
-//
-// Heap. (ring3)
-//
-
-    // The ring3 for the init process is kinda special
-    // using a shared area mapped for him.
-
-    // #todo #bugbug
-    InitProcess->HeapStart = (unsigned long) g_extraheap1_va;
 
 // ===========================
 
@@ -557,7 +532,7 @@ void I_x64CreateKernelProcess(void)
                                   VOLUME1_ROOTDIR_ADDRESS, 
                                   FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
                                   "GWSSRV  BIN", 
-                                  (unsigned long) 0x30E00000,  //0x30E00000
+                                  (unsigned long) 0x30A00000,  //0x30E00000
                                   BUGBUG_IMAGE_SIZE_LIMIT ); 
 
     // Coldn't load sm.bin
@@ -632,7 +607,7 @@ void I_x64CreateKernelProcess(void)
 // ==================
 // The control thread.
 
-    I_x64CreateWSControlThread();
+    I_x64CreateWSThread();
 
 
 // ====================
@@ -690,9 +665,11 @@ void I_x64CreateKernelProcess(void)
 }
 
 
-void I_x64CreateWSControlThread(void)
+// Create a ring0 thread for the window server image.
+// It belongs to the kernel process.
+void I_x64CreateWSThread(void)
 {
-    debug_print ("I_x64CreateWSControlThread:\n");
+    debug_print ("I_x64CreateWSThread:\n");
 
 //
 // Thread
@@ -703,28 +680,26 @@ void I_x64CreateWSControlThread(void)
 
     ws_thread = (void *) create_tid0();
 
-// struct
     if ( (void *) ws_thread == NULL ){
-        panic ("I_x64CreateWSControlThread: EarlyRING0IDLEThread\n");
+        panic ("I_x64CreateWSThread: ws_thread\n");
     }
 
-// validation
     if ( ws_thread->used  != TRUE || 
          ws_thread->magic != 1234 )
     {
-        panic ("I_x64CreateWSControlThread: ws_thread validation\n");
+        panic ("I_x64CreateWSThread: ws_thread validation\n");
     }
 
 // tid
-    if ( ws_thread->tid != SYSTEM_TID )
+    if ( ws_thread->tid != WS_TID )
     {
-        panic ("I_x64CreateWSControlThread: SYSTEM_TID");
+        panic ("I_x64CreateWSThread: WS_TID");
     }
 
 // owner pid
     if ( ws_thread->ownerPID != GRAMADO_PID_KERNEL )
     {
-        panic ("I_x64CreateWSControlThread: GRAMADO_PID_KERNEL");
+        panic ("I_x64CreateWSThread: GRAMADO_PID_KERNEL");
     }
 
 

@@ -10,18 +10,27 @@
 // 0 = GWSSRV.BIN's control thread
 //     A ring 0 thread that belongs to the kernel process.
 //     it is the window server it self.
-// 1 = GWS.BIN's control thread
+// 3 = GWS.BIN's control thread
 //     This is the first client for the window server.
 //     It is a ring3 application.
 //     It belong to the init process.
 
-// KernelProcess->control
-#define WS_TID  0
-#define WS_FIRST_CLIENT_TID  1
 
-// InitProcess->control
-#define SYSTEM_TID  WS_TID
-#define INIT_TID    WS_FIRST_CLIENT_TID
+#define MODULE0_TID  0  // Window server. GWSSRV.BIN
+#define MODULE1_TID  1  //
+#define MODULE2_TID  2  //
+
+#define CLIENT0_TID  3  // First ring3 client. GWS.BIN
+
+// alias.
+#define WS_TID  MODULE0_TID
+//#define ??      MODULE1_TID
+//#define ??      MODULE2_TID
+#define WS_FIRST_CLIENT_TID  CLIENT0_TID
+
+// alias.
+//#define SYSTEM_TID  MODULE0_TID
+#define INIT_TID    CLIENT0_TID
 // =================================
 
 
@@ -913,8 +922,10 @@ void early_ring0_IdleThread (void);
 
 // See: 
 // create.c
-void *create_tid0(void);
-void *create_tid1(void);
+void *create_tid0(void);   // ws
+void *create_tid1 (void);  // ?
+void *create_tid2 (void);  // ?
+void *create_tid3(void);   // first ring3 client. gws.bin
 
 
 // From thread.c

@@ -289,7 +289,7 @@ void do_thread_zombie (int tid){
     }
 
 // System's ring 0 thread.
-    if ( tid != SYSTEM_TID )
+    if ( tid != WS_TID )
     {
         // #todo: Validation
         t->state = ZOMBIE;

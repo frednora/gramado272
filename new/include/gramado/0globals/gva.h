@@ -71,16 +71,13 @@
 #define HEAPPOOL_VA     0x0000000030800000
 
 
-#define EXTRAHEAP1_VA   0x0000000030A00000
+#define EXTRAHEAP1_VA   0x0000000030A00000  //Window server
+#define EXTRAHEAP2_VA   0x0000000030C00000  // ?
+#define EXTRAHEAP3_VA   0x0000000030E00000  // ?
 
-#define EXTRAHEAP2_VA   0x0000000030C00000
-
-// The window server image
-// See: gramado/core/server
-#define EXTRAHEAP3_VA   0x0000000030E00000
-
-#define WS_IMAGE_VA       EXTRAHEAP3_VA
-#define WS_ENTRYPOINT_VA  0x0000000030E01000
+//alias
+#define WS_IMAGE_VA       EXTRAHEAP1_VA
+#define WS_ENTRYPOINT_VA  0x0000000030A01000
 
 
 // The start of the kernel image virtual address.
