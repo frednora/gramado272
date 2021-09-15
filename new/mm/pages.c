@@ -1445,8 +1445,7 @@ Entry_389:
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_EXTRAHEAP1, 
         (unsigned long) &pt_extraheap1[0], (unsigned long) SMALL_extraheap1_pa, 
-        (unsigned long) 7 ); 
-
+        (unsigned long) 3 ); 
 
 // Not used?
 // EXTRAHEAP2_VA
