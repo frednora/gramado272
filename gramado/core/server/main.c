@@ -675,7 +675,7 @@ void dispacher (int fd)
 // Então logo abaixo mandaremos uma resposta de erro
 // e não uma resposta normal.
 
-    if( Status < 0){
+    if(Status < 0){
          SendErrorResponse = TRUE;
     }
 
@@ -687,7 +687,13 @@ void dispacher (int fd)
 // Alguns requests nao exigem resposta.
 // Entao precisamos modificar a flag de sincronizaçao.
 // que ainda deve estar sinalizando um request.
-    
+
+// #todo
+// O problema é que temos que conferir
+// na biblioteca client-side se o cliente espera ou não
+// por uma resposta para um dado tipo de mensagens.
+// No momento todos os requests esperam por reposta?
+
     if (NoReply == TRUE){
         rtl_set_file_sync( 
             fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
@@ -999,11 +1005,8 @@ gwsProcedure (
     // Here starts the gws requests
 
     // Hello!
-    // Draw text inside a window.
-    // #bugbug:
-    // O window server não tem esse ponteiro de janela.
-    // ele até aceitaria um handle.
-    // #bugbug: Something is very wrong with this routine.
+    // Draw text inside the root window.
+    // screen_window = __root_window
 
     case GWS_Hello:
         gwssrv_debug_print ("gwssrv: Message number 1000\n");
@@ -1016,10 +1019,11 @@ gwsProcedure (
                     (struct gws_window_d *) gui->screen_window,
                     long1, long2, COLOR_GREEN,
                     "gwssrv: Hello friend. This is the Gramado Window Server!");
+                
+                gws_show_backbuffer();
             //}
-        } 
-        gws_show_backbuffer();
-        NoReply = FALSE;
+        }
+        NoReply = FALSE;   //The client-side library is waiting for response.
         break;
 
     // Create Window
@@ -1028,19 +1032,19 @@ gwsProcedure (
     case GWS_CreateWindow:
         gwssrv_debug_print ("gwssrv: [1001] serviceCreateWindow\n");
         serviceCreateWindow(client_fd);
-        NoReply = FALSE;   // #bugbug: Why not? We need to return the window id.
+        NoReply = FALSE;   // We need to return the window id.
         break; 
 
     // backbuffer putpixel
     case GWS_BackbufferPutPixel:
         servicepixelBackBufferPutpixel(); 
-        NoReply = FALSE;
+        NoReply = FALSE;    //The client-side library is waiting for response.
         break;
 
     // backbuffer draw horizontal line
     case GWS_DrawHorizontalLine:
         servicelineBackbufferDrawHorizontalLine();
-        NoReply = FALSE;
+        NoReply = FALSE;  //  //The client-side library is waiting for response.
         break;
 
     // Draw char
@@ -1048,7 +1052,8 @@ gwsProcedure (
     case GWS_DrawChar:
         gwssrv_debug_print ("gwssrv: [1004] serviceDrawChar\n");
         serviceDrawChar();
-        NoReply = FALSE;
+        //NoReply = FALSE;  // asyncronous
+        NoReply = TRUE;   // syncronous
         break;
 
     // Draw text
@@ -1056,21 +1061,24 @@ gwsProcedure (
     case GWS_DrawText:
         gwssrv_debug_print ("gwssrv: [1005] serviceDrawText\n");
         serviceDrawText();
-        NoReply = FALSE;
+        //NoReply = FALSE;  //The client-side library is waiting for response.
+        NoReply = TRUE;     // syncronous
         break;
 
     // Refresh window
     case GWS_RefreshWindow:
         gwssrv_debug_print ("gwssrv: [1006] serviceRefreshWindow\n");
         serviceRefreshWindow();
-        NoReply = FALSE;
+        //NoReply = FALSE;
+        NoReply = TRUE;    // syncronous
         break;
 
      // Redraw window
      case GWS_RedrawWindow:
          gwssrv_debug_print ("gwssrv: [1007] serviceRedrawWindow\n");
          serviceRedrawWindow();
-         NoReply = FALSE;
+         //NoReply = FALSE;
+         NoReply = TRUE;    // syncronous
          break;
 
     // Resize window
@@ -1138,7 +1146,7 @@ gwsProcedure (
     case GWS_GetNextEvent:
         gwssrv_debug_print ("gwssrv: [2031] serviceNextEvent\n");
         serviceNextEvent(client_fd);
-        NoReply = FALSE;
+        NoReply = FALSE; // Yes. We need a reply.
         break;
 
     // See: grprim.c
@@ -1172,9 +1180,8 @@ gwsProcedure (
         gwssrv_debug_print ("gwssrv: [2222] calling serviceAsyncCommand\n");
                   //printf ("gwssrv: [2222] calling serviceAsyncCommand\n");
         serviceAsyncCommand();
-        NoReply = TRUE;
+        NoReply = TRUE;         // Do not send a reply.
         break;
-
 
     case GWS_PutClientMessage:
         gwssrv_debug_print ("gwssrv: [GWS_PutClientMessage]\n");

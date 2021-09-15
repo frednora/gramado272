@@ -264,7 +264,8 @@ The remainder ??
             // do timer qua ainda não esta pronta.
             //extra = TRUE;
             extra = FALSE;
-            if (extra == TRUE){
+            if (extra == TRUE)
+            {
                 debug_print (" X "); 
                 tsCallExtraRoutines();
                 extra = FALSE;
@@ -284,19 +285,21 @@ The remainder ??
 			// fazendo a idle thread dormir. Isso pode prejudicar
 			// a contagem.
 
-			// See: core/ps/threadi.c
+           // See: core/ps/threadi.c
+
+            // #bugbug
+            // #todo: This is a work in progress!
 
             if (dead_thread_collector_status == TRUE)
             {
                 debug_print (" C "); 
-
-                // #bugbug
-                // #todo: This is a work in progress!
                 check_for_dead_thread_collector();
             }
 
-
-
+            //
+            // Input responder
+            //
+            
             // Get a input responder if we have one.
             // We will receive a valid tid.
             // See: schedi.c
@@ -307,14 +310,14 @@ The remainder ??
                 current_thread = (int) tmp_tid;
                 goto dispatch_current;
             }
-            
+
             //
-            // == Spawn thread ===============
+            // Spawn thread 
             //
-            
+
             // Check for a thread in standby.
             // In this case, this routine will not return.
-            // See: ts/sched/schedi.c
+            // See: schedi.c
 
             check_for_standby(); 
 

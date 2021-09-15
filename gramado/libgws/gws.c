@@ -2435,6 +2435,7 @@ gws_draw_char (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
+        if (Value == ACTION_NULL )  { return -1; }  //no reponse. (syncronous)
         //gws_yield();
     };
     // A sincronização nos diz que já temos um reply.
@@ -2493,9 +2494,10 @@ gws_draw_text (
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { return -1; }
+        if (Value == ACTION_NULL )  { return -1; }  //no reponse. (syncronous)
         //gws_yield();
     };
- 
+
     response = __gws_drawtext_response ((int) fd);  
 
     gws_debug_print("gws_draw_text: done\n");
@@ -2789,7 +2791,6 @@ gws_redraw_window (
     // #todo
     // check the return values.
 
-
     // Request
     __gws_redraw_window_request (fd,window,flags);
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
@@ -2800,6 +2801,7 @@ gws_redraw_window (
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
+        if (value == ACTION_NULL )  { return -1; }  //no reponse. (syncronous)
         //gws_yield();
     };
     __gws_redraw_window_reponse (fd);
@@ -2873,6 +2875,7 @@ int gws_refresh_window (int fd, int window )
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
+        if (value == ACTION_NULL )  { return -1; }  //no reponse. (syncronous)
         //gws_yield();
     };
 
