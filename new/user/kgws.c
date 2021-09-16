@@ -980,50 +980,44 @@ kgws_send_to_tid (
     unsigned long long2 )
 {
 
-    // Target thread.
+// Target thread.
     struct thread_d *t;
+    int target_tid = (int) (tid & 0xFFFF);
 
-    //struct window_d *w;
-
-    
     unsigned long tmp_msg=0;
-    unsigned long tmp_ch=0;
-    unsigned long tmp_sc=0;    
-    
 
-    if ( tid<0 ){
+
+    //#debug
+    debug_print("kgws_send_to_tid:\n");
+
+    if ( target_tid < 0 || target_tid >= THREAD_COUNT_MAX )
+    {
+        debug_print("kgws_send_to_tid: target_tid\n");
         goto fail;
     }
 
-    //
-    // Pega a thread alvo. 
-    //
+//
+// Pega a thread alvo. 
+//
 
-    t = (struct thread_d *) threadList[tid];
+    t = (struct thread_d *) threadList[target_tid];
 
     if ( (void *) t == NULL ){
-        panic ("kgws_send_to_controlthread_of_currentwindow: t \n");
+        panic ("kgws_send_to_tid: t \n");
     }
 
     if ( t->used != 1 || t->magic != 1234 ){
-        panic ("kgws_send_to_controlthread_of_currentwindow: t validation \n");
+        panic ("kgws_send_to_tid: t validation \n");
     } 
 
-    tmp_msg = (unsigned long) msg;
-    //tmp_msg = (unsigned long) ( tmp_msg & 0x0000FFFF );
+    tmp_msg = (unsigned long) (msg & 0xFFFF);
 
-    tmp_ch = (unsigned long) long1;
-    //tmp_ch = (unsigned long) ( tmp_ch & 0x000000FF );
-   
-    // Scan code.
-    tmp_sc = (unsigned long) long2;
-    //tmp_sc = (unsigned long) ( tmp_sc & 0x000000FF );
-    
+
     //Send system message to the thread.
-    t->window_list[ t->tail_pos ]  = window;
-    t->msg_list[ t->tail_pos ]     = tmp_msg;
-    t->long1_list[ t->tail_pos ]   = tmp_ch;
-    t->long2_list[ t->tail_pos ]   = tmp_sc;
+    t->window_list[ t->tail_pos ]  = (unsigned long) window;
+    t->msg_list[ t->tail_pos ]     = (unsigned long) (tmp_msg & 0xFFFF);
+    t->long1_list[ t->tail_pos ]   = (unsigned long) long1;
+    t->long2_list[ t->tail_pos ]   = (unsigned long) long2;
 
     t->tail_pos++;
     if ( t->tail_pos >= 31 )
@@ -1039,8 +1033,7 @@ kgws_send_to_tid (
 // This is gonna be the next, 
 // and the last of this round.
     
-    cut_round( (struct thread_d *) t );
-
+    // cut_round( (struct thread_d *) t );
 
     //ok
     return 0;

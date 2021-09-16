@@ -340,8 +340,9 @@ gwsProcedure (
     int f12Status = -1;
 
 
-    if(msg<=0)
-        gws_yield();
+    if(msg<=0){
+        return (-1);
+    }
 
     switch (msg){
 
@@ -485,8 +486,8 @@ done:
 
     check_victory(fd);
 
-    //return TRUE;
-    return (int) gws_default_procedure(fd,0,msg,long1,long2);
+    return 0;
+    //return (int) gws_default_procedure(fd,0,msg,long1,long2);
 }
 
 
@@ -1066,7 +1067,7 @@ int main ( int argc, char *argv[] )
     // Enable input method number 1.
     // Event queue in the current thread.
 
-    gws_enable_input_method(1);
+    //gws_enable_input_method(1);
 
     //=================================
 

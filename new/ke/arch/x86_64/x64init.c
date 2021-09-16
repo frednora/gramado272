@@ -173,9 +173,11 @@ void I_x64CreateInitialProcess (void)
 //====================================================
 // Create thread
 
-    // #
-    // Criamos um thread em ring3.
-    // O valor de eflags é 0x3200.
+// #
+// Criamos um thread em ring3.
+// O valor de eflags é 0x3200.
+// The control thread of the first ws's client.
+// See: gws.bin
 
     InitThread = (void *) create_tid3();
 

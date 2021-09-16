@@ -150,29 +150,14 @@ The remainder ??
 // == Unlocked ? ==============================
 //
 
-    // Nesse momento a thread atual sofre preempção por tempo
-    // Em seguida tentamos selecionar outra thread.
+// Nesse momento a thread atual sofre preempção por tempo
+// Em seguida tentamos selecionar outra thread.
+// Save the context.
 
     if ( task_switch_status == UNLOCKED )
     {
-//
-// ## SAVE CONTEXT ##
-//
         save_current_context();
         CurrentThread->saved = TRUE;
-
-//
-// Compositor
-//
-
-// Chamamos o compositor com o contexto salvo.
-// O pit aciona essa flag a cada 32 ms.
-// See: kgwm.c
-
-        //if (UpdateScreenFlag==TRUE){
-            //schedulerUpdateScreen();
-        //}
-
 
 		// #obs:
 		// A preempção acontecerá por dois possíveis motivos.
@@ -206,22 +191,21 @@ The remainder ??
             //debug_print ("s");  // the same again
             return; 
 
-		// #importante
-		// Nesse momento a thread [esgotou] seu quantum, 
-		// então sofrerá preempção e outra thread será colocada 
-		// para rodar de acordo com a ordem estabelecida 
-		// pelo escalonador.
-
-        // Fim do quantum.
-        }else{
+// #importante
+// Nesse momento a thread [esgotou] seu quantum, 
+// então sofrerá preempção e outra thread será colocada 
+// para rodar de acordo com a ordem estabelecida 
+// pelo escalonador.
 
 //
 // ## PREEMPT ##
 //
 
+        // Fim do quantum.
+        }else{
+
             // Preempt
             // >> MOVEMENT 3 (Running --> Ready).
-
             // sofrendo preempção por tempo.
             // #todo: Mas isso só poderia acontecer se a flag
             // ->preempted permitisse. 
@@ -294,21 +278,6 @@ The remainder ??
             {
                 debug_print (" C "); 
                 check_for_dead_thread_collector();
-            }
-
-            //
-            // Input responder
-            //
-            
-            // Get a input responder if we have one.
-            // We will receive a valid tid.
-            // See: schedi.c
-
-            tmp_tid = (int) check_for_input_responder();
-            if( tmp_tid >= 0 && tmp_tid < THREAD_COUNT_MAX )
-            {
-                current_thread = (int) tmp_tid;
-                goto dispatch_current;
             }
 
             //

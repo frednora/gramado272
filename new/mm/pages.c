@@ -1431,6 +1431,9 @@ Entry_388:
 
 //++
 // ====================================================================
+// The window server image.
+// See: gramado/core/server.
+// This is the core of the 'presentation tier'.
 // Extra heap used by the ring 3 init process.
 // See: x64init.c When we setup the Heap pointer.
 // InitProcess->Heap = (unsigned long) g_extraheap1_va; :)
@@ -1459,8 +1462,6 @@ Entry_390:
       (unsigned long) &pt_extraheap2[0], (unsigned long) SMALL_extraheap2_pa,
       (unsigned long) 3 );
 
-// The window server image.
-// See: gramado/core/server.
 // EXTRAHEAP3_VA
 // 391 = extraheap3
 Entry_391:

@@ -359,8 +359,7 @@ void *create_tid2 (void)
 void *create_tid3 (void)
 {
     struct thread_d  *t;
-    int TID = INIT_TID;
-
+    int TID = (int)(INIT_TID & 0xFFFF);
 
     // loops
     register int r=0;    // Wait reason.
@@ -404,7 +403,7 @@ void *create_tid3 (void)
 // TID
 //
 
-    t->tid = TID;
+    t->tid = (int) (TID & 0xFFFF);
 
     // #bugbug: 
     // Is this a valid pointer?

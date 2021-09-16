@@ -914,8 +914,12 @@ void wm_update_desktop(void)
         // Just draw, don't show.
         if( (void*) w != NULL )
         {
-            redraw_window(w,FALSE);
-            invalidate_window(w);
+            if(w->type == WT_OVERLAPPED)
+            {
+                redraw_window(w,FALSE);
+                invalidate_window(w);
+                set_focus(w);
+            }
         }
 
         w = (struct gws_window_d *) w->next; 
@@ -1253,20 +1257,30 @@ do_select:
 
     next = (struct gws_window_d *) windowList[window_with_focus];
 
+// NULL
     if( (void*) next == NULL )
     {
-        window_with_focus = 0;  //root
+        // Volta para a primeira.
+        window_with_focus = 0;
+        // Seleciona a janela root.
         next = __root_window;
     }
 
     if( (void*) next == NULL )
         return;
 
+    if( next->used != TRUE )
+        return;
+
     if( next->magic != 1234 )
         return;
 
-// Pede para o kernel mudar a foreground thread.
-// Seleciona o pr'oximo input reponder.
+// + Pede para o kernel mudar a foreground thread.
+// + Seleciona o próximo input reponder.
+
+    if (next->client_tid < 0)
+        return;
+
     sc82 (
         10011,
         next->client_tid,
@@ -1274,8 +1288,8 @@ do_select:
         next->client_tid);
 
 // ==============================================
-
 // prepara o nome
+
     int name_len = strlen(next->name);
     if(name_len > 32){ name_len = 32; }
     char w_name[64];
@@ -1283,7 +1297,7 @@ do_select:
     strncat(w_name,next->name,name_len);
     w_name[63]=0;
 
-    // #test: notifica na barra de tarefas
+    // notifica na barra de tarefas
     wm_Update_TaskBar((char *) w_name);
 
 
@@ -1319,15 +1333,10 @@ __add_message_to_into_the_queue(
     unsigned long long2 )
 {
 
-    // #todo
-    // Send message to the thread associated with this window.
-
-    // #deprecated ...
-    // Enviaremos mensagens para a fila na thread
-    // associada a essa janela.
-    // Indicado em client_tid.
+// Send message to the thread associated with this window.
 
     unsigned long message_buffer[8];
+
 
     debug_print("__add_message_to_into_the_queue:\n");
 
@@ -1355,19 +1364,20 @@ __add_message_to_into_the_queue(
 //
 
 // standard
-    message_buffer[0] = (int) window->id;      // wid
-    message_buffer[1]    = (int) (msg & 0xFFFF);  // message code
-    message_buffer[2]  = (unsigned long) long1;
-    message_buffer[3]  = (unsigned long) long2;
+    message_buffer[0] = (unsigned long) (window->id & 0xFFFF);  // wid
+    message_buffer[1] = (unsigned long) (msg        & 0xFFFF);  // message code
+    message_buffer[2] = (unsigned long) long1;
+    message_buffer[3] = (unsigned long) long2;
 
 // extra
     message_buffer[4] = 0;
     message_buffer[5] = 0;
 
 
-
-    if( window->client_tid < 0)
+// Invalid client tid.
+    if( window->client_tid < 0 ){
         return -1;
+    }
 
 //
 // Send
@@ -1382,16 +1392,16 @@ __add_message_to_into_the_queue(
 
 
 // Pede para o kernel mudar a foreground thread.
-// Seleciona o proximo input reponder.
+// Seleciona o próximo 'input reponder'.
 // #danger: 
-// Lembrando que vamos fazer um interrupçao estando dentro 
-// do handler da interrupçao de teclado.
+// Lembrando que vamos fazer um interrupção estando dentro 
+// do handler da interrupção de teclado.
 
     sc82 (
         10011,
         window->client_tid,
         window->client_tid,
-        window->client_tid);
+        window->client_tid );
 
 //done:
     debug_print("__add_message_to_into_the_queue: done\n");
@@ -1421,6 +1431,7 @@ wmProcedure(
          case GWS_Create:
              printf("wmProcedure: [1] GWS_Create\n");
              break;
+
          case GWS_Destroy:
              printf("wmProcedure: [2] GWS_Destroy\n");
              break;
@@ -1432,6 +1443,7 @@ wmProcedure(
          case GWS_Size: //get size?
              printf("wmProcedure: [4] GWS_Size\n");
              break;
+
          case GWS_Resize: //set size ?
              printf("wmProcedure: [5] GWS_Resize\n");
              break;
@@ -1444,6 +1456,7 @@ wmProcedure(
                  //exit(0);
              }
              break;
+
          case GWS_Paint:
              printf("wmProcedure: [8] GWS_Paint\n");
              break;
@@ -1451,6 +1464,7 @@ wmProcedure(
          case GWS_SetFocus: // set focus
              printf("wmProcedure: [9] GWS_SetFocus\n");
              break;
+
          case GWS_KillFocus: //kill focus
              printf("wmProcedure: [10] GWS_KillFocus\n");
              break;
@@ -1630,7 +1644,7 @@ wmHandler(
 
 // #important:
 // Mandaremos input somente para a janela com foco de entrada,
-// seja ela de quaquer tipo.
+// seja ela de qualquer tipo.
 
     case GWS_KeyDown:
     case GWS_SysKeyDown:
@@ -1667,8 +1681,10 @@ do_process_message:
     }
 
 // Procedure
+// IN: A valid window with focus.
+
     r = (unsigned long) wmProcedure(
-                            (struct gws_window_d *) w, // window with focus
+                            (struct gws_window_d *) w,
                             (int) msg,
                             (unsigned long) long1,
                             (unsigned long) long2 ); 

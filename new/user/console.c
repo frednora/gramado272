@@ -1339,11 +1339,13 @@ int consoleCompareStrings(void)
     if ( strncmp(prompt,"app1",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
         kgws_send_to_tid(
-            InitThread->tid,
+            (int) InitThread->tid,
             NULL,  //window
-            MSG_COMMAND,  //msg code
+            (int)MSG_COMMAND,  //msg code
             4001,
             0 );
+        printf("app1: done\n");
+        //refresh_screen();
         goto exit_cmp;
     }
 
@@ -1351,11 +1353,13 @@ int consoleCompareStrings(void)
     if ( strncmp(prompt,"app2",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
         kgws_send_to_tid(
-            InitThread->tid,
+            (int) InitThread->tid,
             NULL,  //window
-            MSG_COMMAND,  //msg code
+            (int)MSG_COMMAND,  //msg code
             4002,
             0 );
+        printf("app2: done\n");
+        //refresh_screen();
         goto exit_cmp;
     }
 
@@ -1363,11 +1367,13 @@ int consoleCompareStrings(void)
     if ( strncmp(prompt,"app3",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
         kgws_send_to_tid(
-            InitThread->tid,
+            (int) InitThread->tid,
             NULL,  //window
-            MSG_COMMAND,  //msg code
+            (int)MSG_COMMAND,  //msg code
             4003,
             0 );
+        printf("app3: done\n");
+        //refresh_screen();
         goto exit_cmp;
     }
 

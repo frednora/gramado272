@@ -156,12 +156,12 @@ wmProcedure (
     char ch_buffer[2];
     char buffer[128];
 
-
     unsigned long tmp_value=0;
+
 
     debug_print("wmProcedure:\n");
     
-    sprintf (buffer,"My \x1b[8C string!!\n"); 
+    sprintf (buffer,"My \x1b[8C string!\n"); 
 
 
 // ===================================
@@ -184,10 +184,13 @@ wmProcedure (
 
     switch (msg){
 
-
         case MSG_KEYDOWN:
 
             // Para todas as teclas quando o console não está ativo.
+            // Serão exibidas na janela com foco de entrada,
+            // se ela for do tipo editbox.
+            // O ws mandará mensagens para a thread associa
+            // à janela com foco de entrada.
             if ( ShellFlag!=TRUE ){
                 wmSendInputToWindowManager(0,MSG_KEYDOWN,long1,long2);
             }
@@ -203,8 +206,8 @@ wmProcedure (
                 {
                     input('\0');               // finalize
                     consoleCompareStrings();   // compare
-                    invalidate_screen();
-                    //refresh_screen();
+                    //invalidate_screen();
+                    refresh_screen();
                     return 0;
                 }
                 break; 
