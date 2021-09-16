@@ -174,9 +174,8 @@ unsigned long SavedBPP;
 #include "drivers/video/video.h"
 #include "drivers/video/screen.h"
 
-
-#include "user/model/fonts.h"
-#include "user/model/ascii.h" 
+#include "user/fonts.h"
+#include "user/ascii.h" 
 
 // fs
 #include "fs/path.h"       // path.
@@ -253,14 +252,10 @@ unsigned long SavedBPP;
 
 
 #include "user/ws.h"
-
 #include "user/kgws.h"
-
-
-// #view - designers
-#include "user/view/vk.h"
-#include "user/view/kbdabnt2.h"
-#include "user/view/window.h"
+#include "user/vk.h"
+#include "user/kbdabnt2.h"
+#include "user/window.h"
 // ...
 
 
@@ -282,8 +277,6 @@ unsigned long SavedBPP;
 #include "drivers/tty/ttydrv.h"
 #include "drivers/tty/tty.h"
 #include "drivers/tty/pty.h"
-
-
 
 
 #include "user/vt.h"

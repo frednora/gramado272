@@ -39,10 +39,10 @@ irq1_KEYBOARD (void)
     // Disable mouse port.
     wait_then_write (0x64,0xA7);
     //mouse_expect_ack();
-    
-    // #test
-    // See: ps2kbd.c
-    
+
+// See: 
+// ps2kbd.c
+
     DeviceInterface_PS2Keyboard();
 
     // #bugbug

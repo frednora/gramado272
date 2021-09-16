@@ -9,7 +9,7 @@ static unsigned long HotSpotX=0;
 static unsigned long HotSpotY=0;
 
 //keyboard support
-#define LDISC_KEY_RELEASED  0x80
+//#define LDISC_KEY_PRESSED  0x80
 #define LDISC_KEY_MASK  0x7F
 #define LDISC_FULL      1
 #define LDISC_EMPTY     0
@@ -516,21 +516,11 @@ xxxKeyEvent (
 
     Keyboard_RawByte = raw_byte;
 
-	// Obs: 
-	// Observe que daqui pra frente todas as rotinas poderiam 
-	// estar em user mode.
-
-
-// Overrun raw byte
-// What to do?
+    //if ( Keyboard_RawByte == 0 )
+        //return -1;
 
     if ( Keyboard_RawByte == 0xFF )
-    {
-        //?
-    }
-
-// See:
-// ps2kbd.c
+        return -1;
 
 // #todo
 // The last byte was a prefix
@@ -589,11 +579,11 @@ xxxKeyEvent (
     //isDown = !(Keyboard_RawByte & 0x80);
 
 
+// ================================================
 //key_released:
-    // ================================================
-    // Se a tecla for (liberada).
-    // ligado. tecla liberada.
-    if ( (Keyboard_RawByte & LDISC_KEY_RELEASED) != 0 ) // liberada.
+
+    // Não está pressioanda
+    if ( (Keyboard_RawByte & 0x80) != 0 )
     {
         // Break = TRUE;
         
@@ -709,14 +699,14 @@ xxxKeyEvent (
 
         // Nothing.
         goto done;
-    };
+    }// FI
 
 
-//key_pressed:
-    // ================================================
-    //  Tecla (pressionada) ...........
-    // bit desligado. tecla pressionada.
-    if ( (Keyboard_RawByte & LDISC_KEY_RELEASED) == 0 )  // pressionada.
+// ================================================
+// key_pressed:
+
+    // Está ressionada.
+    if ( (Keyboard_RawByte & 0x80) == 0 ) 
     {
         // Break = FALSE;
         
@@ -873,8 +863,7 @@ xxxKeyEvent (
         // Nothing.
         goto done;
         
-    };  // Fim do else
-
+    } // FI
 
 
 // == Dispatch =======================================================
@@ -890,21 +879,29 @@ done:
     Event_LongRawByte = (unsigned long) ( Keyboard_RawByte & 0x000000FF );
 
 
-/*
 
- #deprecated
- The window procedure will send this message
- to the thread associated with a window
- 
-// Sending message to the foreground thread.
-    if (tid >= 0 || tid < THREAD_COUNT_MAX)
+// Não tem virtual key '0'.
+
+    if ( Event_LongASCIICode == 0 )
+        return -1;
+
+
+// #todo
+// Check 'control + alt + del'.
+
+
+// Teclas de digitação.
+// Manda para o window server.
+// Ele vai imprimir na janela com foco de entrada
+// e enviar mensagem para a thread com foco.
+
+/*
+    if ( Event_Message == MSG_KEYDOWN )
     {
-        kgws_send_to_tid(
-            (int) tid,
-            (struct window_d *) Event_Window,    // opaque pointer
-            (int)               Event_Message,
-            (unsigned long)     Event_LongASCIICode,
-            (unsigned long)     Event_LongRawByte );
+        if ( ShellFlag!=TRUE ){
+            wmSendInputToWindowManager(0, MSG_KEYDOWN, Event_LongASCIICode, Event_LongRawByte);
+            return 0;
+        }
     }
 */
 
@@ -912,6 +909,7 @@ done:
 // Process the event using the system's window procedures.
 // It can use the kernel's virtual console or
 // sent the evento to the loadable window server.
+// See: kgwm.c
 
     wmProcedure(
         (struct window_d *) Event_Window,    // opaque pointer
@@ -1010,8 +1008,21 @@ kgws_send_to_tid (
         panic ("kgws_send_to_tid: t validation \n");
     } 
 
-    tmp_msg = (unsigned long) (msg & 0xFFFF);
 
+//
+// Wake up the target thread ?
+//
+
+    // wakeup_thread(t->tid);
+
+// #todo
+// Podemos melhorar a prioridade ou o quantum da thread alvo.
+
+//
+// The message
+//
+
+    tmp_msg = (unsigned long) (msg & 0xFFFF);
 
     //Send system message to the thread.
     t->window_list[ t->tail_pos ]  = (unsigned long) window;

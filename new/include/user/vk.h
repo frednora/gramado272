@@ -14,18 +14,18 @@
 // Virtual Key.
 //
 
-#define VK_LBUTTON	0x01
-#define VK_RBUTTON	0x02
-#define VK_CANCEL	0x03
-#define VK_POWER    0x03  //??
-#define VK_MBUTTON	0x04
-#define VK_XBUTTON1	0x05
-#define VK_XBUTTON2	0x06
+#define VK_LBUTTON     0x01
+#define VK_RBUTTON     0x02
+#define VK_CANCEL      0x03
+#define VK_POWER       0x03
+#define VK_MBUTTON     0x04
+#define VK_XBUTTON1    0x05
+#define VK_XBUTTON2    0x06
 
 
 #define VK_ABNT2_TREMA 0x07   // caps lock ligado.
 
-#define VK_CLEAR	0x0C  //12 ??
+#define VK_CLEAR    0x0C  //12 ??
 
 
 #define VK_BACK         0x0E  //14  //8

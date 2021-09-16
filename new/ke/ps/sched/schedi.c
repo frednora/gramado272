@@ -91,76 +91,98 @@ int KiScheduler (void){
  */
 
 // 7
-void do_thread_blocked (int tid){
+void do_thread_blocked (int tid)
+{
+    struct thread_d  *t; 
 
-    struct thread_d *t; 
-
-    // tid
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
-    //
-    // Thread.
-    //
-
+// struct
     t = (void *) threadList[tid];
 
-    if ( (void *) t != NULL )
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+// #todo
+// Se a thread estiver rodando no momento
+// e ela mesmo ou uma thread de outro núcleo
+// chamou essa rotina, então precisamos reescalonar ?
+
+/*
+    if (t->state == RUNNING)
     {
-        // #todo:
-        // Validation
-        t->state = BLOCKED;
+        // Set the 'Need to reeschedule' flag.
     }
+*/
+
+// Change the state.
+    t->state = BLOCKED;
 }
 
+
 //3
-void do_thread_dead (int tid){
+void do_thread_dead (int tid)
+{
+    struct thread_d  *t;
 
-    struct thread_d *t; 
 
-
-    // tid
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
-    //
-    // Thread.
-    //
-
+// struct
     t = (void *) threadList[tid];
 
-    if ( (void *) t != NULL )
-    {
-        // todo: validation
-        t->state = DEAD;
-    }
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+// change the state
+    t->state = DEAD;
 }
 
 //0
-void do_thread_initialized (int tid){
+void do_thread_initialized (int tid)
+{
+    struct thread_d  *t;
 
-    struct thread_d *t; 
 
-
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
-        //todo message
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
-    //
-    // Thread.
-    //
+// struct
 
     t = (void *) threadList[tid];
 
-    if ( (void *) t != NULL )
-    {
-        // todo: validation
-        //if ( t->used == 1 && t->magic == 1234 )
-        t->state = INITIALIZED;
-    }
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+
+// change the state
+    t->state = INITIALIZED;
 }
 
 
@@ -169,25 +191,38 @@ void do_thread_ready (int tid)
 {
     struct thread_d  *t;
 
-
-// tid limits
-    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    if ( tid < 0 || 
+         tid >= THREAD_COUNT_MAX )
     {
         return;
     }
 
-//
-// Thread
-//
+// Struct
 
     t = (void *) threadList[tid];
 
-    if ( (void *) t == NULL ){  return;  }
-
-    if ( t->used != TRUE || t->magic != 1234 )
-    {
+    if( (void*) t == NULL )
         return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+// #todo
+// Se a thread estiver rodando no momento
+// e ela mesmo ou uma thread de outro núcleo
+// chamou essa rotina, então precisamos reescalonar ?
+
+/*
+    if (t->state == RUNNING)
+    {
+        // Set the 'Need to reeschedule' flag.
     }
+*/
+
+//  Change the state.
 
     t->state = READY;
 }
@@ -205,9 +240,7 @@ void do_thread_running (int tid){
         return;
     }
 
-//
-// Thread
-//
+// struct
 
     t = (void *) threadList[tid];
 
@@ -225,23 +258,29 @@ void do_thread_standby (int tid)
 {
     struct thread_d *t; 
 
-    // tid
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
-    //
-    // Thread.
-    //
-    
+// struct
+
     t = (void *) threadList[tid];
 
-    if ( (void *) t != NULL )
-    {
-        // todo: validation
-        t->state = STANDBY;
-    }
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+// change the state
+    t->state = STANDBY;
 }
+
 
 //6
 void do_thread_waiting (int tid)
@@ -249,21 +288,26 @@ void do_thread_waiting (int tid)
     struct thread_d *t; 
 
     // tid
-    if (tid < 0 || tid >= THREAD_COUNT_MAX){
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
+    {
         return;
     }
 
-    //
-    // Thread.
-    //
+// struct
 
     t = (void *) threadList[tid];
 
-    if ( (void *) t != NULL )
-    {
-        //#todo: validation
-        t->state = WAITING;
-    }
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+// change the state
+    t->state = WAITING;
 }
 
 // 2
@@ -277,23 +321,28 @@ void do_thread_zombie (int tid){
         return;
     }
 
-//
-// Thread
-//
+// struct
 
     t = (void *) threadList[tid]; 
-    if ( (void *) t == NULL )
-    {
-        // todo: Message
+
+    if( (void*) t == NULL )
         return;
-    }
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
 
 // System's ring 0 thread.
-    if ( tid != WS_TID )
-    {
-        // #todo: Validation
-        t->state = ZOMBIE;
-    }    
+// The window server's thread.
+
+    if ( tid == WS_TID )
+        return;
+
+// Change the state
+    t->state = ZOMBIE;
 }
 
 
@@ -314,8 +363,8 @@ void do_thread_zombie (int tid){
 //ela precisa retornar valores padronizados e configurar 
 //o status recebido
 
-int do_waitpid (pid_t pid, int *status, int options){
-
+int do_waitpid (pid_t pid, int *status, int options)
+{
     struct process_d *p;  
 
 
@@ -389,30 +438,48 @@ int do_waitpid (pid_t pid, int *status, int options){
  *     Obtendo o TID da thread atual. 
  */
 
-// #todo: get current thread
-int get_current (void)
+int get_current_thread (void)
 {
     return (int) current_thread;
 }
 
+
+
 /* 
  * set_current:
- *     #todo: 
- *     Mudar para set_current_thread ( int tid ). 
  */
  
-void set_current (int id){
+void set_current_thread (int tid)
+{
+    struct thread_d  *t; 
 
-    if ( id == current_thread ){  return;  }
 
-// Limits
-
-    if (id < 0 || id >= THREAD_COUNT_MAX)
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
     {
         return;
     }
 
-    current_thread = (int) id;
+    if ( tid == current_thread )
+    {  
+        return;
+    }
+
+// struct
+
+    t = (void *) threadList[tid]; 
+
+    if( (void*) t == NULL )
+        return;
+
+    if(t->used != TRUE)
+        return;
+
+    if(t->magic != 1234)
+        return;
+
+
+// Change global variable.
+    current_thread = (int) tid;
 }
 
 
@@ -628,62 +695,79 @@ fail:
 
 
 /*
- **************************************************
  * wakeup_thread: 
+ * 
  *    Para acordar uma thread, basta colocar ela no 
- * estado RUNNING se ela estiver com seu contexto 
- * salvo e seu estado WAITING. 
- *
- * @todo:
- *     Criar scheduleriWakeupYhread(int tid);
+ * estado READY se ela estiver com seu contexto 
+ * salvo e seu estado WAITING.
+ *    Estando em READY o scheduler vai escalonar ela quando
+ * for possível.
  */
 
-void wakeup_thread (int tid){
+void wakeup_thread (int tid)
+{
+    struct thread_d  *t;
+    int Status=0;
 
-    struct thread_d *t;
-    int Status;
-	//...
-
-
-	// Limits.
-
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
+    if ( tid < 0 || 
+         tid >= THREAD_COUNT_MAX )
     {
         return;
     }
 
-    //Struct.
+// Struct.
 
     t = (void *) threadList[tid]; 
 
-    if ( (void *) t == NULL ){
-        return;    
-   
-    }else{
-    
-		//Se o contexto não foi salvo. 
-		//Não tem como acorda-la.
-		//Pois acordar significa apenas retornar 
-		//ao estado RUNNING.
-		if ( t->saved == 0 ){ 
-	        return; 
-		}
-		
-		// Se estiver bloqueada, 
-		// não tem como acordar ainda. 
-		// precisa desbloquear.
-		if (t->state == BLOCKED){ 
-	        return; 
-		}
-			
-	    //Isso acorda a thread,
-		//mas não coloca ela imediatamente para rodar,
-		//nem precisa.
+    if ( (void *) t == NULL )
+    {
+        return;
+    }
 
-        do_thread_running (tid);
-	};
+    if ( t->used != TRUE )
+        return;
 
-    // Nothing ?!
+    if ( t->magic != 1234 )
+        return;
+
+
+// Se o contexto não foi salvo. 
+// Não tem como acorda-la.
+// Pois acordar significa apenas retornar ao estado RUNNING.
+
+    if ( t->saved == FALSE )
+    {
+        return; 
+    }
+
+// Se a thread ja está acordada, então não há mais o que fazer.
+    if (t->state == READY)
+    {
+        return;
+    }
+
+
+// Não podemos acordar uma thread que ja está rodando.
+// Ela precisa estar esperando.
+
+    if (t->state == RUNNING)
+    {
+        return;
+    }
+
+
+// Se estiver bloqueada, 
+// não tem como acordar ainda. 
+// precisa desbloquear.
+
+    if (t->state == BLOCKED)
+    { 
+        return; 
+    }
+
+// Isso acorda a thread.
+
+    do_thread_ready(tid);
 }
 
 

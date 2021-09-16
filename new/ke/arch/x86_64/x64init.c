@@ -325,9 +325,10 @@ void I_x64ExecuteInitialProcess (void)
         panic("I_x64ExecuteInitialProcess: tid\n");
     }
 
-    // Set the current thread.
-    set_current( Thread->tid ); 
-    
+// Set the current thread.
+
+    set_current_thread( Thread->tid );
+
     // ...
 
     // State
@@ -340,7 +341,8 @@ void I_x64ExecuteInitialProcess (void)
         die();
     }
 
-    // * MOVEMENT 2 ( Standby --> Running)
+// :: MOVEMENT 2 ( Standby --> Running )
+
     if ( Thread->state == STANDBY )
     {
         Thread->state = RUNNING;

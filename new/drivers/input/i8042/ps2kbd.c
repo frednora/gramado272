@@ -129,6 +129,10 @@ sc_again:
 
     switch (__raw){
 
+    case 0:
+       goto done;
+       break;
+
     // ACKNOWLEDGE
     case 0xFA:
         //#test
@@ -144,6 +148,11 @@ sc_again:
         refresh_screen();
         goto done;
         break;
+
+    case 0xFF:
+       goto done;
+       break;
+
     
     ScancodeOrPrefix:
     default:
@@ -179,11 +188,6 @@ CheckByte:
      if ( __raw == 0xE0 ){ __has_e0_prefix = 1; goto done;  }
      if ( __raw == 0xE1 ){ __has_e1_prefix = 1; goto done;  }
 
-// Checking something
-     if ( __raw == 0 )   {                      goto done;  }
-// Checking something
-     //if ( __raw == 0xFF )   {                      goto done;  }
-
 
 // Process the normal byte
 NormalByte:
@@ -205,13 +209,23 @@ NormalByte:
 //
 
 // Valid foreground thread.
-    if( foreground_thread >= 0 && foreground_thread < THREAD_COUNT_MAX )
+
+    if ( foreground_thread >= 0 && 
+         foreground_thread < THREAD_COUNT_MAX )
     {
-        console_interrupt (
-            foreground_thread,
-            CONSOLE_DEVICE_KEYBOARD,
-            __raw );
+        
+        // Hub for different input sources.
+        //console_interrupt (
+            //foreground_thread,
+            //CONSOLE_DEVICE_KEYBOARD,
+            //__raw );
+       
+       // Handler for keyboard input.
+       xxxKeyEvent(
+           (int) foreground_thread,
+           (unsigned char) __raw );
     }
+
 
 // Clean the mess.
     __has_e0_prefix = 0;

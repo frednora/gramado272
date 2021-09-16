@@ -131,8 +131,8 @@ void do_thread_zombie (int tid);
 
 int do_waitpid (pid_t pid, int *status, int options);
 
-int get_current (void);
-void set_current (int id);
+int get_current_thread (void);
+void set_current_thread (int tid);
 
 void wait_for_a_reason ( int tid, int reason );
 int wakeup_thread_reason ( int tid, int reason );
