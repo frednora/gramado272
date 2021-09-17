@@ -1,7 +1,6 @@
 
 #history:
 #2019 - Created by Fred Nora.
-
 #todo:
 #fazer um makefile pra compilar o shell
 #obs: #bugbug tem que arrumas as coisas aqui.
@@ -37,14 +36,15 @@ LIBCOBJ   = ../../../com/lib/rtl/obj
 LIBGWS    = ../../libgws/include/
 LIBGWSOBJ = ../../libgws/obj
 
-#
-# Objects
-#
+	#
+	# Objects
+	#
 
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o \
 gws.o connect.o events.o rw.o    
+
 
 
 
@@ -80,13 +80,13 @@ all-c:
 	
 	
 hello-link:
-	ld -m elf_x86_64 -T ../../link.ld -o LOGON.BIN $(myObjects)    
+	ld -m elf_x86_64 -T ../../link.ld -o SETUP.BIN $(myObjects)    
 
 finalize:
-	cp LOGON.BIN  ../../bin
+	cp SETUP.BIN  ../../bin
 
 clean:
 	-rm *.o
-	-rm LOGON.BIN 
+	-rm SETUP.BIN 
 	
 	

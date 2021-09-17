@@ -1,7 +1,6 @@
 
-	gramado/setup/
+	gramado/logon/
 
-	Setup Environment.
-	It is rused to install or upgrade the operatins system.
+	Logon Environment.
 	We open this environment instead of open
 	the Gramado Shell Environment.

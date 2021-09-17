@@ -11,11 +11,16 @@ all:
 	make -C core/client    
 	make -C core/server    
 
+# Gramado setup
+	make -C setup/client    
+
+# Gramado logon
+	make -C logon/client    
+
 # Gramado shell
 	make -C shell/browser
 	make -C shell/editor
 	make -C shell/fileman
-	make -C shell/logon
 	make -C shell/terminal  
 
 

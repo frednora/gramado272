@@ -252,6 +252,9 @@ clean:
 	-rm -rf gramado/core/server/*.o
 	-rm -rf gramado/core/client/*.o
 
+	-rm -rf gramado/setup/client/*.o
+	-rm -rf gramado/logon/client/*.o
+
 	@echo "Success?"
 
 # base-tier
