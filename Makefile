@@ -22,17 +22,29 @@ PYTHON  = python
 PYTHON2 = python2
 PYTHON3 = python3
 
-# Verbose.
+#
+# Config
+#
 
-ifndef KBUILD_VERBOSE
-  KBUILD_VERBOSE = 1
+
+# use verbose
+ifndef CONFIG_USE_VERBOSE
+    CONFIG_USE_VERBOSE = 1
 endif
 
-ifeq ($(KBUILD_VERBOSE),1)
-  Q =
+
+# ========
+
+# verbose
+ifeq ($(CONFIG_USE_VERBOSE),1)
+    Q =
 else
-  Q = @
+    Q = @
 endif
+
+
+
+# ===== Start ====
 
 PHONY := all
 
@@ -294,6 +306,14 @@ clean3:
 
 # Clear system folder
 	-rm -rf gramado/bin/*.BIN
+
+usage:
+	@echo "Building everything:"
+	@echo "make all"
+	@echo "Clear the mess to restart:"
+	@echo "make clean-all"
+	@echo "Testing on qemu:"
+	@echo "./run"
 
 # End
 

@@ -1038,14 +1038,15 @@ int main ( int argc, char *argv[] )
 // Podemos nesse momento ler alguma configuração
 // que nos diga qual interface devemos inicializar.
 
-    if(launchChild == TRUE){
+    if(launchChild == TRUE)
+    {
+        gws_redraw_window(client_fd,game_window,0);
+        
+        // Interface 1: File manager.
+        gws_clone_and_execute("fileman.bin");
 
-// Interface 1: File manager.
-    gws_clone_and_execute("fileman.bin");
-
-// Interface 1: Test app.
-    //gws_clone_and_execute("editor.bin");
-
+        // Interface 1: Test app.
+        //gws_clone_and_execute("editor.bin");
     }
 
 //

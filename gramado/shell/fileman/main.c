@@ -357,13 +357,18 @@ int main ( int argc, char *argv[] ){
     // #hackhack
     unsigned long titlebarHeight = 32;
 
-    unsigned long wLeft   = 0;
-    unsigned long wTop    = 0;
-    unsigned long wWidth  = w;     //(w >> 1);
-    unsigned long wHeight = h-40;  //h;
+    unsigned long wWidth  = (w >> 1);
+    unsigned long wHeight = (h - 100);
+    unsigned long wLeft   = (w - wWidth)  >> 1;
+    unsigned long wTop    = (h - wHeight) >> 1;
 
-    if (current_mode == GRAMADO_JAIL ){
-        wLeft=0;  wTop=0;  wWidth=w;  wHeight=h;
+// Small screen
+    if (current_mode == GRAMADO_JAIL)
+    {
+        wLeft=0; 
+        wTop=0;  
+        wWidth=w;  
+        wHeight = (h-40);
     }
 
 // main window

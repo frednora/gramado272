@@ -1293,13 +1293,12 @@ do_select:
     int name_len = strlen(next->name);
     if(name_len > 32){ name_len = 32; }
     char w_name[64];
-    sprintf(w_name,"Focus on: ");
+    sprintf(w_name,":: ");
     strncat(w_name,next->name,name_len);
     w_name[63]=0;
 
     // notifica na barra de tarefas
     wm_Update_TaskBar((char *) w_name);
-
 
 //=================================================
 
@@ -2111,7 +2110,7 @@ int serviceCreateWindow (int client_fd)
     int name_len = strlen(Window->name);
     if(name_len > 32){ name_len = 32; }
     char w_name[64];
-    sprintf(w_name,"Application: ");
+    sprintf(w_name,":: ");
     strncat(w_name,Window->name,name_len);
     w_name[63]=0;
 
@@ -3966,13 +3965,16 @@ int get_window_tid( struct gws_window_d *window)
 // teremos mais argumentos
 void wm_Update_TaskBar( char *string )
 {
+    //unsigned long w = gws_get_device_width();
+    //unsigned long h = gws_get_device_height();
+
     redraw_window(__taskbar_window,TRUE);
     redraw_window(__taskbar_startmenu_button_window,TRUE);
 
 // text
     dtextDrawText(
         __taskbar_window,
-        100,
+        __taskbar_window->width - 100,//100,
         8,
         COLOR_YELLOW,
         string );

@@ -357,9 +357,10 @@ int main ( int argc, char *argv[] ){
 // ============================================
 
 
-    // A janela é a metade da tela.
+// Tamanho da janela.
+
     unsigned long w_width  = (w>>1);
-    unsigned long w_height = (h>>1);
+    unsigned long w_height =  (h - 100); //(h>>1);
 
     // original: 
     unsigned long viewwindowx = ( ( w - w_width ) >> 1 );

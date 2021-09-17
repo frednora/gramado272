@@ -1286,6 +1286,8 @@ void create_taskbar (void)
 // =======================================================
 // start menu button
 
+    // size: 52,28
+
     // create the button
     __taskbar_startmenu_button_window = (struct gws_window_d *) CreateWindow ( 
                                             WT_BUTTON, 
@@ -1293,7 +1295,10 @@ void create_taskbar (void)
                                             1, //status 
                                             1, //view
                                             "Start",  
-                                            4, 4, 52, 28,   
+                                            (__taskbar_window->width - 52) >> 1,  //l 
+                                            4,  //t
+                                            52, 
+                                            28,   
                                             __taskbar_window, 
                                             0, 
                                             COLOR_GRAY, COLOR_GRAY );    
@@ -1419,6 +1424,22 @@ void create_background (void)
     //#debug
     //asm ("int $3");
 
+
+//
+// BMP
+//
+
+// Testing bmp.
+// See:
+// gramado/themes
+
+    if (current_mode == GRAMADO_JAIL){
+        gwssrv_display_system_icon ( 1, 8, 8 );
+    }else{
+        gwssrv_display_system_icon ( 2, 8, 8 );
+    };
+
+
 // See: 
 // gws.c
 
@@ -1430,7 +1451,8 @@ void create_background (void)
 
     gwssrv_debug_print ("gwssrv: create_background: done\n");
 
-    //#debug
+// #debug
+    //refresh_screen();
     //while(1){}
 }
 
@@ -1489,41 +1511,11 @@ int initGraphics (void)
     //gws_show_backbuffer();
     //while(1){}
 
-
 //
-// BMP
+// == checks ===============================================
 //
 
-    // Suspended for now!
-
-    
-    // Testing bmp.
-    // See:
-    if (current_mode == GRAMADO_JAIL){
-        gwssrv_display_system_icon ( 1, 8, 100 );
-        //gwssrv_display_system_icon ( 2, 8, 120 );
-        //gwssrv_display_system_icon ( 3, 8, 140 );
-        //gwssrv_display_system_icon ( 4, 8, 160 );
-        // ...
-    }else{
-        gwssrv_display_system_icon ( 1, 100, 100 );
-        //gwssrv_display_system_icon ( 2, 200, 200 );
-        //gwssrv_display_system_icon ( 3, 300, 300 );
-        //gwssrv_display_system_icon ( 4, 400, 400 );
-    };
-
-
-    //#debug breakpoint
-    //while(1){}
-    
-    
-    
-    //
-    // == checks ===============================================
-    //
-
-
-    // Check if we already have the root window.
+// Check if we already have the root window.
 
     if ( (void*) __root_window == NULL )
     {
