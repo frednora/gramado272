@@ -1282,26 +1282,34 @@ void create_taskbar (void)
     __taskbar_window->id = WindowId;
 
     flush_window(__taskbar_window);
-    
+
+    /*
+    //#debug
+    printf ("bar: %d %d %d %d\n",
+        __taskbar_window->left,
+        __taskbar_window->top,
+        __taskbar_window->width,
+        __taskbar_window->height );
+
+    //refresh_screen();
+    //while(1){}
+    */
+
 // =======================================================
 // start menu button
 
-    // size: 52,28
+    unsigned long b_width = 52;
+    unsigned long b_height = 28;
+    unsigned long b_left = (unsigned long) (__taskbar_window->width - b_width) >> 1;
+    unsigned long b_top = 4;
 
     // create the button
     __taskbar_startmenu_button_window = (struct gws_window_d *) CreateWindow ( 
-                                            WT_BUTTON, 
-                                            0, //style
-                                            1, //status 
-                                            1, //view
-                                            "Start",  
-                                            (__taskbar_window->width - 52) >> 1,  //l 
-                                            4,  //t
-                                            52, 
-                                            28,   
-                                            __taskbar_window, 
-                                            0, 
-                                            COLOR_GRAY, COLOR_GRAY );    
+        WT_BUTTON, 0, 1, 1,"Start",  
+        b_left, b_top, b_width, b_height,   
+         __taskbar_window, 
+         0, 
+         COLOR_GRAY, COLOR_GRAY );    
 
     if ( (void *) __taskbar_startmenu_button_window == NULL )
     {
@@ -1310,7 +1318,8 @@ void create_taskbar (void)
         exit(1);
     }
 
-    if ( __taskbar_startmenu_button_window->used != TRUE || __taskbar_startmenu_button_window->magic != 1234 )
+    if ( __taskbar_startmenu_button_window->used != TRUE || 
+         __taskbar_startmenu_button_window->magic != 1234 )
     {
         gwssrv_debug_print ("create_background: __taskbar_startmenu_button_window validation\n"); 
         printf             ("create_background: __taskbar_startmenu_button_window validation\n");
@@ -1329,6 +1338,18 @@ void create_taskbar (void)
 
     flush_window(__taskbar_startmenu_button_window);
 
+
+    /*
+    //#debug
+    printf ("button: %d %d %d %d\n",
+        __taskbar_startmenu_button_window->left,
+        __taskbar_startmenu_button_window->top,
+        __taskbar_startmenu_button_window->width,
+        __taskbar_startmenu_button_window->height );
+
+    refresh_screen();
+    while(1){}
+    */
 
 // =======================================================
 

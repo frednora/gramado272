@@ -51,10 +51,20 @@ wmRegisterWSCallbacks(
     wmData_Callback0 = (unsigned long) callback0;
     wmData_Callback1 = (unsigned long) callback1;
     wmData_Callback2 = (unsigned long) callback2;
-    
-    printf("wmData_Callback0 = %x \n", wmData_Callback0);
-    printf("wmData_Callback0 = %x \n", wmData_Callback1);
-    printf("wmData_Callback0 = %x \n", wmData_Callback2);
+
+
+    if( wmData_Callback0 == 0 ||
+        wmData_Callback1 == 0 ||
+        wmData_Callback2 == 0  )
+    {
+        panic("wmRegisterWSCallbacks: Invalid callbacks\n");
+    }
+
+//#debug
+
+    //printf("wmData_Callback0 = %x \n", wmData_Callback0);
+    //printf("wmData_Callback0 = %x \n", wmData_Callback1);
+    //printf("wmData_Callback0 = %x \n", wmData_Callback2);
 
     // No while.
     // scroll will not work
@@ -62,13 +72,15 @@ wmRegisterWSCallbacks(
         //asm("call *%0" : : "r"(wsCallbacks[0]));
     //}
     
-    printf("done\n");
-    refresh_screen();
-    
+
+//done:
+    //printf("done\n");
+
 // #importante
 // Nesse momento podemos criar
 // interrupçoes para esses endereços.
 
+    refresh_screen();
     //while(1){}
 }
 
