@@ -85,13 +85,21 @@ pixel.o line.o rect.o bg.o \
 i8042.o ps2kbd.o ps2mouse.o keyboard.o mouse.o    
 
 
-
 all:
 
-	$(CC) -c tty/tty.c  $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
+	$(CC) -c storage/storage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
 
-	$(CC) -c disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
-	$(CC) -c disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+	$(CC) -c storage/ata/ata.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
+	$(CC) -c storage/ata/atadma.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
+	$(CC) -c storage/ata/atahdd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
+	$(CC) -c storage/ata/atainit.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atainit.o 
+	$(CC) -c storage/ata/atairq.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
+	$(CC) -c storage/ata/atapci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
+	
+	$(CC) -c storage/disk_r.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_r.o
+	$(CC) -c storage/disk_w.c  $(KERNEL_INCLUDE) $(CFLAGS) -o disk_w.o
+
+	$(CC) -c tty/tty.c  $(KERNEL_INCLUDE) $(CFLAGS) -o tty.o
 
 	$(CC) -c io.c  $(KERNEL_INCLUDE) $(CFLAGS) -o io.o
 	$(CC) -c ws.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ws.o
@@ -102,14 +110,6 @@ all:
 
 	$(CC) -c devmgr.c  $(KERNEL_INCLUDE) $(CFLAGS) -o devmgr.o 
 
-	$(CC) -c storage.c  $(KERNEL_INCLUDE) $(CFLAGS) -o storage.o 
-
-	$(CC) -c ata/ata.c      $(KERNEL_INCLUDE) $(CFLAGS) -o ata.o 
-	$(CC) -c ata/atadma.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atadma.o 
-	$(CC) -c ata/atahdd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atahdd.o 
-	$(CC) -c ata/atainit.c  $(KERNEL_INCLUDE) $(CFLAGS) -o atainit.o 
-	$(CC) -c ata/atairq.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atairq.o 
-	$(CC) -c ata/atapci.c   $(KERNEL_INCLUDE) $(CFLAGS) -o atapci.o 
 
 	$(CC) -c serial/serial.c  $(KERNEL_INCLUDE) $(CFLAGS) -o serial.o
 
