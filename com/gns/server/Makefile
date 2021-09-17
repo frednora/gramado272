@@ -42,12 +42,10 @@ GWS_INCLUDES  = include/
 #TERMINAL  = terminal/include/   
 
 
+#
+# Objects
+#
 
-
-	##
-	## Objects
-	##
-	
 	
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o stdlib.o string.o conio.o socket.o signal.o unistd.o \

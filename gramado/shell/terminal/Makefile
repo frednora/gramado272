@@ -31,14 +31,14 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 	
 
-LIBC      = ../../../lib/rtl/include/
-LIBCOBJ   = ../../../lib/rtl/obj
+LIBC      = ../../../com/lib/rtl/include/
+LIBCOBJ   = ../../../com/lib/rtl/obj
 LIBGWS    = ../../libgws/include/
 LIBGWSOBJ = ../../libgws/obj
 
-	##
-	## Objects
-	##
+#
+# Objects
+#
 
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \

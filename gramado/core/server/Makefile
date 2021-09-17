@@ -54,8 +54,8 @@ user_ldflags = -m elf_x86_64 -T link_r0.ld
 #todo
 #path longo. vamos mudar  as libs de lugar para gramado/libs.
 
-LIBC              = ../../../lib/rtl/include/
-LIBCOBJ           = ../../../lib/rtl/obj
+LIBC              = ../../../com/lib/rtl/include/
+LIBCOBJ           = ../../../com/lib/rtl/obj
 WS_INCLUDES       = include/ 
 WS_INCLUDES_LOCAL = .
 

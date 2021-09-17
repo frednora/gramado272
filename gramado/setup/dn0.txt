@@ -1,0 +1,7 @@
+
+	gramado/setup/
+
+	Setup Environment.
+	It is rused to install or upgrade the operatins system.
+	We open this environment instead of open
+	the Gramado Shell Environment.

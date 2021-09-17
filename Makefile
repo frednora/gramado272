@@ -4,9 +4,10 @@
 
 PRODUCT_NAME  = Gramado
 EDITION_NAME  = 64bit
+
 VERSION_MAJOR = 1
 VERSION_MINOR = 2
-VERSION_BUILD = 266
+VERSION_BUILD = 267
 
 KERNELVERSION = $(VERSION_MAJOR)$(if $(VERSION_MINOR),.$(VERSION_MINOR)$(if $(VERSION_BUILD),.$(VERSION_BUILD)))
 
@@ -37,14 +38,12 @@ PHONY := all
 
 # build: User command.
 all:  \
-build-gramado-files \
+build-gramado-os \
 /mnt/gramadoxvhd    \
 vhd-mount \
 vhd-copy-files \
 vhd-unmount \
-clean \
-clean4    
-
+clean    
 
 
 # Giving permitions to run ./run
@@ -58,17 +57,17 @@ clean4
 #----------
 # build: Developer comand 1.
 # install
-# Build the images and put them all into base/ folder.
+# Build the images and put them all into base/disk/ folder.
 PHONY := install
 install: do_install
 do_install: \
-build-gramado-files  
+build-gramado-os  
 
 
 #----------
 # build: Developer comand 2.
 # image
-# Copy all the files from base/ to the VHD.
+# Copy all the files from base/disk/ to the VHD.
 PHONY := image
 image: do_image
 do_image: \
@@ -91,112 +90,95 @@ do_run:
 #::0
 # ~ Step 0: gramado files.
 
-PHONY := build-gramado-files  
-build-gramado-files: \
-newos \
-gramado-lib \
-gramado-cmd \
-gramado-ns \
-gramado-boot \
-gramado-shell \
-gramadoos     
-
+PHONY := build-gramado-os  
+build-gramado-os: \
+base-tier \
+communication-tier \
+presentation-tier    
 
 
 
 #1
-# the kernel image
-# O BL.BIN procura o kernel no diretorio GRAMADO/
-# See: fs/loader.c
-newos:
-	@echo "Build: Building Gramado kernel ..."
-
-	$(Q) $(MAKE) -C new/
-	sudo cp new/KERNEL.BIN  base/GRAMADO
-
-#2
-gramado-lib:
-	@echo "Build: Building usermode libraries ..."
-	$(Q) $(MAKE) -C lib/rtl/
-	$(Q) $(MAKE) -C lib/lib/
-
-
-#3
-gramado-cmd:
-	@echo "Build: Building cmd applications ..."
-
-	$(Q) $(MAKE) -C cmd/
-
-	-sudo cp cmd/bin/SHELL.BIN      base/
-
-	-sudo cp cmd/bin/CAT.BIN        base/
-#	-sudo cp cmd/bin/FALSE.BIN      base/
-	-sudo cp cmd/bin/REBOOT.BIN     base/
-	-sudo cp cmd/bin/SHUTDOWN.BIN     base/
-#	-sudo cp cmd/bin/TRUE.BIN       base/
-#	-sudo cp cmd/bin/SHOWFUN.BIN    base/
-#	-sudo cp cmd/bin/UNAME.BIN      base/
-
-
-#4
-gramado-ns:
-	@echo "Build: Building Network Server ..."
-
-	$(Q) $(MAKE) -C ns/ 
-	-sudo cp ns/bin/GNSSRV.BIN  base/
-	-sudo cp ns/bin/GNS.BIN     base/
-
-#5
-gramado-boot:
+base-tier:
 	@echo "Build: Building bootloader ..."
 
-	$(Q) $(NASM) boot/vd/fat/main.asm \
-	-I boot/vd/fat/ \
+	$(Q) $(NASM) base/boot/vd/fat/main.asm \
+	-I base/boot/vd/fat/ \
 	-o GRAMADO.VHD 
 
-	$(Q) $(MAKE) -C boot/x86/bm/ 
-	$(Q) $(MAKE) -C boot/x86/bl/ 
+	$(Q) $(MAKE) -C base/boot/x86/bm/ 
+	$(Q) $(MAKE) -C base/boot/x86/bl/ 
 
 	# O mbr só consegue ler o root dir para pegar o BM.BIN
 	# See: stage1.asm
 	# O BM.BIN só consegue ler o root dir pra pegar o BL.BIN
 	# See: main.asm
 
-	sudo cp boot/x86/bin/BM.BIN  base/
-	sudo cp boot/x86/bin/BL.BIN  base/
+	sudo cp base/boot/x86/bin/BM.BIN  base/disk/
+	sudo cp base/boot/x86/bin/BL.BIN  base/disk/
+
+# the kernel image
+# O BL.BIN procura o kernel no diretorio GRAMADO/
+# See: fs/loader.c
+
+	@echo "Build: Building Gramado kernel ..."
+
+	$(Q) $(MAKE) -C base/new/
+	sudo cp base/new/KERNEL.BIN  base/disk/GRAMADO
+
+#2
+communication-tier:
+
+	@echo "Build: Building usermode libraries ..."
+	$(Q) $(MAKE) -C com/lib/rtl/
+	$(Q) $(MAKE) -C com/lib/lib/
+
+	@echo "Build: Building cmd applications ..."
+
+	$(Q) $(MAKE) -C com/cmd/
+	-sudo cp com/cmd/bin/SHELL.BIN      base/disk/
+	-sudo cp com/cmd/bin/CAT.BIN        base/disk/
+#	-sudo cp com/cmd/bin/FALSE.BIN      base/disk/
+	-sudo cp com/cmd/bin/REBOOT.BIN     base/disk/
+	-sudo cp com/cmd/bin/SHUTDOWN.BIN   base/disk/
+#	-sudo cp com/cmd/bin/TRUE.BIN       base/disk/
+#	-sudo cp com/cmd/bin/SHOWFUN.BIN    base/disk/
+#	-sudo cp com/cmd/bin/UNAME.BIN      base/disk/
+
+	@echo "Build: Building Network Server ..."
+
+	$(Q) $(MAKE) -C com/gns/ 
+	-sudo cp com/gns/bin/GNSSRV.BIN  base/disk/
+	-sudo cp com/gns/bin/GNS.BIN     base/disk/
 
 #========================================
 
-#6
-gramado-shell:
-# Install BMPs
-	sudo cp gramado/shell/themes/presence/*.BMP base/
-
-
-
-#7
+#3
+# The presentation tier.
 # Gramado Window System files.
-gramadoos:
+presentation-tier:
 	@echo "Build: Building Window Server ..."
 
 	$(Q) $(MAKE) -C gramado/
 
 # Server and main client.
-	-sudo cp gramado/bin/GWSSRV.BIN    base/
-	-sudo cp gramado/bin/GWS.BIN       base/ 
+	-sudo cp gramado/bin/GWSSRV.BIN    base/disk/
+	-sudo cp gramado/bin/GWS.BIN       base/disk/ 
 
 # Clients
-	-sudo cp gramado/bin/GWM.BIN       base/
-	-sudo cp gramado/bin/LOGON.BIN     base/
-	-sudo cp gramado/bin/EDITOR.BIN    base/
-	-sudo cp gramado/bin/TERMINAL.BIN  base/
-	-sudo cp gramado/bin/FILEMAN.BIN   base/
-	-sudo cp gramado/bin/BROWSER.BIN   base/
+	-sudo cp gramado/bin/GWM.BIN       base/disk/
+	-sudo cp gramado/bin/LOGON.BIN     base/disk/
+	-sudo cp gramado/bin/EDITOR.BIN    base/disk/
+	-sudo cp gramado/bin/TERMINAL.BIN  base/disk/
+	-sudo cp gramado/bin/FILEMAN.BIN   base/disk/
+	-sudo cp gramado/bin/BROWSER.BIN   base/disk/
 
 # Suspended
 # Copy the clients in another folder.
-#	-sudo cp gramado/bin/*.BIN    base/PROGRAMS/
+#	-sudo cp gramado/bin/*.BIN    base/disk/PROGRAMS/
 
+# Install BMPs
+	sudo cp gramado/shell/themes/presence/*.BMP  base/disk/
 
 #===================================================
 #::2
@@ -218,14 +200,14 @@ vhd-mount:
 #===================================================
 #::4
 # ~ Step 4 vhd-copy-files - Copying files into the mounted VHD.
-# Copying the base folder into the mounted VHD.
+# Copying the base/disk/ folder into the mounted VHD.
 vhd-copy-files:
 	@echo "========================="
 	@echo "Build: Copying files into the mounted VHD ..."
 
-	# Copy base
-	# sends everything from base to root.
-	sudo cp -r base/*  /mnt/gramadoxvhd
+	# Copy base/disk/
+	# sends everything from disk/ to root.
+	sudo cp -r base/disk/*  /mnt/gramadoxvhd
 
 #===================================================
 #:::5
@@ -250,62 +232,65 @@ danger-hdd-clone-vhd:
 #
 
 clean-all: \
-clean clean2 clean3 clean4 clean5  
+clean clean1 clean2 clean3    
+
+	-rm *.VHD
+	-rm *.ISO
+
 	@echo "==================="
 	@echo "ok ?"
 clean:
 	@echo "==================="
 	@echo "Build: Deleting the object files ..."
+
 	-rm *.o
-	-rm -rf lib/rtl/obj/*.o
-	-rm -rf lib/lib/libgns/obj/*.o
-	-rm -rf lib/lib/libio01/obj/*.o
+
+	-rm -rf com/lib/rtl/obj/*.o
+	-rm -rf com/lib/lib/libgns/obj/*.o
+	-rm -rf com/lib/lib/libio01/obj/*.o
 
 	-rm -rf gramado/core/server/*.o
 	-rm -rf gramado/core/client/*.o
 
 	@echo "Success?"
-clean1: clean
-clean2:
-	-rm *.VHD
-	-rm *.ISO
-clean3:
-	-rm cmd/bin/*.BIN
-	-rm gramado/bin/*.BIN
-# clean base
-clean4:
-	@echo "==================="
-	@echo "Cleaning all system binaries ..."
+
+# base-tier
+clean1:
+# Clear boot images
+	-rm -rf base/boot/x86/bin/*.BIN
+
 # Clear newos kernel image
-	-rm -rf new/KERNEL.BIN
+	-rm -rf base/new/KERNEL.BIN
+
+# Clear root dir
+	-rm -rf base/disk/*.BIN 
+	-rm -rf base/disk/*.BMP
+# Clear system folder 
+	-rm -rf base/disk/GRAMADO/*.BIN 
+# Clear applications folder
+	-rm -rf base/disk/PROGRAMS/*.BIN 
+# Clear unix-like stuff
+	-rm -rf base/disk/UBASE/BOOT/*.BIN 
+	-rm -rf base/disk/UBASE/BIN/*.BIN 
+	-rm -rf base/disk/UBASE/SBIN/*.BIN
+
+# communication-tier
+clean2:
+
+# Clear libraries folder
+	-rm -rf com/lib/fonts/bin/*.FON
+
+# Clear commands folder
+	-rm -rf com/cmd/bin/*.BIN
+# Clear gns service stuff
+	-rm -rf com/gns/bin/*.BIN
+
+
+clean3:
+	-rm gramado/bin/*.BIN
+
 # Clear system folder
 	-rm -rf gramado/bin/*.BIN
-# Clear libraries folder
-	-rm -rf lib/fonts/bin/*.FON
-# Clear boot images
-	-rm -rf boot/x86/bin/*.BIN
-# Clear commands folder
-	-rm -rf cmd/bin/*.BIN
-# Clear ns service stuff
-	-rm -rf ns/bin/*.BIN
-clean5:
-# Clear root dir
-	-rm -rf base/*.BIN 
-	-rm -rf base/*.BMP
-# Clear system folder 
-	-rm -rf base/GRAMADO/*.BIN 
-# Clear applications folder
-	-rm -rf base/PROGRAMS/*.BIN 
-# Clear unix-like stuff
-	-rm -rf base/UBASE/BOOT/*.BIN 
-	-rm -rf base/UBASE/BIN/*.BIN 
-	-rm -rf base/UBASE/SBIN/*.BIN
 
-# ...
-
-
-
-
-
-
+# End
 
