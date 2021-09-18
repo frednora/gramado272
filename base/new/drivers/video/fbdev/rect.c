@@ -146,7 +146,6 @@ drawDataRectangle (
 // Draw
 //
 
-
     // Draw lines on backbuffer.
 
     if ( internal_height > 600 )

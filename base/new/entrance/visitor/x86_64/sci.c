@@ -1295,8 +1295,9 @@ void *sci0 (
    
 
         // 72
-        // See: sci/sys/sys.c
-        // Cria uma thread e coloca ela pra rodar.
+        // See: ke/sys.c
+        // Cria uma thread que fica no estado INITIALIZED.
+        // Outra syscall tem que colocar ela em STANDBY.
         case SYS_CREATETHREAD:
             debug_print("sci0: [FIXME] SYS_CREATETHREAD\n");
             return (void *) sys_create_thread ( NULL,  NULL, NULL, 

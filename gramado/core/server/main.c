@@ -536,7 +536,20 @@ exit0:
     return (int) Status;
 }
 
+// Vamos criar a thread do compositor.
+// No momento ela ficara apenas fazendo
+// flush dos retângulos ...
+// mas no futuro ela poderá copiar as janelas
+// de seus buffers individuais para o backbuffer e ao fim
+// fazer flush do backbuffer inteiro.
 
+void Compositor_Thread(void)
+{
+    // #debug
+    printf ("f\n");
+
+    wmRefreshDirtyRectangles();
+}
 
 
 /*
@@ -2758,8 +2771,51 @@ int main (int argc, char **argv)
         (unsigned long) &wmHandler );
 
 
+// ========================================================
+
+
+/*
 //
-// The message loop.
+// Thread
+//
+
+// Vamos criar a thread do compositor.
+// No momento ela ficara apenas fazendo
+// flush dos retângulos ...
+// mas no futuro ela poderá copiar as janelas
+// de seus buffers individuais para o backbuffer e ao fim
+// fazer flush do backbuffer inteiro.
+
+// #bugbug
+// O problema aqui é essa rotina ainda não cria
+// threads em ring0 e o window server está em ring0.
+
+    char tStack[4096];
+    void *t;
+
+// Create the thread.
+// IN: 
+// address, stack, name.
+    t = (void *) rtl_create_thread(
+                      &Compositor_Thread,
+                      &tStack[4096], 
+                      "Compositor" );
+
+    if ( (void*) t == NULL )
+    {
+        printf ("gwssrv.bin: Couldn't create the compositor thread\n");
+        exit(0);
+    }
+// Start the thread.
+// Coloca ela em standby
+    rtl_start_thread(t);
+*/
+
+
+// ========================================================
+
+//
+// Loop
 //
 
 // + Accept connection from a client.
@@ -2772,6 +2828,8 @@ int main (int argc, char **argv)
         if (IsTimeToQuit == TRUE) { break; };
 
         // Flush
+        // #todo
+        // Podemos ter uma thread em ring0 somente para isso.
         wmRefreshDirtyRectangles();
 
        // Accept

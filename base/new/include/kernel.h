@@ -128,8 +128,10 @@ unsigned long SavedBPP;
 // globals
 #include "gramado/limits.h"
 #include "gramado/0globals/limits.h"
-#include "gramado/0globals/gpa.h"
-#include "gramado/0globals/gva.h"
+
+#include "mm/x64gpa.h"
+#include "mm/x64gva.h"
+
 #include "gramado/0globals/gentry.h"
 #include "gramado/0globals/gdef.h"
 #include "gramado/0globals/gdevice.h"

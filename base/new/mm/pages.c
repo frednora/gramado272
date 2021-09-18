@@ -904,19 +904,24 @@ int mmSetUpPaging (void)
 // PD   - Page Directory
 // PT   - Page Table
 
+
 // Isso porque endereço físico e virtual são igual abaixo de 1 mb.
 // 0x0009C000va = 0x0009C000pa
+// See: x64gpa.h
 
     gKernelPML4Address = KERNEL_PML4_VA;
 
-    // level 4
+
+// See: x64gva.h
+
+    // level 4: 0x000000000009C000
     unsigned long *kernel_pml4  = (unsigned long *) KERNEL_PML4_PA;
-    // level 3
+    // level 3: 0x000000000009B000
     unsigned long *kernel_pdpt0 = (unsigned long *) KERNEL_PDPT_PA;
-    // level 2
+    // level 2: 0x000000000009A000
     unsigned long *kernel_pd0   = (unsigned long *) KERNEL_PD_PA;
     // level 1
-    // a lot of page tables in the level 1.
+    // A lot of page tables in level 1.
 
 
 //
@@ -925,9 +930,9 @@ int mmSetUpPaging (void)
 
 // Saving some info used by the kernel to handle 
 // the memory he needs.
-
 // See:
 // x64mmm.h
+// x64gva.h
 
     // pml4
     kernel_mm_data.pml4_va = (unsigned long) kernel_pml4;
@@ -946,6 +951,7 @@ int mmSetUpPaging (void)
 
 
 // Check
+// #bugbug: x_panic is not available yet.
 
     if ( kernel_mm_data.pml4_va  == 0 || 
          kernel_mm_data.pml4_pa  == 0 ||
@@ -955,7 +961,7 @@ int mmSetUpPaging (void)
          kernel_mm_data.pd0_pa   == 0 )
     {
         debug_print ("mmSetUpPaging: [FAIL] Invalid kernel_mm_data \n");
-        panic       ("mmSetUpPaging: [FAIL] Invalid kernel_mm_data \n");
+        x_panic     ("mmSetUpPaging: [FAIL] Invalid kernel_mm_data \n");
     }
 
 
@@ -965,17 +971,17 @@ int mmSetUpPaging (void)
 // See:
 // gpa.h
 
-	// #importante
-	// Inicializando as vari�veis que vamos usr aqui.
-	// S�o endere�os de mem�ria f�sica.
-	// As vari�veis s�o globais para podermos gerenciar o uso de
-	// mem�ria f�sica.
-	// See:  mm/mm.h
-	// See:  gpa.h
+// #importante
+// Inicializando as vari�veis que vamos usr aqui.
+// S�o endere�os de mem�ria f�sica.
+// As vari�veis s�o globais para podermos gerenciar o uso de
+// mem�ria f�sica.
+// See:  mm/mm.h
+// See:  gpa.h
 
-	//==============================================================
-	//  SMALL SYSTEMS
-	//==============================================================
+//==============================================================
+//  SMALL SYSTEMS
+//==============================================================
     SMALL_origin_pa      = (unsigned long) SMALLSYSTEM_ORIGIN_ADDRESS;
     SMALL_kernel_base_pa = (unsigned long) SMALLSYSTEM_KERNELBASE;
     SMALL_user_pa        = (unsigned long) SMALLSYSTEM_USERBASE;
@@ -987,9 +993,10 @@ int mmSetUpPaging (void)
     SMALL_extraheap1_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP1_START;
     SMALL_extraheap2_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP2_START;
     SMALL_extraheap3_pa  = (unsigned long) SMALLSYSTEM_EXTRAHEAP3_START;
-	//==============================================================
-	//  MEDIUM
-	//==============================================================
+
+//==============================================================
+//  MEDIUM SYSTEMS
+//==============================================================
     MEDIUM_origin_pa      = (unsigned long) MEDIUMSYSTEM_ORIGIN_ADDRESS;
     MEDIUM_kernel_base_pa = (unsigned long) MEDIUMSYSTEM_KERNELBASE;
     MEDIUM_user_pa        = (unsigned long) MEDIUMSYSTEM_USERBASE;
@@ -1001,9 +1008,10 @@ int mmSetUpPaging (void)
     MEDIUM_extraheap1_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP1_START;
     MEDIUM_extraheap2_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP2_START;
     MEDIUM_extraheap3_pa  = (unsigned long) MEDIUMSYSTEM_EXTRAHEAP3_START;
-	//==============================================================
-	//  LARGE SYSTEMS
-	//==============================================================
+
+//==============================================================
+//  LARGE SYSTEMS
+//==============================================================
     LARGE_origin_pa      = (unsigned long) LARGESYSTEM_ORIGIN_ADDRESS;
     LARGE_kernel_base_pa = (unsigned long) LARGESYSTEM_KERNELBASE;
     LARGE_user_pa        = (unsigned long) LARGESYSTEM_USERBASE;
@@ -1023,13 +1031,11 @@ int mmSetUpPaging (void)
 // gpa.h
 
 // O que temos logo abaixo s�o pequenas parti��es de mem�ria f�sica.
-// cada parti��o tem 1024 unsigned longs. o que d� 4KB cada. 
-
+// cada parti��o tem 512 unsigned longs. o que dÁ 4KB cada. 
 // TABLES: 
 //     Tabelas de p�ginas para o diret�rio do processo Kernel. Essas 
 // tabelas j� foram criadas nesses endere�os f�sicos pelo Boot Loader. 
 // Aqui o Kernel apenas reconfigura utilizando as mesmas localiza��es.
-
 // Poder�amos alocar mem�ria para as page tables ??
 // Sim, mas precisa ser um mecanismo que devolva o endere�o f�sico 
 // de onde foi alocado mem�ria para a page table.
@@ -1109,14 +1115,21 @@ int mmSetUpPaging (void)
 
 // frontbuffer
 // VESA LFB, foi passado pelo Boot Manager.
-    unsigned long lfb_address = (unsigned long) SavedLFB;
+    unsigned long framebuffer_pa = (unsigned long) SavedLFB;
 
 // backbuffer 
 // Endereço físico provisório para o backbuffer
 // (para sistemas com pouca memória.)
 // 16mb. (16*1024*1024) = 0x01000000.
-    unsigned long buff_address = (unsigned long) 0x01000000; 
+    unsigned long backbuffer_pa = (unsigned long) 0x01000000; 
 
+
+
+// fast check
+// #bugbug: x_panic is not available yet.
+
+    //if( framebuffer_pa == 0 )
+        //x_panic("mmSetupPaging: framebuffer_pa");
 
 //
 // # DIRECTORIES
@@ -1301,14 +1314,14 @@ Entry_384:
         (unsigned long) 3 ); 
 
 //===========================================
-// frontbuffer - LFB  0x30200000 ~ 0x303FFFFF 
+// framebuffer - LFB  0x30200000 ~ 0x303FFFFF 
 // 0x30200000virt
 // FRONTBUFFER_VA
 // 385 = frontbuffer. LFB.
 Entry_385:
     mm_used_lfb = (1024 * 2);  
 
-    // lfb_address = Endereço físico do lfb.
+    // framebuffer_pa = Endereço físico do lfb.
     // 0x????pys = 0x30200000virt
     // Uma área em user mode.
     // O endereço físico foi passado pelo bootblock.
@@ -1325,13 +1338,13 @@ Entry_385:
 
     // Criamos uma pagetable.
     // Apontamos a pagetable para a entrada 385 do diretório.
-    // lfb_address = Endereço físico do lfb.
+    // framebuffer_pa = Endereço físico do lfb.
 
     // #test
     // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_FRONTBUFFER,
-        (unsigned long) &pt_frontbuffer[0], (unsigned long) lfb_address, 
+        (unsigned long) &pt_frontbuffer[0], (unsigned long) framebuffer_pa, 
         (unsigned long) 7 ); 
 
 // ===================================================
@@ -1342,7 +1355,7 @@ Entry_385:
 Entry_386:
     mm_used_backbuffer = (1024 * 2);  
 
-    // buff_address = 0x01000000pys
+    // backbuffer_pa = 0x01000000pys
     // 16mb mark.
     // 0x01000000pys = 0x30400000virt
 
@@ -1354,30 +1367,26 @@ Entry_386:
     // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_BACKBUFFER, 
-        (unsigned long) &pt_backbuffer[0], (unsigned long) buff_address, 
+        (unsigned long) &pt_backbuffer[0], (unsigned long) backbuffer_pa, 
         (unsigned long) 7 ); 
 
 
 //++
 // ====================================================================
-// #test #todo : Paged pool area. 0x30600000 ~ 0x307FFFFF
+// Paged pool area. 0x30600000 ~ 0x307FFFFF
 // 0x30600000
 // PAGEDPOOL_VA
 // 387 = Paged pool area.
 Entry_387:
     mm_used_pagedpool = (1024 * 2);  //2mb 
 
-    //g_pagedpool_va = (unsigned long) XXXPAGEDPOOL_VA;  
-    g_pagedpool_va = (unsigned long) PAGEDPOOL_VA; //0x30600000;  // 2mb `a mais que o backbuffer
+    // 0x30600000;  // 2mb a mais que o backbuffer
+    g_pagedpool_va = (unsigned long) PAGEDPOOL_VA;
 
-
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_PAGEDPOOL, 
         (unsigned long) &pt_pagedpool[0], (unsigned long) SMALL_pagedpool_pa, 
         (unsigned long) 7 ); 
-
 // ====================================================================
 //--
 
@@ -1388,7 +1397,7 @@ Entry_387:
 // HEAPPOOL_VA
 // 388 = Heap pool.
 Entry_388:
-    mm_used_heappool = (1024 * 2);  
+    mm_used_heappool = (1024 * 2);
 
     g_heappool_va    = (unsigned long) HEAPPOOL_VA; //0x30800000;
     g_heap_count     = 0;
@@ -1416,18 +1425,6 @@ Entry_388:
 
 // ====================================================================
 //--
-
-//
-// #important
-//
-
-    // The INitProcess uses one of these extra heaps,
-    // and just a small heap from the heap pool
-    // as the other ring3 process do.
-    // See: x64init.c When we setup the Heap pointer.
-    // InitProcess->Heap = (unsigned long) g_extraheap1_va; :)
-
-
 
 //++
 // ====================================================================
@@ -1500,29 +1497,26 @@ Entry_391:
 //
 
 // #important
-// Vamos configurar a frame table de acordo com o
-// total de memória RAM.
-// memorysizeTotal is the ram size in KB.
+// Vamos configurar a frame table de acordo com o total de memória RAM.
+// 'memorysizeTotal' is the ram size in KB.
+
+// Configura apenas o início e o fim.
+// O resto da tabela será configurado pela função
+// I_initialize_frame_table() 
 
 // Start:
 // FRAME_TABLE_START_PA
 // This is the start of the table.
 // This is the 256MB mark.
+
 // End:
 // FRAME_TABLE_END_PA
 // This is the end of the table.
 
 // See:
-// gpa.h
+// x64gpa.h
 
-
-//
-// Configura apenas o início e o fim.
-// O resto da tabela será configurado pela função
-// I_initialize_frame_table() 
-//
-
-    debug_print ("SetUpPaging: Setup FT\n");
+    debug_print ("mmSetUpPaging: Setup FT\n");
 
 // Setup the start of the table.
 // It is always the same.
@@ -1530,14 +1524,17 @@ Entry_391:
 // The system with 256MB has no FT.
 // We need more them this to have a FT.
 
+// ===================
 // Start
     FT.start_pa = __128MB_MARK_PA;
     //FT.start_pa = __256MB_MARK_PA;
     //FT.start_pa = __512MB_MARK_PA;
     //FT.start_pa = __1GB_MARK_PA;
 
+// ===================
 // End
 // (Uninitialized)
+// It will depend on the size of the RAM.
     FT.end_pa = 0; 
 
 
@@ -1549,7 +1546,7 @@ Entry_391:
 
     if ( memorysizeTotal >= (1024*1024)  )
     {
-        debug_print ("SetUpPaging: We have 1GB or more\n");
+        debug_print ("mmSetUpPaging: We have 1GB or more\n");
         FT.end_pa = __1GB_MARK_PA;
         goto initialize_frame_table;
     }
@@ -1561,7 +1558,7 @@ Entry_391:
 
     if ( memorysizeTotal >= (512*1024) )
     {
-        debug_print ("SetUpPaging: We have 512MB or more\n");
+        debug_print ("mmSetUpPaging: We have 512MB or more\n");
         FT.end_pa = __512MB_MARK_PA;
         goto initialize_frame_table;
     } 
@@ -1572,7 +1569,7 @@ Entry_391:
 
     if ( memorysizeTotal >= (256*1024) )
     {
-        debug_print ("SetUpPaging: We have 256MB or more\n");
+        debug_print ("mmSetUpPaging: We have 256MB or more\n");
         FT.end_pa = __256MB_MARK_PA;
         goto initialize_frame_table;
     } 
@@ -1591,31 +1588,49 @@ Entry_391:
 
 // The available ram is less than 256.
     if ( memorysizeTotal < (256*1024) ){
-        debug_print ("SetUpPaging: [ALERT] memorysizeTotal is less than 256MB\n");
+        debug_print ("mmSetUpPaging: [ALERT] memorysizeTotal is less than 256MB\n");
     }
+
+//
+// Danger !
+//
 
 // The available RAM is almost 256MB
 // Its because we a 256MB card,
 // But the boot loader did not check the last mb.
-    if ( memorysizeTotal < (250*1024) ){
-        debug_print ("SetUpPaging: [PANIC] The system has less than 250MB of available RAM\n");
-        panic ("mmSetUpPaging: The system has less than 250MB of available RAM\n");
+
+//#bugbug: x_panic is not available yet.
+
+    if ( memorysizeTotal < (250*1024) )
+    {
+        debug_print ("mmSetUpPaging: [PANIC] The system has less than 250MB of available RAM\n");
+        x_panic     ("mmSetUpPaging: less than 250MB \n");
     }
 
 // Não é menor que 250MB
     FT.end_pa = (unsigned long)(250*1024*1024);
 
+//============================================================
+
 //
 // Initializing all the other elements of the frame table
 //
 
-
 initialize_frame_table:
+
+// #bugbug
+// Slow. Use a define for this value.
+
+    if ( FT.end_pa < (250*1024*1024) ){
+        debug_print ("mmSetUpPaging: [PANIC] less than 250MB.\n");
+        //#todo: panic
+    }
 
     I_initialize_frame_table();
 
 
 // ================================================================
+
 //
 // Memory size
 //
@@ -1657,7 +1672,7 @@ initialize_frame_table:
         );
 
 // Free.
-    memorysizeFree = (memorysizeTotal - memorysizeUsed);
+    memorysizeFree = (unsigned long) (memorysizeTotal - memorysizeUsed);
 
 
 // memorysizeFree  is the size in KB.
@@ -1673,8 +1688,6 @@ initialize_frame_table:
 
     debug_print ("SetUpPaging: [DANGER] Load cr3\n");
 
-
-    // __asm__ __volatile__("cli");
 
 // pae
     //printf ("SetUpPaging: enable_pae\n");
@@ -1698,7 +1711,7 @@ initialize_frame_table:
     // carregar o cr3, mas acho que agora usaremos
     // endereços de 64bit?
     
-    load_pml4_table( &kernel_pml4[0] );
+    load_pml4_table( (void *) &kernel_pml4[0] );
 
 
 
@@ -1716,39 +1729,12 @@ initialize_frame_table:
     //refresh_screen();
     //while(1){}
 
-
-
 //done:
-    // x86_SetCR3 ( (unsigned long) &kernel_pml4[0] );
     debug_print("mmSetUpPaging: done\n");
     return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//
+// End.
+//
 

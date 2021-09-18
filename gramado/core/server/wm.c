@@ -890,6 +890,10 @@ void wmRefreshDirtyRectangles(void)
     int __Dirty = -1;
     int background_status = -1;
 
+    struct gws_window_d  *tmp;
+    register int i=0;
+
+
 // #debug
     //gwssrv_debug_print("wmRefreshDirtyRectangles:\n");
 
@@ -957,10 +961,6 @@ void wmRefreshDirtyRectangles(void)
 // Invalidating all the windows ... 
 // and it will be flushed into the framebuffer for the ring0 routines.
 
-    struct gws_window_d  *tmp;
-    
-    register int i=0;
-
 
 //
 // Update
@@ -987,7 +987,7 @@ void wmRefreshDirtyRectangles(void)
 
 // Is it time to update all the windows?
 
-    int UpdateScreenFlag= FALSE;
+    int UpdateScreenFlag=FALSE;  // Suspended
 
     if(UpdateScreenFlag == TRUE)
     {

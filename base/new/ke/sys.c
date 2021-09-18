@@ -240,7 +240,16 @@ void *sys_create_thread (
 
     // Create thread.
     
-    
+
+// #todo
+// Temos que checar o iopl do processo que chamou
+// e a thread tem que estar no mesmo ring.
+
+    int iopl = RING3;
+
+    if ( ppid = WS_TID )
+        iopl = RING0;
+
     // #bugbug #todo
     // Only ring3 for now.
     // We need to receive a parameter for that.
@@ -251,14 +260,20 @@ void *sys_create_thread (
                                      priority, 
                                      ppid, 
                                      name,
-                                     RING3 ); 
+                                     iopl ); 
 
     if ( (void *) Thread == NULL ){
         debug_print ("sys_create_thread: [FAIL] Thread\n");
         return NULL;
     }
 
-    SelectForExecution ( (struct thread_d *) Thread );
+    Thread->saved = FALSE;
+
+// #suspended:
+// We have another syscall to put the thread in the standby state.
+
+// Put the state in STANDBY.
+    //SelectForExecution ( (struct thread_d *) Thread );
 
     return (struct thread_d *) Thread;
 }
