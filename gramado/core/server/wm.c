@@ -1056,6 +1056,60 @@ void flush_frame(void)
 }
 
 
+void __Tile(void)
+{
+    struct gws_window_d *w;
+
+    int cnt=0;
+    int c=0;
+    int i=0;
+
+    debug_print("__Tile:\n");
+
+    w=(struct gws_window_d *)first_window;
+    if((void*)w==NULL)
+    { 
+        debug_print("__Tile: w==NULL\n");
+        return; 
+    }
+
+
+    while((void*)w != NULL)
+    {
+        w = (struct gws_window_d *) w->next;
+        cnt++;
+    };
+
+// ====
+    w=(struct gws_window_d *)first_window;
+    if((void*)w==NULL)
+    { 
+        debug_print("__Tile: w==NULL\n");
+        return; 
+    }
+
+    i=0;
+    while ((void*)w != NULL)
+    {
+        if(i>=cnt)
+            break;
+
+        if(i>4)
+            break;
+        
+        w->left = (i*10);
+        w->top  = (i*10);
+        w->width  = 240;
+        w->height = 120;
+
+        w = (struct gws_window_d *) w->next;
+        i++;
+    };
+
+    debug_print("__Tile: done\n");
+}
+
+
 // #danger: Not tested yet.
 // Repinda todas as janelas seguindo a ordem da lista
 // que está em last_window.
@@ -1063,6 +1117,8 @@ void wm_update_desktop(void)
 {
     struct gws_window_d *w;
 
+// #test
+   __Tile();
 
 // Root window
     redraw_window(__root_window,TRUE);
@@ -2999,16 +3055,36 @@ redraw_window (
 
 draw_frame:
 
+    // #todo
+    // Precisamos de uma rotina que redesenhe o frame,
+    // sem alocar criar objetos novos.
+
     if ( window->type == WT_OVERLAPPED || 
          window->type == WT_EDITBOX || 
          window->type == WT_BUTTON )
     {
-        // #todo
-        // Precisamos de uma rotina que redesenhe o frame,
-        // sem alocar criar objetos novos.
+        if ( (void*) window != NULL )
+        {
+            if( (void*) window->parent != NULL )
+            {
+                if( window->parent->magic == 1234 )
+                {
+                    wmCreateWindowFrame ( 
+                        (struct gws_window_d *) window->parent,  //parent.
+                        (struct gws_window_d *) window,      //bg do botão em relação à sua parent. 
+                        METRICS_BORDER_SIZE,       //border size
+                        (unsigned int)COLOR_BLACK, //border color 1
+                        (unsigned int)COLOR_BLACK, //border color 2
+                        (unsigned int)COLOR_BLACK, //border color 3
+                        (unsigned int)COLOR_BLACK, //ornament color 1
+                        (unsigned int)COLOR_BLACK, //ornament color 2
+                        1 );  //style
+                }
+            }
+        }
     }
 
-    if (flags == 1){
+    if (flags == TRUE){
         gws_show_window_rect(window);
     }
 
