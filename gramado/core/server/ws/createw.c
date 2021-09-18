@@ -324,92 +324,6 @@ void demoTerry(void)
 }
 
 
-// WORKER
-// Paint button borders.
-// Called only for xxxCreateWindow
-// >>> No checks
-
-void 
-__paint_buttom_borders(
-    struct gws_window_d *w,
-    unsigned int color1,
-    unsigned int color2,
-    unsigned int color2_light,
-    unsigned int outer_color )
-{
-
-    if ( (void*) w == NULL )
-        return;
-
-//  ____
-// |
-//
-// board1, borda de cima e esquerda.
-
-// Cima
-    rectBackbufferDrawRectangle ( 
-        w->left+1, w->top,
-        w->width-2, 1, 
-        outer_color, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1, w->top+1,
-        w->width-2, 1, 
-        color1, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1+1, w->top+1+1,
-        w->width-4, 1, 
-        color1, TRUE,0 );
-
-// Esq
-    rectBackbufferDrawRectangle ( 
-        w->left, w->top+1, 
-        1, w->height-2,
-        outer_color, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1, w->top+1, 
-        1, w->height-2,
-        color1, TRUE,0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1+1, w->top+1+1, 
-        1, w->height-4,
-        color1, TRUE,0 );
-
-//  
-//  ____|
-//
-// board2, borda direita e baixo.
-
-// Dir
-    rectBackbufferDrawRectangle ( 
-        ((w->left) + (w->width) -1 -1 -1), w->top+1+1, 
-        1, w->height-4, 
-        color2_light, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
-        ((w->left) + (w->width) -1 -1), w->top+1, 
-        1, w->height-2, 
-        color2, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
-        ((w->left) + (w->width) -1), w->top+1, 
-        1, w->height-2, 
-        outer_color, TRUE, 0 );
-
-// Baixo
-    rectBackbufferDrawRectangle ( 
-        w->left+1+1, ( (w->top) + (w->height) -1 -1 -1),  
-        w->width-4, 1, 
-        color2_light, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1, ( (w->top) + (w->height) -1 -1),  
-        w->width-2, 1, 
-        color2, TRUE, 0 );
-    rectBackbufferDrawRectangle ( 
-        w->left+1, ( (w->top) + (w->height) -1 ),  
-        w->width-2, 1, 
-        outer_color, TRUE, 0 );
-}
-
-
-
 
 /*
  ********************
@@ -1813,7 +1727,13 @@ void *xxxCreateWindow (
 
         if ( (void*) Parent != NULL )
         {
-            __paint_buttom_borders(
+
+            // #todo
+            // Esses valores precisam estar na estrutura para
+            // podermos chamar a rotina redraw para repintar 
+            // as bordas do botao.
+
+            __draw_buttom_borders(
                 (struct gws_window_d *)window,
                 (unsigned int) buttonBorderColor1,
                 (unsigned int) buttonBorderColor2,
@@ -2122,7 +2042,7 @@ draw_frame:
 
         if ( (void*) __w != NULL )
         {
-            wmDrawFrame ( 
+            wmCreateWindowFrame ( 
                 (struct gws_window_d *) pWindow,  //parent.
                 (struct gws_window_d *) __w,      //bg do botão em relação à sua parent. 
                 METRICS_BORDER_SIZE,       //border size

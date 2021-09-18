@@ -1483,6 +1483,17 @@ void demoTerry(void);
 struct gws_window_d *createwCreateRootWindow(void);
 
 
+//worker: no checks
+void __draw_window_border( struct gws_window_d *parent, struct gws_window_d *window );
+
+void 
+__draw_buttom_borders(
+    struct gws_window_d *w,
+    unsigned int color1,
+    unsigned int color2,
+    unsigned int color2_light,
+    unsigned int outer_color );
+
 // #important: 
 // O frame de uma janela deve fazer parte do window manager
 // e não das primitivas do window server.
@@ -1490,7 +1501,7 @@ struct gws_window_d *createwCreateRootWindow(void);
 // ou oferece recursos que serão usados pelo wm.
 // In: style = estilo do frame.
 int 
-wmDrawFrame ( 
+wmCreateWindowFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
     unsigned long border_size,

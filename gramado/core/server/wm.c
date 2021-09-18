@@ -156,6 +156,157 @@ void __update_fps(void)
 }
 
 
+// WORKER
+// Paint button borders.
+// Called by xxxCreateWindow
+// >>> No checks
+
+void 
+__draw_buttom_borders(
+    struct gws_window_d *w,
+    unsigned int color1,
+    unsigned int color2,
+    unsigned int color2_light,
+    unsigned int outer_color )
+{
+
+    if ( (void*) w == NULL )
+        return;
+
+//  ____
+// |
+//
+// board1, borda de cima e esquerda.
+
+// Cima
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top,
+        w->width-2, 1, 
+        outer_color, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top+1,
+        w->width-2, 1, 
+        color1, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, w->top+1+1,
+        w->width-4, 1, 
+        color1, TRUE,0 );
+
+// Esq
+    rectBackbufferDrawRectangle ( 
+        w->left, w->top+1, 
+        1, w->height-2,
+        outer_color, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, w->top+1, 
+        1, w->height-2,
+        color1, TRUE,0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, w->top+1+1, 
+        1, w->height-4,
+        color1, TRUE,0 );
+
+//  
+//  ____|
+//
+// board2, borda direita e baixo.
+
+// Dir
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1 -1 -1), w->top+1+1, 
+        1, w->height-4, 
+        color2_light, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1 -1), w->top+1, 
+        1, w->height-2, 
+        color2, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        ((w->left) + (w->width) -1), w->top+1, 
+        1, w->height-2, 
+        outer_color, TRUE, 0 );
+
+// Baixo
+    rectBackbufferDrawRectangle ( 
+        w->left+1+1, ( (w->top) + (w->height) -1 -1 -1),  
+        w->width-4, 1, 
+        color2_light, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, ( (w->top) + (w->height) -1 -1),  
+        w->width-2, 1, 
+        color2, TRUE, 0 );
+    rectBackbufferDrawRectangle ( 
+        w->left+1, ( (w->top) + (w->height) -1 ),  
+        w->width-2, 1, 
+        outer_color, TRUE, 0 );
+}
+
+
+
+// worker:
+// no checks
+// Draw the border of an edit box.
+void __draw_window_border( struct gws_window_d *parent, struct gws_window_d *window )
+{
+
+    if ( (void*) parent == NULL )
+        return;
+
+    if ( (void*) window == NULL )
+        return;
+
+
+    if( window->type == WT_EDITBOX )
+    {
+        // board1, borda de cima e esquerda.
+        rectBackbufferDrawRectangle( 
+            window->left, window->top, 
+            window->width, window->border_size, 
+            window->border_color, TRUE,0 );
+
+        rectBackbufferDrawRectangle( 
+            window->left, window->top, 
+            window->border_size, window->height, 
+            window->border_color, TRUE,0 );
+
+        // board2, borda direita e baixo.
+        rectBackbufferDrawRectangle( 
+            (window->left + window->width - window->border_size), window->top,  
+            window->border_size, window->height, 
+            window->border_color, TRUE,0 );
+
+        rectBackbufferDrawRectangle ( 
+            window->left, (window->top + window->height - window->border_size), 
+            window->width, window->border_size, 
+            window->border_color, TRUE,0 );
+    }
+
+    if( window->type == WT_OVERLAPPED )
+    {
+        // board1, borda de cima e esquerda.
+        rectBackbufferDrawRectangle( 
+            parent->left + window->left, parent->top + window->top, 
+            window->width, window->border_size, 
+            window->border_color, TRUE,0 );
+
+        rectBackbufferDrawRectangle( 
+            parent->left + window->left, parent->top + window->top, 
+            window->border_size, window->height, 
+            window->border_color, TRUE,0 );
+
+        //board2, borda direita e baixo.
+        rectBackbufferDrawRectangle( 
+            (parent->left + window->left + window->width - window->border_size), (parent->top + window->top), 
+            window->border_size, window->height, 
+            window->border_color, TRUE,0 );
+
+        rectBackbufferDrawRectangle ( 
+            (parent->left + window->left), (parent->top + window->top + window->height - window->border_size), 
+            window->width, window->border_size, 
+            window->border_color, TRUE,0 );
+    }
+}
+
+
 /*
  ********************************
  * wmDrawFrame:
@@ -194,7 +345,7 @@ void __update_fps(void)
 // < 0 = not ok. something is wrong.
 
 int 
-wmDrawFrame ( 
+wmCreateWindowFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
     unsigned long border_size,
@@ -257,7 +408,9 @@ wmDrawFrame (
     //unsigned long Height = (height & 0xFFFF);
 
 
-    gwssrv_debug_print ("wmDrawFrame:\n");
+    gwssrv_debug_print ("wmCreateWindowFrame:\n");
+
+
 
 
 // #todo
@@ -272,18 +425,25 @@ wmDrawFrame (
 // Cada elemento da frame que incluimos, incrementa
 // o w.top do retângulo da área de cliente.
 
-    // #todo
-    // check parent;
-    //if ( (void*) parent == NULL ){}
+
+// check parent
+
+    if ( (void*) parent == NULL ){
+        gwssrv_debug_print ("wmCreateWindowFrame: [FAIL] parent\n");
+        return -1;
+    }
+
+    if (parent->used != TRUE || parent->magic != 1234)
+        return -1;
 
 // check window
 
     if ( (void*) window == NULL ){
-        gwssrv_debug_print ("wmDrawFrame: [FAIL] window\n");
+        gwssrv_debug_print ("wmCreateWindowFrame: [FAIL] window\n");
         return -1;
     }
 
-    if (window->used != TRUE || window->magic != 1234 )
+    if (window->used != TRUE || window->magic != 1234)
         return -1;
 
 // #bugbug
@@ -337,7 +497,7 @@ wmDrawFrame (
     };
 
     if ( useFrame == FALSE ){
-        gwssrv_debug_print ("wmDrawFrame: [ERROR] This type does not use a frame.\n");
+        gwssrv_debug_print ("wmCreateWindowFrame: [ERROR] This type does not use a frame.\n");
         return -1;
     }
 
@@ -371,7 +531,9 @@ wmDrawFrame (
         }
 
         // Draw the border of an edit box.
+        __draw_window_border(parent,window);
 
+        /*
         // board1, borda de cima e esquerda.
         rectBackbufferDrawRectangle( 
             window->left, window->top, 
@@ -385,7 +547,7 @@ wmDrawFrame (
 
         // board2, borda direita e baixo.
         rectBackbufferDrawRectangle( 
-            (window->left + window->width - BorderSize), window->top,  
+            (window->left + window->width - window->border_size), window->top,  
             window->border_size, window->height, 
             window->border_color, TRUE,0 );
 
@@ -393,7 +555,8 @@ wmDrawFrame (
             window->left, (window->top + window->height - window->border_size), 
             window->width, window->border_size, 
             window->border_color, TRUE,0 );
-
+        */
+        
         // ok
         return 0;
     }
@@ -439,7 +602,9 @@ wmDrawFrame (
 
 
         // Quatro bordas de uma janela overlapped.
-         
+        __draw_window_border(parent,window);
+        
+        /* 
         // board1, borda de cima e esquerda.
         rectBackbufferDrawRectangle( 
             parent->left + window->left, parent->top + window->top, 
@@ -461,6 +626,7 @@ wmDrawFrame (
             (parent->left + window->left), (parent->top + window->top + window->height - window->border_size), 
             window->width, window->border_size, 
             window->border_color, TRUE,0 );
+        */
 
         // #important:
         // The border in an overlapped window will affect
@@ -507,7 +673,7 @@ wmDrawFrame (
                                     0 );   // rop_flags  
 
             if ( (void *) tbWindow == NULL ){
-                gwssrv_debug_print ("wmDrawFrame: tbWindow fail \n");
+                gwssrv_debug_print ("wmCreateWindowFrame: tbWindow fail \n");
                 return -1;
             }
             tbWindow->type = WT_SIMPLE;
@@ -515,7 +681,7 @@ wmDrawFrame (
             // Register window
             id = RegisterWindow(tbWindow);
             if (id<0){
-                gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
+                gwssrv_debug_print ("wmCreateWindowFrame: Couldn't register window\n");
                 return -1;
             }
 
@@ -611,7 +777,7 @@ wmDrawFrame (
                                 0, window->statusbar_color, window->statusbar_color, 
                                 0 );   // rop_flags  
             if ( (void *) sbWindow == NULL ){
-                gwssrv_debug_print ("wmDrawFrame: sbWindow fail \n");
+                gwssrv_debug_print ("wmCreateWindowFrame: sbWindow fail \n");
                 return -1;
             }
             sbWindow->type = WT_SIMPLE;
@@ -619,7 +785,7 @@ wmDrawFrame (
             // Register window
             id = RegisterWindow(tbWindow);
             if (id<0){
-                gwssrv_debug_print ("wmDrawFrame: Couldn't register window\n");
+                gwssrv_debug_print ("wmCreateWindowFrame: Couldn't register window\n");
                 return -1;
             }
         }
@@ -636,7 +802,7 @@ wmDrawFrame (
     //button
     if ( Type == WT_BUTTON )
     {
-        gwssrv_debug_print ("wmDrawFrame: [TODO] frame for button\n");
+        gwssrv_debug_print ("wmCreateWindowFrame: [TODO] frame for button\n");
         
         //todo frame or not
         //just like the edit box.   
@@ -2760,7 +2926,19 @@ redraw_window (
         //if ( (void*) window->parent != NULL )
         //{
 
+
+            // redraw the button border.
+            // #todo:
+            // as cores vao depender do etado do botao.
+            // #todo: veja como foi feito na hora da criaçao do botao.
+            __draw_buttom_borders(
+                (struct gws_window_d *)window,
+                (unsigned int) border1, //buttonBorderColor1,
+                (unsigned int) border2, //buttonBorderColor2,
+                (unsigned int) xCOLOR_GRAY5, //buttonBorderColor2_light,
+                (unsigned int) COLOR_BLACK );  //buttonBorder_outercolor );
             
+            /*
             //board1, borda de cima e esquerda.
             rectBackbufferDrawRectangle ( 
                 window->left, window->top,  
@@ -2782,7 +2960,7 @@ redraw_window (
                  window->left, (window->top) + (window->height) -1,  
                  (window->width), 1, 
                  border2, 1, 0 );
-             
+             */
              
             // Button label
             //gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
