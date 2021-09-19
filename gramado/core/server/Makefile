@@ -68,7 +68,7 @@ WS_INCLUDES_LOCAL = .
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o stdlib.o string.o conio.o socket.o signal.o unistd.o \
 r_render.o \
-bitblt.o line.o rect.o xxxinput.o char.o dtext.o createw.o gws.o comp.o wm.o \
+bitblt.o line.o rect.o xxxinput.o char.o dtext.o window.o gws.o comp.o wm.o \
 grprim.o sprite.o demos.o bmp.o connect.o button.o font.o\
 termios.o ioctl.o fcntl.o    
 
@@ -103,7 +103,7 @@ all-c:
 	$(CC)  -c  ws/line.c      $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o line.o
 	$(CC)  -c  ws/rect.c      $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o rect.o
 	$(CC)  -c  ws/xxxinput.c  $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o xxxinput.o
-	$(CC)  -c  ws/createw.c   $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o createw.o
+	$(CC)  -c  ws/window.c    $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o window.o
 	$(CC)  -c  ws/button.c    $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o button.o
 	$(CC)  -c  ws/comp.c      $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o comp.o
 	$(CC)  -c  ws/bmp.c       $(user_ccflags) -I $(LIBC) -I include/ -I . -I ws/  -o bmp.o

@@ -38,6 +38,7 @@
 
 ; Segmento onde inicia a parte em Assembly.
 segment .head_x86
+
 [bits 32]
 
 

@@ -40,7 +40,7 @@
 
 unsigned long init_testing_memory_size (int mb);
 
-int LandOSLoadKernelImage(void);
+int newOSLoadKernelImage(void);
 
 void BlSetupPaging(void);
 
@@ -51,15 +51,13 @@ void blShowMenu (void){
 
     int i=0;
 
-
-    // Cursor.
+// Cursor.
     g_cursor_x = 0;
     g_cursor_y = 0;
 
-    // Clear backbuffer.
-    // Black color.
+// Clear backbuffer.
+// Black color.
     clear_backbuffer();
-
 
     for (i=0; i<8; i++)
     {
@@ -67,10 +65,10 @@ void blShowMenu (void){
 
         if (MENU[i].used == TRUE)
         {
-            if ( i == menu_highlight){
-                printf ("* %s \n",MENU[i].string);
+            if ( i == menu_highlight ){
+                printf ("* %s \n", MENU[i].string);
             }else{
-                printf ("  %s \n",MENU[i].string);
+                printf ("  %s \n", MENU[i].string);
             };
         }
     };
@@ -153,16 +151,16 @@ ____go:
  *     Initializes, loads the kernel image and returns to head.s.
  */
 
-void OS_Loader_Main (void){
+void OS_Loader_Main (void)
+{
 
-    // #todo
-    // Podemos cair num shell de recuperaçcao
-    // caso o carregamento der errado.
-
+// #todo
+// Podemos cair num shell de recuperaçcao
+// caso o carregamento der errado.
 
     int Status = (-1);
 
-    // main flags.
+// main flags.
     gdefLegacyBIOSBoot  = FALSE;
     gdefEFIBoot         = FALSE;
     gdefSafeBoot        = FALSE;
@@ -287,24 +285,23 @@ void OS_Loader_Main (void){
 // Interrupts
 //
 
-    // #todo
-    // Podemos adiar isso. :)
+// #todo
+// Podemos adiar isso ?
 
     asm ("sti");
 
+// Initializes heap;
+// Used for malloc() and ide driver.
 
-    // Initializes heap;
-    // Used for malloc() and ide driver.
-    
-    printf ("BlMain: init_heap..\n");
+    printf ("OS_Loader_Main: init_heap..\n");
     refresh_screen();
     
     init_heap();
 
-    printf ("BlMain: init_hdd..\n");
+    printf ("OS_Loader_Main: init_hdd..\n");
     refresh_screen();
 
-    // Initializes ide support.
+// Initializes ide support.
     init_hdd();
 
 
@@ -322,7 +319,7 @@ void OS_Loader_Main (void){
 //#endif
 
     if (g_initialized != 1){
-        printf("BlMain: g_initialized\n");
+        printf("OS_Loader_Main: g_initialized\n");
         die();
     }
 
@@ -347,20 +344,24 @@ void OS_Loader_Main (void){
 //#endif
 
 
-    // #todo
-    // Maybe we need the return from these routines.
+// #todo
+// Maybe we need the return from these routines.
 
 
-    // Load root dir.
-    printf ("BlMain: Loading rootdir ..\n");
+// #slow
+// Load root dir.
+
+    printf ("OS_Loader_Main: Loading rootdir ..\n");
     refresh_screen();
 
     fs_load_rootdirEx();
     g_fat16_root_status = TRUE;
 
 
-    // Load FAT.
-    printf ("BlMain: Loading fat ..\n");
+// #slow
+// Load FAT.
+
+    printf ("OS_Loader_Main: Loading fat ..\n");
     refresh_screen();
 
     fs_load_fatEx();
@@ -393,17 +394,17 @@ void OS_Loader_Main (void){
     // BlLoadConfigFiles ();   
 
 
-    // Loading the kernel image.
-    // Helper function in this document.
+// #slow
+// Loading the kernel image.
+// Helper function in this document.
 
-    printf ("BlMain: Loading kernel image ..\n");
+    printf ("OS_Loader_Main: Loading kernel image ..\n");
     refresh_screen();
 
-    //Status = AnotherOSLoadKernelImage();
-    Status = LandOSLoadKernelImage();
+    Status = newOSLoadKernelImage();
 
     if (Status<0){
-         printf("BlMain: LandOSLoadKernelImage fail. \n");
+         printf("OS_Loader_Main: newOSLoadKernelImage fail. \n");
          refresh_screen();
          while(1){}    
          //goto run_rescue_shell;
@@ -446,7 +447,7 @@ void OS_Loader_Main (void){
     printf ("\n");
     printf ("\n");
     printf ("\n");
-    printf ("Gramado X-BL.BIN: [main.c-BlMain()] \n");
+    printf ("Gramado BL.BIN: [main.c-OS_Loader_Main()] \n");
     printf ("The 64bit kernel image is \n");
     printf ("already loaded. So now we will \n");
     printf ("setup the long mode, the paging and\n");
@@ -496,14 +497,14 @@ See:
     unsigned long data = (unsigned long) (d >> 29 );
 
     if ( (data & 1) != 0 ){
-        printf("BlMain: x86_64 hardware supported\n");
+        printf("OS_Loader_Main: x86_64 hardware supported\n");
         refresh_screen();
     }
 
     // #todo
     // Abort! There is nothing to do.
     if ( (data & 1) == 0 ){
-        printf("BlMain: [ERROR] x86_64 hardware not supported\n");
+        printf("OS_Loader_Main: [ERROR] x86_64 hardware not supported\n");
         refresh_screen();
         while(1){
             asm ("cli");
@@ -544,9 +545,10 @@ See:
 	// Essa configuraçao basica nao impede
 	// que o kernel faça uma reconfiguraçao completa.
 
+// #slow
+// #debug
 
-    // #debug
-    printf ("BlMain: Initializing pages..  ******** \n");
+    printf ("OS_Loader_Main: Initializing pages..  ******** \n");
     refresh_screen();
 
     // In this document.
@@ -582,7 +584,7 @@ See:
     
     // Called by BlMain()
 
-int LandOSLoadKernelImage(void)
+int newOSLoadKernelImage(void)
 {
     int Status = -1;
 
@@ -603,7 +605,7 @@ int LandOSLoadKernelImage(void)
     // Fail
     if ( Status != 0 )
     {
-        printf ("LandOSLoadKernelImage: elfLoadKernelImage fail\n");
+        printf ("newOSLoadKernelImage: elfLoadKernelImage fail\n");
         refresh_screen();
         
         return (int) (-1);
