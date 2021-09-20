@@ -1041,18 +1041,22 @@ int main ( int argc, char *argv[] )
     if(launchChild == TRUE)
     {
         gws_redraw_window(client_fd,game_window,0);
-        
-        // Interface 1: File manager.
+
+        // Interface 1: Command line interpreter.
+        //gws_clone_and_execute("cmdline.bin");
+
+        // Interface 2: File manager.
         gws_clone_and_execute("fileman.bin");
 
         // Interface 1: Test app.
         //gws_clone_and_execute("editor.bin");
     }
 
+
+
 //
 // Input
 //
-
 
     //=================================
     

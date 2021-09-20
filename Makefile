@@ -264,6 +264,8 @@ clean:
 	-rm -rf com/lib/lib/libgns/obj/*.o
 	-rm -rf com/lib/lib/libio01/obj/*.o
 
+	-rm -rf gramado/core/cmdline/*.o
+
 	-rm -rf gramado/core/server/*.o
 	-rm -rf gramado/core/client/*.o
 

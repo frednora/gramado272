@@ -233,31 +233,36 @@ void hal_test_speaker (void){
 
 // Called by init() in init.c
 
+// OUT: TRUE if its ok.
+
 int init_hal (void)
 {
-    int Status = 0;
+    int Status = FALSE;
 
     Initialization.hal = FALSE;
 
-    // nothing
+// nothing
+
     init_cpu();
 
-    // #todo:
-    // Chamaremos essa inicialização básica nesse momento.
-    // A inicialização completa será chamada pelo processo init.
-    
+// #todo:
+// Chamaremos essa inicialização básica nesse momento.
+// A inicialização completa será chamada pelo processo init.
+
     early_timer_init();
-    
-    
-	// Detecta fabricantes específicos suportados pelo núcleo.  
+
+
+// Detecta fabricantes específicos suportados pelo núcleo.  
 
     // nothing
+
     hal_hardware_detect();
 
     Initialization.hal = TRUE;
 
-    return 0;
+    return TRUE;
 }
+
 
 /*
  * hal_hardware_detect:

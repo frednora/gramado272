@@ -32,21 +32,19 @@ void x64init_load_pml4_table(unsigned long phy_addr)
 // Não passa o comando para o processo.
 // See: gramado/core/client
 
-void I_x64CreateInitialProcess (void)
+int I_x64CreateInitialProcess (void)
 {
     int fileret = -1;
-    
-    if ( system_state != SYSTEM_BOOTING )
-        panic ("I_x64CreateInitialProcess: system_state\n");    
 
-    //#todo
-    debug_print ("I_x64CreateInitialProcess: [TODO]\n");
-    printf      ("I_x64CreateInitialProcess: [TODO]\n");
-    refresh_screen();
+// #debug
+    debug_print ("I_x64CreateInitialProcess: \n");
+    //printf      ("I_x64CreateInitialProcess:\n");
+    //refresh_screen();
 
-
-
-    //debug_print ("__x64CreateInitialProcess:\n");
+    if ( system_state != SYSTEM_BOOTING ){
+        printf ("I_x64CreateInitialProcess: system_state\n");    
+        return FALSE;
+    }
 
 //
 // Load imag SM.BIN.
@@ -78,13 +76,10 @@ void I_x64CreateInitialProcess (void)
                                   (unsigned long) CONTROLTHREAD_BASE, //0x00200000
                                   BUGBUG_IMAGE_SIZE_LIMIT );
 
-    // Coldn't load sm.bin
     if ( fileret != 0 ){
-        debug_print("I_x64CreateInitialProcess: Coldn't load GWS.BIN \n");
-        panic      ("I_x64CreateInitialProcess: Coldn't load GWS.BIN \n");
+        printf ("I_x64CreateInitialProcess: Coldn't load GWS.BIN \n");
+        return FALSE;
     }
-
-
 
 	// Creating init process.
 	// > Cria um diretório que é clone do diretório do kernel base 
@@ -98,7 +93,8 @@ void I_x64CreateInitialProcess (void)
     void *init_pml4_va = (void *) CloneKernelPML4();
 
     if ( init_pml4_va == 0 ){
-        panic ("I_x64CreateInitialProcess: init_pml4_va\n");
+        printf ("I_x64CreateInitialProcess: init_pml4_va\n");
+        return FALSE;
     }
 
     init_mm_data.pml4_va = init_pml4_va;
@@ -107,7 +103,8 @@ void I_x64CreateInitialProcess (void)
                                                gKernelPML4Address );
 
     if ( init_mm_data.pml4_pa == 0 ){
-        panic ("I_x64CreateInitialProcess: init_mm_data.pml4_pa\n");
+        printf ("I_x64CreateInitialProcess: init_mm_data.pml4_pa\n");
+        return FALSE;
     }
 
     // ...
@@ -131,43 +128,50 @@ void I_x64CreateInitialProcess (void)
 
 // struct
     if ( (void *) InitProcess == NULL ){
-        panic ("I_x64CreateInitialProcess: InitProcess\n");
+        printf ("I_x64CreateInitialProcess: InitProcess\n");
+        return FALSE;
     }
 
 // validation
-    if ( (void *) InitProcess->used != TRUE || InitProcess->magic != 1234 ){
-        panic ("I_x64CreateInitialProcess: InitProcess validation\n");
+    if ( InitProcess->used != TRUE || 
+         InitProcess->magic != 1234 )
+    {
+        printf ("I_x64CreateInitialProcess: InitProcess validation\n");
+        return FALSE;
     }
 
 // struct
-    if ( (void *) InitProcess->pid != GRAMADO_PID_INIT ){
-        panic ("I_x64CreateInitialProcess: pid\n");
+    if ( InitProcess->pid != GRAMADO_PID_INIT )
+    {
+        printf ("I_x64CreateInitialProcess: pid\n");
+        return FALSE;
     }
 
 // The init process is a system application
 // GWS.BIN
     InitProcess->type = SYSTEM_APPLICATION;
 
-
-    if ( init_mm_data.used != TRUE || init_mm_data.magic != 1234 )
+    if ( init_mm_data.used != TRUE || 
+         init_mm_data.magic != 1234 )
     {
-        panic ("I_x64CreateInitialProcess: init_mm_data validation\n");
+        printf ("I_x64CreateInitialProcess: init_mm_data validation\n");
+        return FALSE;
     }
 
-        // Esse foi configurado agora.
-        InitProcess->pml4_VA = init_mm_data.pml4_va;
-        InitProcess->pml4_PA = init_mm_data.pml4_pa; 
+    // Esse foi configurado agora.
+    InitProcess->pml4_VA = init_mm_data.pml4_va;
+    InitProcess->pml4_PA = init_mm_data.pml4_pa; 
 
-        // Herdado do kernel
-        InitProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
-        InitProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
+    // Herdado do kernel
+    InitProcess->pdpt0_VA = kernel_mm_data.pdpt0_va;
+    InitProcess->pdpt0_PA = kernel_mm_data.pdpt0_pa; 
 
-        // Herdado do kernel
-        InitProcess->pd0_VA = kernel_mm_data.pd0_va;
-        InitProcess->pd0_PA = kernel_mm_data.pd0_pa; 
+    // Herdado do kernel
+    InitProcess->pd0_VA = kernel_mm_data.pd0_va;
+    InitProcess->pd0_PA = kernel_mm_data.pd0_pa; 
 
-        InitProcess->position = SPECIAL_GUEST;
-        fs_initialize_process_cwd ( InitProcess->pid, "/" );
+    InitProcess->position = SPECIAL_GUEST;
+    fs_initialize_process_cwd ( InitProcess->pid, "/" );
 
 
 //====================================================
@@ -183,23 +187,28 @@ void I_x64CreateInitialProcess (void)
 
 // struct
     if ( (void *) InitThread == NULL ){
-        panic ("I_x64CreateInitialProcess: InitThread\n");
+        printf ("I_x64CreateInitialProcess: InitThread\n");
+        return FALSE;
     }
 
 // validation
-    if ( InitThread->used != TRUE || InitThread->magic != 1234 )
+    if ( InitThread->used != TRUE || 
+         InitThread->magic != 1234 )
     {
-        panic ("I_x64CreateInitialProcess: InitThread validation\n");
+        printf ("I_x64CreateInitialProcess: InitThread validation\n");
+        return FALSE;
     }
 
 // tid
     if ( InitThread->tid != INIT_TID ){
-        panic ("I_x64CreateInitialProcess: INIT_TID\n");
+        printf ("I_x64CreateInitialProcess: INIT_TID\n");
+        return FALSE;
     }
 
 // owner pid
     if ( InitThread->ownerPID != GRAMADO_PID_INIT ){
-        panic ("I_x64CreateInitialProcess: GRAMADO_PID_INIT\n");
+        printf ("I_x64CreateInitialProcess: GRAMADO_PID_INIT\n");
+        return FALSE;
     }
 
 //
@@ -259,6 +268,8 @@ void I_x64CreateInitialProcess (void)
     // poderá pasasr o comando para ele quando quizer.
 
     InitialProcessInitialized = TRUE;
+
+    return TRUE;
 }
 
 
@@ -517,13 +528,14 @@ void I_x64ExecuteInitialProcess (void)
 // KERNEL.BIN and GWSSRV.BIN.
 // See: gramado/core/server.
 
-void I_x64CreateKernelProcess(void)
+int I_x64CreateKernelProcess(void)
 {
-    debug_print ("I_x64CreateKernelProcess:\n");
-
+    int Status=FALSE;
     unsigned long fileret=1;
-
     unsigned long BUGBUG_IMAGE_SIZE_LIMIT = (512 * 4096);
+
+
+    debug_print ("I_x64CreateKernelProcess:\n");
 
 //
 // Window server image.
@@ -539,10 +551,9 @@ void I_x64CreateKernelProcess(void)
                                   (unsigned long) 0x30A00000,  //0x30E00000
                                   BUGBUG_IMAGE_SIZE_LIMIT ); 
 
-    // Coldn't load sm.bin
     if ( fileret != 0 ){
-        debug_print("I_x64CreateInitialProcess: GWSSRV.BIN \n");
-        panic      ("I_x64CreateInitialProcess: GWSSRV.BIN \n");
+        printf ("I_x64CreateInitialProcess: GWSSRV.BIN \n");
+        return FALSE;
     }
 
 //
@@ -569,17 +580,23 @@ void I_x64CreateKernelProcess(void)
 
 // struct
     if ( (void *) KernelProcess == NULL ){
-        panic ("I_x64CreateKernelProcess: KernelProcess\n");
+        printf ("I_x64CreateKernelProcess: KernelProcess\n");
+        return FALSE;
     }
 
 // validation
-    if ( (void *) KernelProcess->used != TRUE || KernelProcess->magic != 1234 ){
-        panic ("I_x64CreateKernelProcess: KernelProcess validation\n");
+    if ( KernelProcess->used != TRUE || 
+         KernelProcess->magic != 1234 )
+    {
+        printf ("I_x64CreateKernelProcess: KernelProcess validation\n");
+        return FALSE;
     }
 
 // pid
-    if ( (void *) KernelProcess->pid != GRAMADO_PID_KERNEL ){
-        panic ("I_x64CreateKernelProcess: pid\n");
+    if ( KernelProcess->pid != GRAMADO_PID_KERNEL )
+    {
+        printf ("I_x64CreateKernelProcess: pid\n");
+        return FALSE;
     }
 
 
@@ -591,9 +608,9 @@ void I_x64CreateKernelProcess(void)
     if ( kernel_mm_data.used != TRUE || 
          kernel_mm_data.magic != 1234 )
     {
-        panic ("I_x64CreateKernelProcess: kernel_mm_data validation\n");
+        printf ("I_x64CreateKernelProcess: kernel_mm_data validation\n");
+        return FALSE;
     }
-
 
     KernelProcess->pml4_VA = kernel_mm_data.pml4_va;
     KernelProcess->pml4_PA = kernel_mm_data.pml4_pa; 
@@ -611,15 +628,21 @@ void I_x64CreateKernelProcess(void)
 // ==================
 // The control thread.
 
-    I_x64CreateWSThread();
+    Status = I_x64CreateWSThread();
+
+    if ( Status != TRUE ){
+        printf("Couldn't Create the WS thread\n");
+        return FALSE;
+    }
 
 
 // ====================
 
 // Initialize the kernel module list
     int i=0;
-    for (i=0; i<KMODULE_MAX; i++)
+    for (i=0; i<KMODULE_MAX; i++){
         kmList[i] = 0;
+    };
 
 // ====================
 // Setup the first kernel module.
@@ -629,8 +652,11 @@ void I_x64CreateKernelProcess(void)
     struct kernel_module_d *m;
     
     m = (struct kernel_module_d *) kmalloc( sizeof(struct kernel_module_d) );
-    if( (void*) m == NULL )
-        panic ("I_x64CreateKernelProcess: m");
+    if( (void*) m == NULL ){
+        printf ("I_x64CreateKernelProcess: m\n");
+        return FALSE;
+    }
+
 
 // name
 
@@ -666,12 +692,14 @@ void I_x64CreateKernelProcess(void)
     m->initialized = FALSE;
     m->used  = TRUE;
     m->magic = 1234;
+    
+    return TRUE;
 }
 
 
 // Create a ring0 thread for the window server image.
 // It belongs to the kernel process.
-void I_x64CreateWSThread(void)
+int I_x64CreateWSThread(void)
 {
     debug_print ("I_x64CreateWSThread:\n");
 
@@ -685,27 +713,28 @@ void I_x64CreateWSThread(void)
     ws_thread = (void *) create_tid0();
 
     if ( (void *) ws_thread == NULL ){
-        panic ("I_x64CreateWSThread: ws_thread\n");
+        printf ("I_x64CreateWSThread: ws_thread\n");
+        return FALSE;
     }
 
     if ( ws_thread->used  != TRUE || 
          ws_thread->magic != 1234 )
     {
-        panic ("I_x64CreateWSThread: ws_thread validation\n");
+        printf ("I_x64CreateWSThread: ws_thread validation\n");
+        return FALSE;
     }
 
 // tid
-    if ( ws_thread->tid != WS_TID )
-    {
-        panic ("I_x64CreateWSThread: WS_TID");
+    if ( ws_thread->tid != WS_TID ){
+        printf ("I_x64CreateWSThread: WS_TID");
+        return FALSE;
     }
 
 // owner pid
-    if ( ws_thread->ownerPID != GRAMADO_PID_KERNEL )
-    {
-        panic ("I_x64CreateWSThread: GRAMADO_PID_KERNEL");
+    if ( ws_thread->ownerPID != GRAMADO_PID_KERNEL ){
+        printf ("I_x64CreateWSThread: GRAMADO_PID_KERNEL");
+        return FALSE;
     }
-
 
 //
 // Memory
@@ -766,10 +795,16 @@ void I_x64CreateWSThread(void)
 
     ____IDLE = (struct thread_d *) ws_thread;
 
+// ??
 // This is the control thread of the kernel process.
+// OK, the loadable tharead that belongs to the ws is
+// the kernel process's control thread. :)
 
-    if ((void*)KernelProcess != NULL)
+    if ((void*)KernelProcess != NULL){
         KernelProcess->control = (struct thread_d *) ws_thread;
+    }
+
+    return TRUE;
 }
 
 
@@ -792,7 +827,7 @@ void I_x64CreateWSThread(void)
 
 int I_x64main (void)
 {
-    int Status=0;
+    int Status = FALSE;
 
 
 // ============================
@@ -823,27 +858,32 @@ int I_x64main (void)
  
     // #debug
     debug_print ("I_x64main: [TODO]\n");
-    printf      ("I_x64main: [TODO]\n");
-    refresh_screen();
+    //printf      ("I_x64main: [TODO]\n");
+    //refresh_screen();
 
 
 //
 // System State
 //
 
-    if ( system_state != SYSTEM_BOOTING ){
+    if (system_state != SYSTEM_BOOTING)
+    {
         debug_print ("[x64] I_x64main: system_state\n");
-        x_panic     ("[x64] I_x64main: system_state\n");
+        //x_panic     ("[x64] I_x64main: system_state\n");
+        return FALSE;
     }
 
 //
 // System Arch
 //
 
-    if (current_arch != CURRENT_ARCH_X86_64){
+    if (current_arch != CURRENT_ARCH_X86_64)
+    {
         debug_print ("[x64] I_x64main: current_arch fail\n");
-        x_panic     ("[x64] I_x64main: current_arch fail\n");
+        //x_panic     ("[x64] I_x64main: current_arch fail\n");
+        return FALSE;
     }
+
 
 //
 // Threads counter
@@ -894,17 +934,24 @@ int I_x64main (void)
     PROGRESS("Kernel:1:2\n"); 
     debug_print ("I_x64main: Calling I_init()\n");
 
-    if ( InitializationPhase != 0 ){
-        x_panic ("I_x64main: InitializationPhase\n");
+    if ( InitializationPhase != 0 )
+    {
+        debug_print ("I_x64main: InitializationPhase\n");
+        //x_panic ("I_x64main: InitializationPhase\n");
         //KiAbort();
+        return FALSE;
     }
 
-    // Phases 1 and 2.
+// Phases 1 and 2.
+// See: sysinit.c
+
     Status = (int) I_init(); 
-    if ( Status != 0 ){
-        debug_print ("I_x64main: I_init fail\n");
-        x_panic     ("I_x64main: I_init fail\n");
+
+    if ( Status != TRUE ){
+        printf ("I_x64main: I_init fail\n");
+        return FALSE;
     }
+
 
 // End of phase.
 // Starting phase 3.
@@ -975,7 +1022,12 @@ int I_x64main (void)
 // window server's control thread.
 
     PROGRESS("Kernel:1:6\n"); 
-    I_x64CreateKernelProcess();
+    Status = I_x64CreateKernelProcess();
+
+    if(Status != TRUE){
+        debug_print ("Couldn't create the Kernel process\n");
+        return FALSE;
+    }
 
 // ================================
 // Creating a ring 0 thread for the kernel.
@@ -1004,7 +1056,12 @@ int I_x64main (void)
 // Não passa o comando para o processo.
 
     PROGRESS("Kernel:1:8\n"); 
-    I_x64CreateInitialProcess();
+    Status = I_x64CreateInitialProcess();
+
+    if(Status != TRUE){
+        debug_print ("Couldn't create the Initial process\n");
+        return FALSE;
+    }
 
 //================================
 // Check some initialization flags.
@@ -1111,7 +1168,7 @@ int I_x64main (void)
     debug_print ("[x64] I_x64main: done\n");
     debug_print ("==============\n");
 
-    return (int) 1234;
+    return TRUE;
 
 // ================================
 // The routine fails.
@@ -1122,8 +1179,7 @@ fail:
 fail0:
     debug_print ("[x64] I_x64main: fail\n");
     refresh_screen(); 
-    return (int) (-1);
+    return FALSE;
 }
-
 
 

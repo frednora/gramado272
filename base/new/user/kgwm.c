@@ -549,11 +549,12 @@ fail:
 }
 
 
-// called by init()
+// called by I_init()
+// OUT: return TRUE if its ok.
 int init_gramado (void)
 {
-    debug_print ("init_gramado: [?? fixme]\n");
-    return 0;
+    debug_print ("init_gramado: [fixme]\n");
+    return TRUE;
 }
 
 

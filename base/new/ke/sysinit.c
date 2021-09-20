@@ -222,22 +222,23 @@ void init_globals (void)
 // Phases 1 and 2.
 // Called in the initialization phase 0.
 // Called by x64main in x64init.c
+// OUT: TRUE if it is ok.
 
 int I_init (void)
 {
-    int Status = 0;
+    int Status = FALSE;
     unsigned char ProcessorType=0;
 
-
+// #debug
     debug_print ("I_init:\n");
-    printf      ("I_init:\n");
+    //printf      ("I_init:\n");
 
 // ==================
 // Check kernel phase.
 
     if ( InitializationPhase != 0 ){
-        debug_print ("I_init: InitializationPhase fail\n");
-        x_panic     ("I_init: InitializationPhase fail\n");
+        printf ("I_init: InitializationPhase fail. Not 0\n");
+        return FALSE;
     }
 
 // ===============================
@@ -290,7 +291,8 @@ int I_init (void)
     debug_print ("I_init: storage structure\n");
     storage = (void *) kmalloc ( sizeof(struct storage_d) );
     if ( (void *) storage == NULL ){
-       panic ("I_init: storage\n");
+       printf ("I_init: storage\n");
+       return FALSE;
     }
     debug_print ("I_init: disk [TODO]\n");
     disk_init();
@@ -389,7 +391,8 @@ int I_init (void)
 // We need to be in the phase 0.
 
     if (InitializationPhase != 0){
-        x_panic ("I_init: InitializationPhase\n");
+        printf ("I_init: InitializationPhase\n");
+        return FALSE;
     }
 
 
@@ -399,8 +402,9 @@ int I_init (void)
     PROGRESS("Kernel:2:8\n"); 
     debug_print ("I_init: hal\n");
     Status = init_hal();
-    if (Status != 0){
-        x_panic ("I_init: init_hal fail\n");
+    if (Status != TRUE){
+        printf ("I_init: init_hal fail\n");
+        return FALSE;
     }
 
 // ==========================
@@ -409,8 +413,9 @@ int I_init (void)
 
     PROGRESS("Kernel:2:9\n"); 
     Status = init_microkernel();
-    if (Status != 0){
-        panic ("core-init: init_microkernel fail\n");
+    if (Status != TRUE){
+        printf ("I_init: init_microkernel fail\n");
+        return FALSE;
     }
 
 // =========================================
@@ -418,8 +423,9 @@ int I_init (void)
 
     PROGRESS("Kernel:2:10\n"); 
     Status = init_executive();
-    if (Status != 0){
-        panic ("I_init: init_executive fail\n"); 
+    if (Status != TRUE){
+        printf ("I_init: init_executive fail\n"); 
+        return FALSE;
     }
 
 // =========================================
@@ -428,8 +434,9 @@ int I_init (void)
 
     PROGRESS("Kernel:2:11\n"); 
     Status = init_gramado();
-    if (Status != 0){
-        panic ("I_init: init_gramado fail\n"); 
+    if (Status != TRUE){
+        printf ("I_init: init_gramado fail\n"); 
+        return FALSE;
     }
 
 // =========================================
@@ -451,7 +458,8 @@ int I_init (void)
 // We need to be in the phase 1.
 
     if ( InitializationPhase != 1 ){
-        x_panic ("I_init: InitializationPhase\n");
+        printf ("I_init: InitializationPhase. Not 1\n");
+        return FALSE;
     }
 
 // =========================================
@@ -462,9 +470,9 @@ int I_init (void)
     PROGRESS("Kernel:2:13\n"); 
     processor = (void *) kmalloc ( sizeof( struct processor_d ) ); 
     if ( (void *) processor == NULL ){
-        x_panic("I_init: processor\n");
+        printf("I_init: processor\n");
+        return FALSE;
     }
-
 
     // #todo
     // Check if cpuid instruction is available.
@@ -506,7 +514,8 @@ int I_init (void)
         break;
     // ...
     default:
-        x_panic ("I_init: [ERROR] default Type");
+        printf ("I_init: [ERROR] default Type");
+        return FALSE;
         break;
     };
 
@@ -584,7 +593,7 @@ int I_init (void)
     // Return to the main initialization routine
     // in x64init.c
 
-    return 0;
+    return TRUE;
 
 // ====================
 // fail
@@ -595,8 +604,10 @@ int I_init (void)
     // If we already have printf verbose.
 fail0:
     debug_print ("I_init: fail\n");
-    return (-1);
+    return FALSE;
 }
+
+
 
 
 

@@ -937,10 +937,11 @@ void *systemNull (void)
  */
 
 // called by init()
+// OUT: return TRUE if its ok.
 
-int init_executive (void){
-
-    int Status = 0;
+int init_executive (void)
+{
+    int Status = FALSE;
 
 
     Initialization.executive = FALSE;
@@ -952,29 +953,23 @@ int init_executive (void){
 #endif
 
 
-//
 // PCI
-//
+// PCI - Pega informações da PCI.
+// As informaçoes serao salvas em uma lista e usadas depois.
+// por isso temos que sondar agora.
 
-    // PCI - Pega informações da PCI.
-    // As informaçoes serao salvas em uma lista e usadas depois.
-    // por isso temos que sondar agora.
-    
     init_pci();
 
-
-//
 // CMOS
-//
-    // CLOCK - Pega informações de Hora e Data.
+// CLOCK - Pega informações de Hora e Data.
+
     init_clock();
 
-	//...
+    // ...
 
-
-	// #importante: 
-	// Só depois de inicializarmos o ata 'e que podemos carregar 
-	// alguma coisa.
+// #importante: 
+// Só depois de inicializarmos o ata 'e que podemos carregar 
+// alguma coisa.
 
     debug_print ("init_executive: ataDialog\n");
     ataDialog ( 1, FORCEPIO, FORCEPIO );
@@ -995,26 +990,7 @@ int init_executive (void){
 
     Initialization.executive = TRUE;
 
-    return (int) Status;
+    return (int) TRUE;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

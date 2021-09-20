@@ -333,10 +333,69 @@ int gws(void)
     return (int) client_fd;
 }
 
+void doPrompt(int fd)
+{
+    int i=0;
+
+
+    if(fd<0)
+        return;
+
+    // Clean prompt buffer.
+    
+    for ( i=0; i<PROMPT_MAX_DEFAULT; i++ ){ prompt[i] = (char) '\0'; };
+    
+    prompt[0] = (char) '\0';
+    prompt_pos    = 0;
+    prompt_status = 0;
+    prompt_max    = PROMPT_MAX_DEFAULT;  
+
+    // Prompt
+    printf("\n");
+    printf("cmdline: Type something\n");
+    printf("$ ");
+    fflush(stdout);
+
+    if(game_window<0)
+        return;
+
+    gws_refresh_window(fd,game_window);
+}
+
+void compareStrings(int fd)
+{
+
+    printf("\n");
+
+    if ( strncmp(prompt,"test",4) == 0 )
+    {
+         printf("==TEST==\n");
+         goto exit_cmp;
+    }
+
+    if ( strncmp(prompt,"reboot",6) == 0 )
+    {
+         rtl_reboot();
+         goto exit_cmp;
+    }
+
+    if ( strncmp(prompt,"cls",3) == 0 )
+    {
+         gws_redraw_window(fd,game_window,TRUE);
+         //#define SYSTEMCALL_SETCURSOR  34
+         gramado_system_call ( 34, 2, 2, 0 );
+         goto exit_cmp;
+    }
+
+    printf("Command not found\n");
+
+exit_cmp:
+    doPrompt(fd);
+}
 
 // local
 int 
-gwsProcedure ( 
+cmdlineProcedure ( 
     int fd,
     void *window, 
     int msg, 
@@ -421,8 +480,19 @@ gwsProcedure (
                     goto done;
                     break;
                 
+                case VK_RETURN:
+                    input('\0');
+                    compareStrings(fd);
+                    break;
+                
+                // input
                 default:
-                    printf("%c",long1); fflush(stdout);
+                    
+                    input(long1);
+                    
+                    printf("%c",long1);
+                    fflush(stdout);
+                    
                     break;
             }
             break;
@@ -1060,17 +1130,6 @@ int main ( int argc, char *argv[] )
 // Input
 //
 
-
-    //=================================
-    
-    // get current thread
-    // set foreground thread.
-    // #todo: We need to create a rtl function for this.
-    // See: rtl.c
-    //int cThread = (int) pthread_self();
-    //sc82 (10011,cThread,cThread,cThread);
-
-    rtl_focus_on_this_thread();
     
     // Enable input method number 1.
     // Event queue in the current thread.
@@ -1078,6 +1137,33 @@ int main ( int argc, char *argv[] )
     //gws_enable_input_method(1);
 
     //=================================
+
+
+// =================================
+// Focus
+
+
+// set focus
+    rtl_focus_on_this_thread();
+
+// set focus
+    gws_async_command(
+         client_fd,
+         9,             // set focus
+         game_window,
+         game_window );
+
+//
+// Banner
+//
+
+// Set cursor position.
+    gramado_system_call ( 34, 2, 2, 0 );
+
+    printf ("Gramado OS\n");
+
+// Show prompt.
+    doPrompt(client_fd);
 
     // Podemos chamar mais de um diálogo
     // Retorna TRUE quando o diálogo chamado 
@@ -1090,7 +1176,7 @@ int main ( int argc, char *argv[] )
         {
             //if( RTLEventBuffer[1] == MSG_QUIT ){ break; }
 
-            gwsProcedure ( 
+            cmdlineProcedure ( 
                 client_fd,
                 (void*) RTLEventBuffer[0], 
                 RTLEventBuffer[1], 

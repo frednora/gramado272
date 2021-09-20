@@ -1186,6 +1186,8 @@ int consoleCompareStrings(void)
 
 //...
 
+    printf("\n");
+
 // #test
     if ( strncmp(prompt,"path",4) == 0 )
     {
@@ -1207,7 +1209,7 @@ int consoleCompareStrings(void)
 // about
     if ( strncmp( prompt, "about", 5 ) == 0 )
     {
-        printf("\n");
+        //printf("\n");
         printf("About: The kernel console\n");
         goto exit_cmp;
     }
@@ -1215,7 +1217,7 @@ int consoleCompareStrings(void)
 // help
     if ( strncmp( prompt, "help", 4 ) == 0 )
     {
-        printf("\n");
+        //printf("\n");
         printf("Commands: about, help, reboot\n");
         goto exit_cmp;
     }

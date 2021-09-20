@@ -5,16 +5,27 @@
 // for the initialization routine.
 // Please put here data we need.
 
-
 // fake main.c
 // We need a fake KERNEL.BIN ELF file that will be used my the
 // boot loader.
 // The boot loader will load the fake kernel image before
 // setting up the long mode and the paging.
 
-#define GCC_VERSION (__GNUC__ * 10000		\
-		     + __GNUC_MINOR__ * 100	\
-		     + __GNUC_PATCHLEVEL__)
+
+// #bsod
+// List of errors:
+// Error: 0x00 - Unexpected error.
+// Error: 0x01 - CURRENT_ARCH_X86_64 initialization fail.
+// Error: 0x02 - generic.
+// Error: 0x03 - Undefined 'current arch'.
+// Error: 0x04 - The kernel image is too long.
+// Error: 0x05 - Memory allocation for Display device structure.
+// ...
+
+
+#define GCC_VERSION ( __GNUC__ * 10000 \
+            + __GNUC_MINOR__ * 100 \
+            + __GNUC_PATCHLEVEL__ )
 
 
 #include <kernel.h>
@@ -314,14 +325,16 @@ int kernel_main(int arch_type)
 
 
 // =================================================
-    // Globals
-    // We do not have output yet
+// Globals
+// We do not have output yet
+
     //preinit_Globals(arch_type);
     preinit_Globals(0);
 
 // =================================================
-    // Serial
-    // We do not have output yet
+// Serial
+// We do not have output yet
+
     preinit_Serial();
 
 
@@ -438,24 +451,23 @@ int kernel_main(int arch_type)
 
 
 //
-// == Background ===================================================
+// == Background ===================
 //
 
-    // Initializing background 
-    // for the very first time.
-    // Now we have a black screen.
-    // But the cursor position is wrong yet.
+// Initializing background 
+// for the very first time.
+// Now we have a black screen.
+// But the cursor position is wrong yet.
 
-    
     // #todo
     // See: user/draw/view/bg.c
 
     Background_initialize();
 
 
-    // ++
-    // ======================================
-    // Screen size
+// ++
+// ======================================
+// Screen size
     
     unsigned long bytes_per_pixel = 0;
     unsigned long pitch = 0;
@@ -470,19 +482,20 @@ int kernel_main(int arch_type)
         pitch = (xBootBlock.deviceWidth * bytes_per_pixel);
     }  
 
-    if ( pitch == 0){
+    if (pitch == 0){
         refresh_screen_enabled = FALSE;
         printf ("Screen size fail. pitch\n");
     }
 
-    if ( pitch != 0){
-        
+    if (pitch != 0)
+    {
         sz_in_kb = (unsigned long) (( pitch * xBootBlock.deviceHeight )/ 1024 );
         screen_size_in_kb = sz_in_kb;
         
+        // #debug
         printf ("Screen size: %d KB\n", sz_in_kb);
         
-        // fail.
+        // fail
         if ( sz_in_kb >= 2048 ){
             refresh_screen_enabled = FALSE;
             printf ("Screen size fail sz_in_k\n");
@@ -491,20 +504,19 @@ int kernel_main(int arch_type)
         // ok
         // Ok We can use the refresh routine.
         // Because we have memory enough for that.
-        if ( sz_in_kb < 2048 )
-        {
+        if ( sz_in_kb < 2048 ){
             refresh_screen_enabled = TRUE;  
         }
     }
-    // ======================================
-    // --
+// ======================================
+// --
 
 
 //
 // BANNER!
 //
 
-// Welcome message. (Poderia ser um banner.) 
+// Welcome message.
 // This is the first message in the screen
 
     console_banner(0);
@@ -519,24 +531,20 @@ int kernel_main(int arch_type)
 //
 
     switch (current_mode){
+
     case GRAMADO_JAIL:
-        printf (">> GRAMADO_JAIL\n");
-        break;
     case GRAMADO_P1:
-        printf (">> GRAMADO_P1\n");
-        break;
     case GRAMADO_HOME:
-        printf (">> GRAMADO_HOME\n");
+        // ok
         break;
+
     case GRAMADO_P2:
-        printf (">> GRAMADO_P2\n");
-        break;
     case GRAMADO_CASTLE:
-        printf (">> GRAMADO_CASTLE\n");
-        break;
     case GRAMADO_CALIFORNIA:
-        printf (">> GRAMADO_CALIFORNIA\n");
+        printf (">> [TODO] current_mode\n");
         break;
+
+    // #panic
     default:
         printf (">> Undefined mode!\n");
         break;
@@ -547,11 +555,12 @@ int kernel_main(int arch_type)
     //while(1){}
 
 
-    // ================================================
+// ================================================
 
-    // #test
-    // Não queremos um tamanho de imagem que
-    // exceda o tamanho da região de memória mapeada para ela.
+// #test
+// Não queremos um tamanho de imagem que
+// exceda o tamanho da região de memória mapeada para ela.
+
     unsigned long KernelImage_BSS_Size=0;
     unsigned long KernelImage_DATA_Size=0;
     unsigned long KernelImage_RODATA_Size=0;
@@ -580,10 +589,12 @@ int kernel_main(int arch_type)
         printf ("BSS Size %d KB \n",KernelImage_BSS_Size/1024);
 
         // Limit 1 MB
-        if ( KernelImage_Size/1024 > 1024 ){
-            panic ("kernel_main: The kernel image is too long\n");
+        // The kernel image is too long.
+        if ( KernelImage_Size/1024 > 1024 )
+        {
+            panic ("Error 0x04");
         }
-        
+
         // #debug
         // refresh_screen();
         // while(1){}
@@ -667,9 +678,11 @@ int kernel_main(int arch_type)
 
     GramadoDisplayDevice = (struct display_device_d *) kmalloc ( sizeof(struct display_device_d) ); 
 
-    if ( (void*) GramadoDisplayDevice == NULL )
-        x_panic ("kernel_main: GramadoDisplayDevice");
-   
+    // Memory allocation for Display device structure.
+    if ( (void*) GramadoDisplayDevice == NULL ){
+        x_panic ("Error: 0x05");
+    }
+
     GramadoDisplayDevice->framebuffer_pa = (unsigned long) xBootBlock.lfb_pa;
     GramadoDisplayDevice->framebuffer_va = (unsigned long) FRONTBUFFER_VA;
  
@@ -709,32 +722,20 @@ int kernel_main(int arch_type)
         // Not supported on Gramado X.
         //case CURRENT_ARCH_X86:
         //    break;
-
         // See: x64init.c in ke/arch/x86_64/
+
         case CURRENT_ARCH_X86_64:
-            
             debug_print ("kernel_main: [CURRENT_ARCH_X86_64] calling x64main() ...\n");
-            //printf      ("kernel_main: [CURRENT_ARCH_X86_64] calling x64main() ...\n");
-            
             Background_initialize();
             Status = (int) I_x64main();
-            
-            if (Status < 0){
-                x_panic("[Kernel] kernel_main: CURRENT_ARCH_X86 fail\n");
+            if (Status != TRUE){
+                x_panic("Panic: Error 0x01");
             }
-            
-            // #test
-            // No return.
-            if (Status == 1234)
-            {
+            if (Status == TRUE){
                 debug_print ("kernel_main: Calling x64ExecuteInitialProcess()\n");
-                
                 Background_initialize();
                 I_x64ExecuteInitialProcess();
             }
-
-
-            //goto fail2;
             break;
 
         // See:
@@ -743,14 +744,11 @@ int kernel_main(int arch_type)
         // ...
 
         default:
-            //system_state = SYSTEM_ABORTED;
-            
             debug_print ("kernel_main: [FAIL] Current arch not defined!\n");
-            //printf("kernel_main: [FAIL] Current arch not defined!");
-            goto fail2;
+            //system_state = SYSTEM_ABORTED;
+            x_panic("Error 0x03");
             break;
     };
-
 
 //=============================
 
@@ -899,7 +897,7 @@ int kernel_main(int arch_type)
     //die();
 
     printf("\n");
-    printf("kernel_main: *breakpoint :)\n");
+    printf("kernel_main: breakpoint :)\n");
     refresh_screen();
 
 //=============================
@@ -937,6 +935,9 @@ int kernel_main(int arch_type)
 
     //a_soft_place_to_fall();
     //die();
+
+// Unexpected error.
+    x_panic("Error: 0x00");
 
     while (1){
         asm ("sti");
@@ -981,6 +982,8 @@ fail1:
 fail0:
     system_state = SYSTEM_ABORTED;
     // Return to xxxhead.asm and hang.
+
+    x_panic("Error: 0x02");
     return -1;
 }
 

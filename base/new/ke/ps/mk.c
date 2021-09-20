@@ -5,12 +5,13 @@
 #include <kernel.h> 
 
 
+// Called by I_init().
 
 int init_microkernel (void)
 {
-    int Status = 0;
+    int Status = FALSE;
 
-    debug_print ("init_microkernel: [>>>>>> TODO]\n");
+    debug_print ("init_microkernel:\n");
 
 //#ifdef KERNEL_VERBOSE
     //printf ("MICROKERNEL:\n");
@@ -65,32 +66,31 @@ int init_microkernel (void)
 
     // ...
 
+
 //
 // Dispatch Count Block
 //
     DispatchCountBlock = (void *) kmalloc ( sizeof( struct dispatch_count_d ) );
 
     if ( (void *) DispatchCountBlock == NULL ){
-        panic ("init_microkernel: DispatchCountBlock\n");
-    } else {
-        DispatchCountBlock->SelectIdleCount = 0;
-        DispatchCountBlock->SelectInitializedCount = 0;
-        DispatchCountBlock->SelectNextCount = 0;
-        DispatchCountBlock->SelectCurrentCount = 0;
-        DispatchCountBlock->SelectAnyCount = 0;
-        DispatchCountBlock->SelectIdealCount = 0;
-        DispatchCountBlock->SelectDispatcherQueueCount = 0;
-        //...
-    };
+        printf ("init_microkernel: DispatchCountBlock\n");
+        return FALSE;
+    }
 
-    //More?!
-
-    Initialization.microkernel = TRUE;
+    DispatchCountBlock->SelectIdleCount = 0;
+    DispatchCountBlock->SelectInitializedCount = 0;
+    DispatchCountBlock->SelectNextCount = 0;
+    DispatchCountBlock->SelectCurrentCount = 0;
+    DispatchCountBlock->SelectAnyCount = 0;
+    DispatchCountBlock->SelectIdealCount = 0;
+    DispatchCountBlock->SelectDispatcherQueueCount = 0;
+    // ...
 
 
-#ifdef PS_VERBOSE
-    printf ("Done\n");
-#endif
+
+//#ifdef PS_VERBOSE
+    //printf ("Done\n");
+//#endif
 
 
 #ifdef BREAKPOINT_TARGET_AFTER_MK
@@ -101,7 +101,9 @@ int init_microkernel (void)
     die();
 #endif
 
-    return (int) Status;
+    Initialization.microkernel = TRUE;
+
+    return TRUE;
 }
 
 
