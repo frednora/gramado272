@@ -173,6 +173,9 @@ presentation-tier:
 
 	$(Q) $(MAKE) -C gramado/
 
+# command line client application.
+	-sudo cp gramado/bin/CMDLINE.BIN    base/disk/
+
 # Server and main client.
 	-sudo cp gramado/bin/GWSSRV.BIN    base/disk/
 	-sudo cp gramado/bin/GWS.BIN       base/disk/ 

@@ -263,7 +263,8 @@ int filemanProcedure(
 
                 case VK_F2: 
                     printf("VK_F2\n");
-                    rtl_clone_and_execute("terminal.bin");
+                    //rtl_clone_and_execute("terminal.bin");
+                    rtl_clone_and_execute("cmdline.bin");
                     return 0;
                     break;
 
