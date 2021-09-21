@@ -1328,7 +1328,7 @@ int consoleCompareStrings(void)
     if ( strncmp(prompt,"close",5) == 0 )
     {
         if( (void*) InitThread == NULL ){goto exit_cmp;}
-        kgws_send_to_tid(
+        post_message_to_tid(
             InitThread->tid,
             NULL,  //window
             MSG_CLOSE,  //msg code
@@ -1340,7 +1340,7 @@ int consoleCompareStrings(void)
 // msg:
     if ( strncmp(prompt,"app1",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
-        kgws_send_to_tid(
+        post_message_to_tid(
             (int) InitThread->tid,
             NULL,  //window
             (int)MSG_COMMAND,  //msg code
@@ -1354,7 +1354,7 @@ int consoleCompareStrings(void)
 // msg:
     if ( strncmp(prompt,"app2",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
-        kgws_send_to_tid(
+        post_message_to_tid(
             (int) InitThread->tid,
             NULL,  //window
             (int)MSG_COMMAND,  //msg code
@@ -1368,7 +1368,7 @@ int consoleCompareStrings(void)
 // msg:
     if ( strncmp(prompt,"app3",4) == 0 ){
         if( (void*) InitThread == NULL ){goto exit_cmp;}
-        kgws_send_to_tid(
+        post_message_to_tid(
             (int) InitThread->tid,
             NULL,  //window
             (int)MSG_COMMAND,  //msg code

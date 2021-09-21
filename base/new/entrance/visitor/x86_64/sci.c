@@ -1429,10 +1429,11 @@ void *sci0 (
             return (void *) sys_get_message( (unsigned long) &message_address[0] );
             break;
 
-        // Send message to thread.
+        // Post message to tid.
+        // Asynchronous.
         // IN: tid, message buffer address.
         case 112:
-            return (void *) sys_send_message_tid( (int) arg2, (unsigned long) arg3 );
+            return (void *) sys_post_message_to_tid( (int) arg2, (unsigned long) arg3 );
             break;
 
 

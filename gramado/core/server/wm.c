@@ -1607,7 +1607,7 @@ __add_message_to_into_the_queue(
 // IN:
 // tid, message buffer address
 
-    rtl_send_system_message( 
+    rtl_post_system_message( 
         (int) window->client_tid, 
         (unsigned long) &message_buffer[0] );
 

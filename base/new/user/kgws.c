@@ -36,7 +36,7 @@ int kgws_ws_status;
  */
 
 int 
-sendto_tty ( 
+write_in_tty ( 
     struct tty_d *target_tty,
     struct window_d *window, 
     int message,
@@ -238,7 +238,7 @@ fail:
 // Called by UserInput_SendKeyboardMessage in this document.
 
 int 
-sendto_eventqueue ( 
+postto_eventqueue ( 
     int tid,
     struct window_d *window, 
     int message,
@@ -330,7 +330,7 @@ sendto_eventqueue (
                             //    (unsigned long) Event_LongASCIICode, 
                             //    (unsigned long) Event_LongRawByte );
 
-                            kgws_send_to_tid (  tid,
+                            post_message_to_tid (  tid,
                                                 Event_Window,
                                 (int)           Event_Message, 
                                 (unsigned long) Event_LongASCIICode, 
@@ -353,7 +353,7 @@ sendto_eventqueue (
                     //if (current_input_mode == INPUT_MODE_SETUP)
                     if ( IOControl.useEventQueue == TRUE )
                     {
-                        kgws_send_to_tid (  tid,
+                        post_message_to_tid (  tid,
                                             Event_Window,
                             (int)           Event_Message, 
                             (unsigned long) Event_LongASCIICode, 
@@ -392,7 +392,7 @@ sendto_eventqueue (
                //    (unsigned long) Event_LongASCIICode, 
                //    (unsigned long) Event_LongRawByte );
 
-               kgws_send_to_tid (  tid,
+               post_message_to_tid (  tid,
                                    Event_Window,
                    (int)           Event_Message, 
                    (unsigned long) Event_LongASCIICode, 
@@ -921,159 +921,8 @@ done:
     return 0;
 }
 
-// service 112
-unsigned long
-sys_send_message_tid( 
-    int tid, 
-    unsigned long message_buffer )
-{
-
-    if( tid < 0 || tid >= THREAD_COUNT_MAX )
-        return 0;
-
-    if( message_buffer == 0 )
-        return 0;
-
-    unsigned long *event = (unsigned long *) message_buffer;
-
-    kgws_send_to_tid(
-        tid,         //tid
-        event[0],    //window
-        event[1],    //msg code
-        event[2],    //long1
-        event[3] );  //long2
-
-    return 0;
-}
 
 //==========
-/*
- *************************************************
- * kgws_send_to_tid:
- * 
- * 
- */
-
-// Send a message to the thread associated with the
-// window with focus.
-
-// Called by KEYBOARD_SEND_MESSAGE() in ps2kbd.c.
-
-// #todo:
-// We need to associate the current thread and the current tty.
-// tty->control
-// window->control
-
-// #bugbug
-// Only keyboard messages,
-// long1 and long2 will mask to single byte.
-// IN: tid, window, message code, ascii code, raw byte.
-
-int
-kgws_send_to_tid ( 
-    int tid, 
-    struct window_d *window, 
-    int msg, 
-    unsigned long long1, 
-    unsigned long long2 )
-{
-
-// Target thread.
-    struct thread_d *t;
-    int target_tid = (int) (tid & 0xFFFF);
-
-    unsigned long tmp_msg=0;
-
-
-    //#debug
-    debug_print("kgws_send_to_tid:\n");
-
-    if ( target_tid < 0 || target_tid >= THREAD_COUNT_MAX )
-    {
-        debug_print("kgws_send_to_tid: target_tid\n");
-        goto fail;
-    }
-
-//
-// Pega a thread alvo. 
-//
-
-    t = (struct thread_d *) threadList[target_tid];
-
-    if ( (void *) t == NULL ){
-        panic ("kgws_send_to_tid: t \n");
-    }
-
-    if ( t->used != 1 || t->magic != 1234 ){
-        panic ("kgws_send_to_tid: t validation \n");
-    } 
-
-
-//
-// Wake up the target thread ?
-//
-
-    // wakeup_thread(t->tid);
-
-// #todo
-// Podemos melhorar a prioridade ou o quantum da thread alvo.
-
-//
-// The message
-//
-
-    tmp_msg = (unsigned long) (msg & 0xFFFF);
-
-    //Send system message to the thread.
-    t->window_list[ t->tail_pos ]  = (unsigned long) window;
-    t->msg_list[ t->tail_pos ]     = (unsigned long) (tmp_msg & 0xFFFF);
-    t->long1_list[ t->tail_pos ]   = (unsigned long) long1;
-    t->long2_list[ t->tail_pos ]   = (unsigned long) long2;
-
-    t->tail_pos++;
-    if ( t->tail_pos >= 31 )
-        t->tail_pos = 0;
-
-
-//
-// #test
-//
-
-// lets end this round putting a given thread at the end
-// of this round.
-// This is gonna be the next, 
-// and the last of this round.
-    
-    // cut_round( (struct thread_d *) t );
-
-    //ok
-    return 0;
-
-fail:
-    // fail
-    return -1;
-}
-
-
-
-int
-kgws_send_to_foreground_thread ( 
-    struct window_d *window, 
-    int msg, 
-    unsigned long long1, 
-    unsigned long long2 )
-{
-
-    if( foreground_thread <0 )
-        return -1;
-
-    return (int) kgws_send_to_tid( 
-                     foreground_thread,
-                     window,
-                     msg,
-                     long1,
-                     long2 );
-}
 
 
 

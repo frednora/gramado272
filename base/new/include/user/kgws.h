@@ -189,7 +189,7 @@ void schedulerUpdateScreen(void);
 
 
 int 
-sendto_tty ( 
+write_in_tty ( 
     struct tty_d *target_tty,
     struct window_d *window, 
     int message,
@@ -197,7 +197,7 @@ sendto_tty (
     unsigned long raw_byte );
 
 int 
- sendto_eventqueue( 
+postto_eventqueue( 
     int tid,
     struct window_d *window, 
     int message,
@@ -214,27 +214,6 @@ xxxKeyEvent (
     unsigned char raw_byte );
 
 
-// service 112
-unsigned long
-sys_send_message_tid( 
-    int tid, 
-    unsigned long message_buffer );
-
-int
-kgws_send_to_tid ( 
-    int tid, 
-    struct window_d *window, 
-    int msg, 
-    unsigned long long1, 
-    unsigned long long2 );
-
-
-int
-kgws_send_to_foreground_thread ( 
-    struct window_d *window, 
-    int msg, 
-    unsigned long long1, 
-    unsigned long long2 );
 
 
 // ===============================

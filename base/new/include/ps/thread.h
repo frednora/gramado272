@@ -1048,6 +1048,28 @@ void KiSpawnThread (int tid);
 void spawn_pid(pid_t pid);
 void spawn_tid(int tid);
 
+int
+post_message_to_tid ( 
+    int tid, 
+    struct window_d *window, 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 );
+
+int
+post_message_to_foreground_thread ( 
+    struct window_d *window, 
+    int msg, 
+    unsigned long long1, 
+    unsigned long long2 );
+
+// service 112
+unsigned long
+sys_post_message_to_tid( 
+    int tid, 
+    unsigned long message_buffer );
+
+
 #endif    
 
 

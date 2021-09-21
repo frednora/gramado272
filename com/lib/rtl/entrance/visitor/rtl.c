@@ -184,7 +184,7 @@ unsigned long rtl_get_system_message(unsigned long message_buffer)
 }
 
 
-unsigned long rtl_send_system_message( int tid, unsigned long message_buffer)
+unsigned long rtl_post_system_message( int tid, unsigned long message_buffer)
 {
 
     if( tid < 0 )
