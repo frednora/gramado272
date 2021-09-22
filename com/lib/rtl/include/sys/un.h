@@ -2,10 +2,14 @@
  * File: un.h
  * 
  *   Socket support for unix style. 
- * 
  */
 
 
+// PF_UNIX and PF_LOCAL address family. 
+// Used for local communication between programs 
+// running on the same computer.
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
 
 // sys/un.h
 // Socket support for libc03.

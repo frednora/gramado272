@@ -1,9 +1,11 @@
 /*
  * File: sys/socket.h
  * 
- *     libc03.
  */
 
+// Core socket functions and data structures.
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
 
 #ifndef _SOCKET_H
 #define _SOCKET_H
@@ -276,7 +278,8 @@
  * Read using getsockopt() with SOL_SOCKET, SO_PEERCRED 
  */
 
-struct sockpeercred {
+struct sockpeercred 
+{
     uid_t  uid;    /* effective user id */
     gid_t  gid;    /* effective group id */
     pid_t  pid;
@@ -308,12 +311,12 @@ typedef struct socket_context {
 
 
 // not bsd.
-struct sockaddr{
+struct sockaddr 
+{
     //unsigned char   sa_len;
     unsigned short  sa_family;
     char            sa_data[14];
 };
-
 
 
 /*
@@ -321,11 +324,11 @@ struct sockaddr{
  * information in raw sockets.
  * bsd
  */
-struct sockproto {
+struct sockproto 
+{
     unsigned short sp_family;    // address family 
     unsigned short sp_protocol;  // protocol 
 };
-
 
 
 typedef struct
@@ -334,7 +337,6 @@ typedef struct
     unsigned  h_length;
 
 }hostent;
-
 
 
 
@@ -368,8 +370,9 @@ struct msghdr
 
 
 
-
-//=========
+//
+// == Prototypes =======
+//
 
 
 // socket
@@ -412,7 +415,6 @@ bind (
 int listen (int sockfd, int backlog);
 
 
-
 int accept4 (int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 
 // alternative way
@@ -422,7 +424,6 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 // accept
 // #todo: standard unix-like
 int accept (int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-
 
 int 
 connect ( 

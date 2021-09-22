@@ -159,6 +159,9 @@ void *create_tid0(void)
     kThread->ke_long2  = 0;
     kThread->ke_newmessageFlag =  FALSE;
 
+
+/*
+// ===========================================================
 // Message queue
     for ( i=0; i<32; ++i )
     {
@@ -171,12 +174,42 @@ void *create_tid0(void)
     };
     kThread->head_pos = 0;
     kThread->tail_pos = 0;
+// ===========================================================
+*/
 
-// ??
-// Message queue 2.
+// ===========================================================
+// Message queue.
     for ( q=0; q<32; ++q ){ kThread->MsgQueue[q] = 0; }
     kThread->MsgQueueHead = 0;
     kThread->MsgQueueTail = 0;
+
+
+// Create all the 32 pointers.
+    struct msg_d  *tmp;
+
+    for ( i=0; i<32; ++i )
+    {
+        tmp = (struct msg_d *) kmalloc( sizeof( struct msg_d ) );
+        if( (void*) tmp == NULL )
+            panic("create_tid0: tmp");
+
+        tmp->window = NULL;
+        tmp->msg = 0;
+        tmp->long1 = 0;
+        tmp->long2 = 0;
+        tmp->long3 = 0;
+        tmp->long4 = 0;
+
+        tmp->used = TRUE;
+        tmp->magic = 1234;
+        
+        // Coloca o ponteiro que criamos na lista de ponteiros.
+        kThread->MsgQueue[i] = (unsigned long) tmp;
+    }
+
+// =================================================
+
+
 
 // Priorities
 // This is a ring0 thread, only used for sti/hlt.
@@ -498,7 +531,9 @@ void *create_tid3 (void)
 
     t->ke_newmessageFlag =  FALSE;
 
-    // loop
+
+/*
+//====================
     // Clean the message queue.
     for ( i=0; i<32; ++i )
     {
@@ -511,12 +546,41 @@ void *create_tid3 (void)
     };
     t->head_pos = 0;
     t->tail_pos = 0;
+//====================
+*/
 
-    // loop
-    // Message queue.
+
+// ===============================
+// Message queue.
+
     for ( q=0; q<32; ++q ){ t->MsgQueue[q] = 0; };
     t->MsgQueueHead = 0;
     t->MsgQueueTail = 0;
+
+// Create all the 32 pointers.
+    struct msg_d  *tmp;
+
+    for ( i=0; i<32; ++i )
+    {
+        tmp = (struct msg_d *) kmalloc( sizeof( struct msg_d ) );
+        if( (void*) tmp == NULL )
+            panic("create_tid3: tmp");
+
+        tmp->window = NULL;
+        tmp->msg = 0;
+        tmp->long1 = 0;
+        tmp->long2 = 0;
+        tmp->long3 = 0;
+        tmp->long4 = 0;
+
+        tmp->used = TRUE;
+        tmp->magic = 1234;
+        
+        // Coloca o ponteiro que criamos na lista de ponteiros.
+        t->MsgQueue[i] = (unsigned long) tmp;
+    }
+// ============================================
+
 
     // Priorities.
     // The idle thread has the lowest priority possible.

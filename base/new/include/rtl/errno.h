@@ -58,9 +58,9 @@
 #define	ENOTDIR		20	/* Not a directory */
 #define	EISDIR		21	/* Is a directory */
 #define EINVAL    22    /* Invalid argument */
-#define	ENFILE		23	/* Too many open files in system */
-#define	EMFILE		24	/* Too many open files */
-#define	ENOTTY		25	/* Inappropriate I/O control operation */
+#define ENFILE    23    /* Too many open files in system */
+#define EMFILE    24    /* Too many open files */
+#define ENOTTY    25    /* Inappropriate I/O control operation */
 /* 26 - Unknown Error */
 #define	EFBIG		27	/* File too large */
 #define	ENOSPC		28	/* No space left on device */

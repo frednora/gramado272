@@ -628,13 +628,19 @@ struct thread_d
     // O kernel deve checar essa flag. Se ela estiver acionada,
     // significa que o kernel deve processar essa mensagem.
 
-    //++
+
+// #todo
+// Talvez possamos usar isso para algum tipo de 
+// envio de mensagem síncrona, sem fila.
+// Ou talvez deletar isso.
+
+//++
     struct window_d  *ke_window;
     int               ke_msg;
     unsigned long     ke_long1;
     unsigned long     ke_long2;
     int               ke_newmessageFlag; 
-    //--
+//--
 
 //
 // == Event queue ===========================================
@@ -657,6 +663,15 @@ struct thread_d
     // See: events.h
 
 
+
+
+// #bugbug
+// Vamos deletar esse conjunto de vetores aqui
+// pois estamos usado a nova fila criada logo abaixo.
+// Mas alguma coisa esta impedindo de fazer isso,
+// causando page fault.
+
+
 //++
 //========================
 // standard
@@ -674,22 +689,21 @@ struct thread_d
 //--
 
 
-
-    // ====================================================
+// ====================================================
 
 //
 // Message Queue
 //
 
-    // Coloca-se em tail, quande chegar ao fim do buffer, recomeça.
-    // Se o tail encontrar o head é porque o processo não está 
-    // respondendo.
-    // #bugbug
-    // isso ao esta sendo usado no momento.
-    
+// For the msg_d structure,
+// see: window.h
+
     unsigned long MsgQueue[32];
-    int MsgQueueHead;  //retira. 
-    int MsgQueueTail;  //coloca.
+    int MsgQueueHead;
+    int MsgQueueTail;
+
+// ====================================================
+
 
     // Quando um processo só pode receber mensagens de um 
     // determinado processo. Ou de qualquer um.

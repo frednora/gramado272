@@ -1,6 +1,9 @@
 
+// arpa/inet.h
 
-//  arpa/inet.h
+// Functions for manipulating numeric IP addresses.
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
 
 
 #ifndef _INET_H
@@ -35,6 +38,7 @@ uint32_t htonl(uint32_t hostlong);
 uint16_t ntohs(uint16_t netshort);
 uint32_t ntohl(uint32_t netlong);
 */
+
 
 // Not tested
 uint16_t htons(uint16_t hostshort)
@@ -86,13 +90,6 @@ uint16_t ____ntohs (uint16_t  w)
 
 
 #endif  //inet.h
-
-
-
-
-
-
-
 
 
 

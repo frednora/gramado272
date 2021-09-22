@@ -1,13 +1,19 @@
 
 // socket.c
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
+
 
 #include <kernel.h>  
 
 // Internal
 #define SYS_SOCKET_IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
 
+// A small list of PIDs.
+// A server can register its PID here
+// telling the system that it is responsible for this kind of service.
 
-static int gramado_ports[GRAMADO_PORT_MAX];
+static pid_t gramado_ports[GRAMADO_PORT_MAX];
 
 
 /*
@@ -1001,6 +1007,12 @@ fail:
  *     This is a work in progress.
  */
 
+// accept() is used on the server side. 
+// It accepts a received incoming attempt to create 
+// a new TCP connection from the remote client, 
+// and creates a new socket associated with 
+// the socket address pair of this connection.
+
 // #todo
 // Pega um socket da lista de conexoes incompletas.
 // Nosso maior objetivo aqui eh retornar o fd arquivo de socket do cliente.
@@ -1069,7 +1081,6 @@ sys_accept (
     if ( fdServer < 0 || fdServer >= NUMBER_OF_FILES )
     {
         debug_print ("sys_accept: [FAIL] fdServer\n");
-        printf      ("sys_accept: [FAIL] fdServer\n");
         return (int) (-EINVAL);
     }
 
@@ -1079,11 +1090,9 @@ sys_accept (
 // #bugbug: 
 // Ainda não estamos usando isso.
 
-    if ( (void *) addr == NULL )
-    {
+    if ( (void *) addr == NULL ){
         debug_print ("sys_accept: [FAIL] addr\n");
-        printf      ("sys_accept: [FAIL] addr\n");
-        goto fail;
+        return (int) (-EINVAL);
     }
 
 //
@@ -1091,6 +1100,13 @@ sys_accept (
 //
 
 // accept() is called by the server.
+
+    if( current_process < 0  || current_process >= PROCESS_COUNT_MAX )
+    {
+        debug_print ("sys_accept: [FAIL] current_process\n");
+        printf      ("sys_accept: [FAIL] current_process\n");
+        goto fail;
+    }
 
     sProcess = (struct process_d *) processList[current_process];
  
@@ -1131,14 +1147,13 @@ sys_accept (
 
 // Is this file a socket?
 
-    //if (sFile->____object != ObjectTypeSocket )
     if ( is_socket(sFile) != TRUE )
     {
         debug_print ("sys_accept: sFile is not a socket object\n");
-             printf ("sys_accept: sFile is not a socket object $\n");
+             printf ("sys_accept: sFile is not a socket object\n");
         goto fail;
     }
-    
+
     if (sFile->sync.can_accept != TRUE )
     {
         debug_print ("sys_accept: sFile can NOT accept connections\n");
@@ -1146,7 +1161,9 @@ sys_accept (
         goto fail;
     }
 
-    sSocket = sFile->socket;
+// Get the server's private socket.
+
+    sSocket = (struct socket_d *) sFile->socket;
     
     if ( (void *) sSocket == NULL )
     {
@@ -1154,6 +1171,16 @@ sys_accept (
         printf      ("sys_accept: [FAIL] sSocket\n");
         goto fail;
     }
+
+// Check validation?
+
+    if( sSocket->used != TRUE || sSocket->magic != 1234 )
+    {
+        debug_print ("sys_accept: [FAIL] sSocket validation\n");
+        printf      ("sys_accept: [FAIL] sSocket validation\n");
+        goto fail;
+    }
+
 
     // Isso significa que o cliente chamou connect antes mesmo 
     // do servidor chamar accept ??
@@ -1271,11 +1298,12 @@ sys_accept (
 
     // ele tambem esta em um dos slots e no slot 31.
 
-    //if ( sSocket->state != SS_CONNECTED )
+// Se o socket ja está conectado ou 
+// esta esperando para se conectar.
+
     if ( sSocket->state == SS_CONNECTING || 
          sSocket->state == SS_CONNECTED )
     {
-
         debug_print ("sys_accept: CONNECTING !\n");
 
         //Server socket. Pre-connect.
@@ -1283,8 +1311,13 @@ sys_accept (
         sSocket->state = SS_CONNECTED;
 
         // Se existe outro socket linkado ao socket do servidor.
+        // #todo
+        // Nesse momento pegamos o primeiro da lista de conexões pendentes.
+        // Mas desejamos ter uma lista de conexões pendentes e 
+        // nesse momento pegaremos um da lista seguindo uma ordem.
+        
         cSocket = (struct socket_d *) sProcess->socket_pending_list[0];
-                
+
         // Not valid Client socket
         if ( (void*) cSocket == NULL )
         {
@@ -1294,28 +1327,42 @@ sys_accept (
         }
 
         // Valid Client socket
+        // Vamos nos conectar a ele.
         if ( (void *) cSocket != NULL )
         {
+            // check validation
+            if( cSocket->used != TRUE || cSocket->magic != 1234 )
+            {
+                debug_print ("sys_accept: [FAIL] cSocket validation\n");
+                sSocket->state = SS_CONNECTING;  //anula.
+                goto fail;
+            }
+
+            // Na verdade o magic indica que eh 
+            // uma conexao pendente.
+            if( cSocket->magic_string[0] == 'C')
+            {
+                debug_print("MAGIC C\n");
+                //printf ("magic: %s\m",cSocket->magic_string);
+            }
+
             //ok: usar isso só para debug
             //debug_print ("sys_accept: done\n");
 
             cSocket->state = SS_CONNECTED;
             
-            //Salvando no slot prealocado na inicializacao
-            cFile = cSocket->private_file;
+            // Pegando o ponteiro da estrutura de arquivo 
+            // associada ao socket do cliente.
+            cFile = (file *) cSocket->private_file;
+            // Salvando o ponteiro de estrutura de arquivo 
+            // no slot prealocado na inicializacao.
+            // Essa é a estrutura de processo do servidor.
+            // Essa é a lista de arquivos abertos pelo processo.
             //sProcess->Objects[ sProcess->_client_sock_fd ] = cFile;
             sProcess->Objects[ 31 ] = (unsigned long) cFile;  //last
             cFile->_file = 31;
             
-            // Certificar que eh um socket de cliente ja conectado.
-            // Na verdade o magic indica que eh 
-            // uma conexao pendente.
-            if( cSocket->magic_string[0] == 'C'){
-                debug_print("MAGIC C\n");
-            //printf ("magic: %s\m",cSocket->magic_string);
-            }
-            
-            debug_print ("sys_accept: done ok\n");
+            debug_print ("sys_accept: done\n");
 
             return (int) cFile->_file; 
         }
@@ -1347,6 +1394,10 @@ fail:
  *    bind() assigns the address specified by addr to the socket 
  *    referred to by the file descriptor sockfd.
  */
+
+// bind() is typically used on the server side, and 
+// associates a socket with a socket address structure, 
+// i.e. a specified local IP address and a port number.
 
 // See:
 // https://man7.org/linux/man-pages/man2/bind.2.html
@@ -1512,6 +1563,11 @@ fail:
  *     Connecting to a server given an address.
  */
 
+// connect() is used on the client side, and 
+// assigns a free local port number to a socket. 
+// In case of a TCP socket, it causes an attempt 
+// to establish a new TCP connection.
+
 // connect.
 // Em nosso exemplo o cliente quer se conectar com o servidor.
 // Conectando a um servidor dado um endereço.
@@ -1559,7 +1615,7 @@ sys_connect (
     struct process_d  *cProcess;  // Client process.
     struct process_d  *sProcess;  // Server process.
 
-    int target_pid = -1;
+    pid_t target_pid = (-1);  //fail
     
     struct socket_d *client_socket;
     struct socket_d *server_socket;
@@ -1653,19 +1709,19 @@ sys_connect (
             // window server
             if ( addr->sa_data[0] == 'w' && addr->sa_data[1] == 's' )
             {   
-                target_pid = (int) gramado_ports[GRAMADO_WS_PORT]; 
+                target_pid = (pid_t) gramado_ports[GRAMADO_WS_PORT]; 
             }
 
             // network server
             if ( addr->sa_data[0] == 'n' && addr->sa_data[1] == 's' )
             { 
-                target_pid = (int) gramado_ports[GRAMADO_NS_PORT]; 
+                target_pid = (pid_t) gramado_ports[GRAMADO_NS_PORT]; 
             }
 
             // file system server
             if ( addr->sa_data[0] == 'f' && addr->sa_data[1] == 's' )
             {   
-                target_pid = (int) gramado_ports[GRAMADO_FS_PORT]; 
+                target_pid = (pid_t) gramado_ports[GRAMADO_FS_PORT]; 
             }
 
             // ...
@@ -1723,7 +1779,7 @@ sys_connect (
             // Se a porta for , então usaremos o pid do WS.
             if (addr_in->sin_port == PORTS_WS)
             {
-                target_pid = (int) gramado_ports[GRAMADO_WS_PORT];
+                target_pid = (pid_t) gramado_ports[GRAMADO_WS_PORT];
 
                 if(Verbose==TRUE){
                 printf ("sys_connect: Connecting to the Window Server on port %d ...\n",
@@ -1739,7 +1795,7 @@ sys_connect (
             // Se a porta for , então usaremos o pid do NS.
             if (addr_in->sin_port == PORTS_NS)
             {
-                target_pid = (int) gramado_ports[GRAMADO_NS_PORT]; 
+                target_pid = (pid_t) gramado_ports[GRAMADO_NS_PORT]; 
 
                 if(Verbose==TRUE){
                 printf ("sys_connect: Connecting to the Network Server on port %d...\n",
@@ -2037,7 +2093,7 @@ __OK_new_slot:
 // #todo
 // Precisamos de uma lista de conexoes pendentes.
 // O cliente invocou a conexao apenas uma vez
-// e precisa uasr o servidor varias vezes
+// e precisa usar o servidor varias vezes
 // #obs: Isso funcionou. Vamos tentar com lista.
 // #ps: algumas implementacoes usam lista encadeada
 // de conexoes incompletas. 'server_socket->iconn'
@@ -2183,6 +2239,9 @@ sys_getsockname (
  retransmission, the request may be ignored so that a later reattempt
  at connection succeed
 */
+
+// listen() is used on the server side, and 
+// causes a bound TCP socket to enter listening state.
 
 // IN:
 // sockfd  = The fd of the server's socket.
@@ -2468,7 +2527,13 @@ update_socket (
  *       Essa é função oferece suporte à função socket da libc.
  *       Estamos na klibc dentro do kernel base.
  */
- 
+
+// The function socket() creates an endpoint for communication and 
+// returns a file descriptor for the socket.
+
+// socket() creates a new socket of a certain type, 
+// identified by an integer number, and allocates system resources to it.
+
 //libc socket interface.
 //See: https://www.gnu.org/software/libc/manual/html_node/Sockets.html
 
@@ -2498,7 +2563,13 @@ int sys_socket ( int family, int type, int protocol )
     struct socket_d  *__socket;
 
 
-    // Socket address structure.
+//
+// Address types:
+//
+
+// ====================
+// type 1:
+// Socket address structure.
     // Usado em AF_GRAMADO
     struct sockaddr  addr;
     addr.sa_family  = family;
@@ -2506,8 +2577,10 @@ int sys_socket ( int family, int type, int protocol )
     addr.sa_data[1] = 'x';
 
 
-    // Internet style for inet.
-    // Usado em AF_INET
+// ====================
+// type 2:
+// Internet style for inet.
+// Usado em AF_INET
     struct sockaddr_in  addr_in;
     addr_in.sin_family      = AF_INET;
     addr_in.sin_port        = 11369;  //??
@@ -2515,7 +2588,7 @@ int sys_socket ( int family, int type, int protocol )
     //addr_in.sin_addr      = SYS_SOCKET_IP(192, 168, 1, 112); //errado
     //addr_in->sin_addr.s_addr = inet_addr("127.0.0.1");  //todo: inet_addr see netbsd
 
-    
+
     // Current process.
     struct process_d  *p;  
 
@@ -2540,33 +2613,34 @@ int sys_socket ( int family, int type, int protocol )
     debug_print ("sys_socket:\n");
 
 
-	//
-	// Filtros
-	//
+// Filters
 
     if (family < 0){
         debug_print ("sys_socket: [FAIL] family not supported\n");
         return (int) (-EINVAL);
     }
 
-    // Check if this is a valid type.
-    //if (type < 0){
     if ( type != SOCK_STREAM &&
          type != SOCK_DGRAM  &&
          type != SOCK_RAW)
     {
         debug_print ("sys_socket: [FAIL] type not supported\n");
-        goto fail;
+        return (int) (-EINVAL);
     }
 
     if (protocol < 0){
         debug_print ("sys_socket: [FAIL] protocol not supported\n");
-        goto fail;
+        return (int) (-EINVAL);
     }
 
+// Current process.
 
-    // Current process.
-    
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
+        debug_print ("sys_socket: current_process fail\n");
+        panic       ("sys_socket: current_process fail\n");
+    }
+
     p = (struct process_d *) processList[current_process];
      
     if ( (void *) p == NULL )
@@ -2575,77 +2649,81 @@ int sys_socket ( int family, int type, int protocol )
         panic       ("sys_socket: p fail\n");
     }
 
+//
+// Socket structure.
+//
 
-    //
-    // Socket structure.
-    //
-    
-    // #todo:
-    // Create a helper function to do this job.
-    // This functions need to create the object and need to have this switch
-    // for different families. create_socket( family, type, protocol)
-    // it returns the socket structure pointer.
-    
-    // Criamos um socket vazio.
-    // IN: ip and port.
+// #todo:
+// Create a helper function to do this job.
+// This functions need to create the object and need to have this switch
+// for different families. create_socket( family, type, protocol)
+// it returns the socket structure pointer.
+
+// Criamos um socket vazio.
+// IN: ip and port.
 
     __socket = (struct socket_d *) create_socket_object();
-  
+
     if ( (void *) __socket == NULL )
     {
         debug_print ("sys_socket: [FAIL] __socket \n");
         printf      ("sys_socket: [FAIL] __socket \n");
         goto fail;
-
-    }else{
-
-        // #bugbug
-        // The private socket of a process.
-        // This is not good. 
-        // Some process will create more than one socket?
-        
-        p->priv = __socket;
-
-        // family, type and protocol.
-        __socket->family   = family;
-        __socket->type     = type;      // DATAGRAM or STREAM 
-        __socket->protocol = protocol;
-
-        // #Initialized with '0'.
-        __socket->ip   = ip;
-        __socket->port = port;
-
-        __socket->pid = (pid_t) current_process;
-        __socket->uid = (uid_t) current_user;
-        __socket->gid = (gid_t) current_group;
+    }
 
 
-       //
-       // Create file!
-       //
+// #bugbug
+// The private socket of a process.
+// This is not good. 
+// Some process will create more than one socket?
 
-       // family
-       // Setup the addr.
+    p->priv = (struct socket_d *) __socket;
 
-       // #importante
-       // As rotinas logo abaixo criarão o arquivo
-       // e retornarão o fd.
+// family, type and protocol.
+
+    __socket->family   = family;
+    __socket->type     = type;      // DATAGRAM or STREAM 
+    __socket->protocol = protocol;
+
+// ip:port
+// Initialized with '0'.
+
+    __socket->ip   = ip;  //ipv4
+    __socket->port = port;
+
+// pid, uid, gid.
+
+    __socket->pid = (pid_t) current_process;
+    __socket->uid = (uid_t) current_user;
+    __socket->gid = (gid_t) current_group;
 
 
-       switch (family){
+//
+// Create socket file.
+//
 
-           case AF_GRAMADO:
-               debug_print ("sys_socket: AF_GRAMADO\n");
-               __socket->addr = addr;
-               return (int) socket_gramado ( __socket, 
-                                AF_GRAMADO, type, protocol );
-               break;
+// #importante
+// As rotinas logo abaixo criarão o arquivo 
+// e retornarão o fd.
+
+// family
+// Setup the addr.
+
+
+    switch (family){
+
+    case AF_GRAMADO:
+        debug_print ("sys_socket: AF_GRAMADO\n");
+        __socket->addr = addr;  // Address type used by AF_GRAMADO.
+        return (int) socket_gramado ( (struct socket_d *) __socket, 
+                         AF_GRAMADO, type, protocol );
+        break;
 
            //case AF_LOCAL:
            case AF_UNIX:
                debug_print ("sys_socket: AF_UNIX\n");
-               __socket->addr =  addr;
-               return (int) socket_unix ( __socket, 
+               __socket->addr = addr;  // Address type used by AF_UNIX.
+               return (int) socket_unix ( (struct socket_d *) __socket, 
                                 AF_UNIX, type, protocol );
                break;
 
@@ -2654,8 +2732,8 @@ int sys_socket ( int family, int type, int protocol )
            //para essa função, e usarmos outra estrutura.               
            case AF_INET:
                debug_print ("sys_socket: AF_INET\n");
-               __socket->addr_in = addr_in;
-               return (int) socket_inet ( __socket, 
+               __socket->addr_in = addr_in;  // Address type used by AF_INET.
+               return (int) socket_inet ( (struct socket_d *) __socket, 
                                 AF_INET, type, protocol );
                break;
 
@@ -2666,10 +2744,9 @@ int sys_socket ( int family, int type, int protocol )
                debug_print ("sys_socket: Couldn't create the file\n");
                goto fail;
                break;
-        };
-
-        // ...
     };
+
+    // ...
 
 fail:
     debug_print ("sys_socket: [FAIL] Something is wrong!\n");

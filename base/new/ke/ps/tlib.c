@@ -3,6 +3,135 @@
 
 #include <kernel.h>
 
+
+/*
+ *********************** 
+ * sys_get_message:
+ *     Get a message from the current thread and 
+ * put it into the given buffer.
+ *     The message has 6 standard elements.
+ */
+
+// Called by sci.c
+
+// Service 111.
+// It is called by the applications.
+// It is also used for ipc.
+
+void *sys_get_message ( unsigned long buffer )
+{
+    struct thread_d  *t;
+
+    unsigned long *message_address = (unsigned long *) buffer;
+    int head_pos=0;
+
+    debug_print ("sys_get_message:\n");
+
+// buffer
+// #todo: Check some other invalid address.
+    if ( buffer == 0 ){ 
+        panic ("sys_get_message: buffer\n");
+        //return NULL;
+    }
+
+// #todo:
+// Check current_thread validation
+
+
+// Thread
+    t = (void *) threadList[current_thread];
+
+    if ( (void *) t == NULL ){
+        panic ("sys_get_message: t\n");
+    }
+
+    if ( t->used != TRUE || t->magic != 1234 ){
+        panic ("sys_get_message: t validation\n");
+    }
+
+
+/*
+// =====================================================
+// Offset
+    head_pos = (int) t->head_pos;
+
+// Get standard entries.
+    message_address[0] = (unsigned long) t->window_list[head_pos];
+    message_address[1] = (unsigned long) t->msg_list[head_pos];
+    message_address[2] = (unsigned long) t->long1_list[head_pos];
+    message_address[3] = (unsigned long) t->long2_list[head_pos];
+
+// Get extra entries.
+    message_address[4] = (unsigned long) t->long3_list[head_pos];
+    message_address[5] = (unsigned long) t->long4_list[head_pos];
+
+// Clean
+    t->window_list[head_pos] = NULL;
+    t->msg_list[head_pos] = 0;
+    t->long1_list[head_pos] = 0;
+    t->long2_list[head_pos] = 0;
+    t->long3_list[head_pos] = 0;
+    t->long4_list[head_pos] = 0;
+
+// Round
+    t->head_pos++;
+    if ( t->head_pos >= 31 ){  t->head_pos = 0;  }
+// =====================================================
+*/
+
+
+// ===========================================================
+// usando a fila de mensagens com estrutura.
+
+    struct msg_d  *next_msg;
+
+    //get the next head pointer.
+    next_msg = (struct msg_d *) t->MsgQueue[ t->MsgQueueHead ];
+    
+    if ( (void*) next_msg != NULL )
+    {
+        if (next_msg->used == TRUE && next_msg->magic == 1234 )
+        {
+            // Get standard entries.
+            message_address[0] = (unsigned long) next_msg->window;
+            message_address[1] = (unsigned long) (next_msg->msg & 0xFFFFFFFF);
+            message_address[2] = (unsigned long) next_msg->long1;
+            message_address[3] = (unsigned long) next_msg->long2;
+
+            // Get extra entries.
+            message_address[4] = (unsigned long) next_msg->long3;
+            message_address[5] = (unsigned long) next_msg->long4;
+            
+            // clear the entry.
+            // Consumimos a mensagem. Ela não existe mais.
+            // Mas preservamos a estrutura.
+            next_msg->window = NULL;
+            next_msg->msg = 0;
+            next_msg->long1 = 0;
+            next_msg->long2 = 0;
+            next_msg->long3 = 0;
+            next_msg->long4 = 0;
+            
+            // round
+            t->MsgQueueHead++;
+            if ( t->MsgQueueHead >= 31 ){  t->MsgQueueHead = 0;  }
+        }
+    }
+// ===========================================================
+
+
+
+//done:
+    debug_print ("sys_get_message: done\n");
+// Yes, We have a message.
+    return (void *) 1;
+
+//fail0:
+// No message.
+    return NULL;
+} 
+
+
 /*
  *************************************************
  * kgws_send_to_tid:
@@ -81,27 +210,52 @@ post_message_to_tid (
 
     tmp_msg = (unsigned long) (msg & 0xFFFF);
 
+
+
+/*
+// =============================================
     //Send system message to the thread.
-    t->window_list[ t->tail_pos ]  = (unsigned long) window;
-    t->msg_list[ t->tail_pos ]     = (unsigned long) (tmp_msg & 0xFFFF);
-    t->long1_list[ t->tail_pos ]   = (unsigned long) long1;
-    t->long2_list[ t->tail_pos ]   = (unsigned long) long2;
+    t->window_list[ t->tail_pos ] = (unsigned long) window;
+    t->msg_list[ t->tail_pos ]    = (unsigned long) (tmp_msg & 0xFFFF);
+    t->long1_list[ t->tail_pos ]  = (unsigned long) long1;
+    t->long2_list[ t->tail_pos ]  = (unsigned long) long2;
 
     t->tail_pos++;
     if ( t->tail_pos >= 31 )
         t->tail_pos = 0;
+// =============================================
+*/
 
 
-//
+
+// ==========================================================
 // #test
-//
+// Vamos colocar essa mensagem na outra fila de mensagens.
+// Essa nova fila sera a única fila no futuro.
 
-// lets end this round putting a given thread at the end
-// of this round.
-// This is gonna be the next, 
-// and the last of this round.
-    
-    // cut_round( (struct thread_d *) t );
+    struct msg_d *next_msg;
+
+    // get the pointer for the next entry
+    next_msg = (struct msg_d *) t->MsgQueue[ t->MsgQueueTail ];
+
+    // check validation
+    if ( (void*) next_msg != NULL )
+    {
+        if( next_msg->used == TRUE && next_msg->magic == 1234 )
+        {
+            next_msg->window = (struct window_d *) window;
+            next_msg->msg    = (int) (tmp_msg & 0xFFFF);
+            next_msg->long1  = (unsigned long) long1;
+            next_msg->long2  = (unsigned long) long2;
+        }
+
+        t->MsgQueueTail++;
+        if ( t->MsgQueueTail >= 31 )
+            t->MsgQueueTail = 0;
+    }
+
+
+// ==========================================================
 
     //ok
     return 0;

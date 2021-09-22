@@ -2,11 +2,15 @@
  * File: in.h
  * 
  *   Socket support for internet style. 
- * 
- * 
  */
 
 // Internet address family
+// AF_INET and AF_INET6 address families and 
+// their corresponding protocol families, 
+// PF_INET and PF_INET6. 
+// These include standard IP addresses and TCP and UDP port numbers.
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
 
 /*	$NetBSD: in.h,v 1.108 2018/11/09 11:46:28 maya Exp $	*/
 

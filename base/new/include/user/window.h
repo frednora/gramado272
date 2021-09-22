@@ -510,7 +510,7 @@ struct window_class_d
 	kernel_window_classes_t	kernelClass;
 	
 	//3
-	server_window_classes_t	serverClass;
+	server_window_classes_t serverClass;
 	
 	//Endereço do procedimento de janela.
 	//(eip da thread primcipal do app)
@@ -522,13 +522,37 @@ struct window_class_d
 // Single message struct model.
 struct msg_d 
 {
+
+// validation
     int used;
     int magic;
-    
+
+// Standard header.
     struct window_d *window;
     int msg;
     unsigned long long1;
     unsigned long long2;
+
+// extra payload.
+    unsigned long long3;
+    unsigned long long4;
+
+// Extention:
+
+    pid_t sender_pid;
+    pid_t receiver_pid;
+
+    int sender_tid;
+    int receiver_tid;
+
+// ...
+
+    // #todo
+    // We need some synchronization flags.
+    // Maybe its better putting this flag into the thread struct.
+    // t->msg_flags;
+
+    //unsigned long flags;
 };
 
 

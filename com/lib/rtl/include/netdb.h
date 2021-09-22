@@ -1,8 +1,13 @@
 /*
  * netdb.h
  * 
- * 
  */
+
+// Functions for translating protocol names and 
+// host names into numeric addresses. 
+// Searches local data as well as name services.
+// See:
+// https://en.wikipedia.org/wiki/Berkeley_sockets
 
 
 #ifndef _NETDB_H_
@@ -29,33 +34,32 @@ typedef  _BSD_SIZE_T_  size_t;
 
 #if defined(_NETBSD_SOURCE)
 #ifndef _PATH_HEQUIV
-#define	_PATH_HEQUIV  "/etc/hosts.equiv"
+#define _PATH_HEQUIV  "/etc/hosts.equiv"
 #endif
 #ifndef _PATH_HOSTS
-#define	_PATH_HOSTS  "/etc/hosts"
+#define _PATH_HOSTS  "/etc/hosts"
 #endif
 #ifndef _PATH_NETWORKS
-#define	_PATH_NETWORKS  "/etc/networks"
+#define _PATH_NETWORKS  "/etc/networks"
 #endif
 #ifndef _PATH_PROTOCOLS
-#define	_PATH_PROTOCOLS  "/etc/protocols"
+#define _PATH_PROTOCOLS  "/etc/protocols"
 #endif
 #ifndef _PATH_SERVICES
-#define	_PATH_SERVICES  "/etc/services"
+#define _PATH_SERVICES  "/etc/services"
 #endif
 #ifndef _PATH_SERVICES_CDB
-#define	_PATH_SERVICES_CDB  "/var/db/services.cdb"
+#define _PATH_SERVICES_CDB  "/var/db/services.cdb"
 #endif
 #ifndef _PATH_SERVICES_DB
-#define	_PATH_SERVICES_DB  "/var/db/services.db"
+#define _PATH_SERVICES_DB  "/var/db/services.db"
 #endif
 #endif
 
 
 
-
-struct servent {
-
+struct servent 
+{
     char   *s_name;     /*%< official service name */
     char  **s_aliases;  /*%< alias list */
     int     s_port;     /*%< port # */
@@ -63,8 +67,8 @@ struct servent {
 };
 
 
-struct protoent {
-
+struct protoent 
+{
     char   *p_name;     /*%< official protocol name */
     char  **p_aliases;  /*%< alias list */
     int     p_proto;    /*%< protocol # */
@@ -170,12 +174,9 @@ struct protoent {
  * Scope delimit character
  */
 #if defined(_NETBSD_SOURCE)
-#define	SCOPE_DELIMITER	'%'
+#define SCOPE_DELIMITER	'%'
 #endif
 #endif /* (_POSIX_C_SOURCE - 0) >= 200112L || ... */
-
-
-
 
 /*
 //#todo
@@ -186,10 +187,6 @@ struct hostent *gethostbyname(const char *name)
     return (struct hostent *) 0;
 }
 */
-
-
-
-
 
 #endif /* !_NETDB_H_ */
 
