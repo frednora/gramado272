@@ -1011,7 +1011,7 @@ void *sci0 (
         // um driver em user mode.
         // #todo: This operation needs permition.
         case SYS_READ_LBA: 
-            my_read_hd_sector ( 
+            ataReadSector ( 
                 (unsigned long) arg2, (unsigned long) arg3, 0 , 0 ); 
             break;
 
@@ -1020,7 +1020,7 @@ void *sci0 (
         // um driver em user mode.
         // #todo: This operation needs permition.
         case SYS_WRITE_LBA: 
-            my_write_hd_sector ( 
+            ataWriteSector ( 
                 (unsigned long) arg2, (unsigned long) arg3, 0 , 0 ); 
             break;
 
@@ -1059,15 +1059,14 @@ void *sci0 (
         // 6 - Put pixel. 
         // Coloca um pixel no backbuffer.
         // Isso pode ser usado por um servidor. 
-        // cor, x, y, 0.
+        // cor, x, y, rop_flags.
         // todo: chamar kgws_backbuffer_putpixel
         case SYS_BUFFER_PUTPIXEL:
             backbuffer_putpixel ( 
-                (unsigned long) a2, 
-                (unsigned long) a3, 
-                (unsigned long) a4, 
-                0,
-                0 );   // rop_flags
+                (unsigned long) a2,  // color
+                (unsigned long) a3,  // x
+                (unsigned long) a4,  // y
+                0 );                 // rop_flags
             return NULL; 
             break;
 
@@ -1128,8 +1127,7 @@ void *sci0 (
         //OUT: fd
 
         case SYS_OPEN:
-            debug_print ("$ --------------- \n");
-            debug_print ("sci0: SYS_OPEN $\n");
+            debug_print ("sci0: SYS_OPEN\n");
             return (void *) sys_open ( 
                                 (const char *) arg2, 
                                 (int)          arg3, 
@@ -1141,7 +1139,6 @@ void *sci0 (
         // See: sys.c
         // IN: fd
         case SYS_CLOSE:
-            debug_print ("$ ------------ \n");
             debug_print ("sci0: SYS_CLOSE\n");
             return (void *) sys_close( (int) arg2 );
             break;
@@ -1153,7 +1150,7 @@ void *sci0 (
             return (void *) sys_read ( 
                                 (unsigned int) arg2, 
                                 (char *)       arg3, 
-                                (int)          arg4 );  
+                                (int)          arg4 ); 
             break;
 
         // 19 - write()
@@ -1170,13 +1167,10 @@ void *sci0 (
  
         // 33 - free number.
 
-
-        // 34 - Setup cursor for the current virtual console.
-        // See: core/system.c
-        // IN: x,y
-        // #todo: Essa rotina dever pertencer ao user/
+        // 34
+        // Setup cursor position for the current virtual console.
         case SYS_VIDEO_SETCURSOR: 
-            set_up_cursor ( 
+            newos_set_cursor ( 
                 (unsigned long) arg2, 
                 (unsigned long) arg3 );
             return NULL;
@@ -1751,8 +1745,10 @@ void *sci0 (
         // tty ... 236 237 238 239.
 
         // 236 - get tty id
-        case 236:  return (void *) current_tty;  break;
-        
+        case 236:
+            return (void *) current_tty;
+            break;
+
         // 240, 241
         case SYS_GETCURSORX:  return (void *) get_cursor_x();  break;
         case SYS_GETCURSORY:  return (void *) get_cursor_y();  break;

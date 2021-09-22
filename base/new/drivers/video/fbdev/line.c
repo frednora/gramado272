@@ -29,21 +29,24 @@ my_buffer_horizontal_line (
     unsigned long rop_flags )
 {
 
+// #todo
+// Maybe we need checking some limits here.
+
     if (x1 > x2){
         return;
     }
 
     while (x1 < x2)
     {
-        backbuffer_putpixel ( color, x1, y, 0, rop_flags );
+        backbuffer_putpixel ( 
+            color,        // color
+            x1,           // x
+            y,            // y
+            rop_flags );  // rop flags
+        
         x1++;
     };
 }
-
-
-
-
-
 
 
 

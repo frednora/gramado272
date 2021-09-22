@@ -81,7 +81,7 @@ serial.o \
 storage.o \
 ata.o atadma.o atahdd.o atainit.o atairq.o atapci.o \
 video.o vsync.o screen.o \
-pixel.o line.o rect.o bg.o \
+xpixel.o line.o rect.o bg.o \
 i8042.o ps2kbd.o ps2mouse.o keyboard.o mouse.o    
 
 
@@ -125,7 +125,8 @@ all:
 	$(CC) -c input/i8042/ps2mouse.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
 
 
-	$(CC) -c video/fbdev/pixel.c  $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
+	$(CC) -c video/fbdev/xpixel.c  $(KERNEL_INCLUDE) $(CFLAGS) -o xpixel.o
+
 	$(CC) -c video/fbdev/line.c   $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
 	$(CC) -c video/fbdev/rect.c   $(KERNEL_INCLUDE) $(CFLAGS) -o rect.o
 	$(CC) -c video/fbdev/bg.c     $(KERNEL_INCLUDE) $(CFLAGS) -o bg.o

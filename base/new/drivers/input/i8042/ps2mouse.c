@@ -188,8 +188,12 @@ void __ps2mouse_parse_data_packet (void)
        //drawDataRectangle( mouse_x, mouse_y, 10, 10, COLOR_BLACK, 0 );
        
        // IN: color, x, y, 0, rop_flags
-       backbuffer_putpixel ( COLOR_BLACK, mouse_x, mouse_y, 0, 0 );
-       refresh_rectangle ( mouse_x, mouse_y, 10, 10);
+       backbuffer_putpixel ( 
+           COLOR_BLACK,  // color 
+           mouse_x,      // x
+           mouse_y,      // y
+           0 );          // rop_flags
+       refresh_rectangle ( mouse_x, mouse_y, 10, 10 );
        
        //printf("[%d,%d] ",mouse_x,mouse_y);
        //refresh_screen();

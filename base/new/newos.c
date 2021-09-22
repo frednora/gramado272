@@ -107,6 +107,24 @@ void *newos_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes)
 }
 
 
+// 34 - Setup cursor for the current virtual console.
+// See: core/system.c
+// IN: x,y
+// #todo: Essa rotina dever pertencer ao user/
+
+void newos_set_cursor( unsigned long x, unsigned long y )
+{
+
+// #todo
+// Maybe check some limits.
+
+    set_up_cursor ( 
+        (unsigned long) x, 
+        (unsigned long) y );
+}
+
+
+
 
 
 

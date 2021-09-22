@@ -1464,12 +1464,10 @@ struct gui_d  *gui;
 
 void 
 backbuffer_putpixel ( 
-    unsigned int ax,    // color, 32bit 
-    unsigned long bx, 
-    unsigned long cx, 
-    unsigned long dx,
-    unsigned long rop_flags );
-
+    unsigned int  _color,
+    unsigned long _x, 
+    unsigned long _y, 
+    unsigned long _rop_flags );
 
 //
 // char

@@ -26,4 +26,5 @@ unsigned long newos_get_memory_size_mb(void);
 
 void *newos_alloc_shared_ring3_pages(pid_t pid, int number_of_bytes);
 
+void newos_set_cursor( unsigned long x, unsigned long y );
 

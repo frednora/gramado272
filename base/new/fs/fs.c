@@ -3648,7 +3648,7 @@ save_file:
 
             //grava - aqui next esta certo!!!
             //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );
-            my_write_hd_sector ( 
+            ataWriteSector ( 
                 (unsigned long) address, 
                 (unsigned long) ( VOLUME1_DATAAREA_LBA + next -2), 
                 0, 

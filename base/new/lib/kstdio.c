@@ -201,16 +201,20 @@ void printchar (char **str, int c)
  *     Essa rotina é chamada pelas funções: /printchar/input/.
  */
 
+// Para virtual consoles.
+// Em tty/console.c
+
 int putchar (int ch)
-{ 
-    // Para virtual consoles.
-    // Em tty/console.c
+{
+    if(ch<0){
+        return (int)(-1);
+    }
+
+    if(fg_console<0){
+        return (int)(-1);
+    }
 
     console_outbyte ( ch, fg_console );
-
-    // Para pseudo terminal (pts).
-    //Em tty/vt.c
-    //vt_outbyte (ch,tty );
 
     return (int) ch;
 }

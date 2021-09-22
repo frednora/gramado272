@@ -181,9 +181,10 @@
 int ATAFlag;
 unsigned short  *ata_identify_dev_buf;
 
+
+
 unsigned char ata_record_dev;
 unsigned char ata_record_channel;
-
 
 // #important
 // Qual é o canal e o dispositivo usado no momento
@@ -414,7 +415,9 @@ void DeviceInterface_SecondaryIDE(void);
 
 void ata_soft_reset (void);
 unsigned char ata_status_read (void);
+
 void ata_cmd_write (int cmd_val);
+
 unsigned char ata_wait_drq (void);
 unsigned char ata_wait_no_drq (void);
 
@@ -472,37 +475,44 @@ int ata_initialize ( int ataflag );
 
 
 // ===
-uint8_t hdd_ata_status_read (int p);
-int hdd_ata_wait_not_busy (int p);
-void hdd_ata_cmd_write ( int port, int cmd_val );
-int hdd_ata_wait_no_drq (int p);
-static void hdd_ata_pio_read ( int p, void *buffer, int bytes );
-void hdd_ata_pio_write ( int p, void *buffer, int bytes );
+uint8_t hdd_ata_status_read (unsigned short port);
+int hdd_ata_wait_not_busy (unsigned short port);
+void hdd_ata_cmd_write ( unsigned short port, unsigned char cmd_val );
+int hdd_ata_wait_no_drq (unsigned short port);
+
+
+static void hdd_ata_pio_read ( unsigned short port, void *buffer, int bytes );
+void hdd_ata_pio_write ( unsigned short port, void *buffer, int bytes );
 
 
 // # Changing the lba type to 'unsigned int' 32 bit.
 int 
 pio_rw_sector ( 
     unsigned long buffer, 
-    unsigned int lba, 
+    unsigned int _lba, 
     int rw, 
-    int port,
+    unsigned short port,
     int slave );
 
 
-void 
-my_read_hd_sector ( 
-    unsigned long ax, 
-    unsigned long bx, 
-    unsigned long cx, 
-    unsigned long dx );
 
-void 
-my_write_hd_sector ( 
-    unsigned long ax,
-    unsigned long bx,
-    unsigned long cx,
-    unsigned long dx );
+
+int 
+ataReadSector( 
+    unsigned long buffer, 
+    unsigned long lba, 
+    unsigned long reserved1, 
+    unsigned long reserved2 );
+
+int 
+ataWriteSector ( 
+    unsigned long buffer,
+    unsigned long lba,
+    unsigned long reserved1,
+    unsigned long reserved2 );
+
+
+
 
 int init_hdd (void);
 

@@ -188,17 +188,12 @@ d_draw_char (
 
         for ( x2=0; x2 < gcharWidth; x2++ )
         {
-
-            // Put pixel
-            
             backbuffer_putpixel ( 
-                *work_char & bit_mask ? fgcolor: bgcolor, 
-                x + x2, 
-                y, 
-                0,
-                0 );  //rop_flags
+                *work_char & bit_mask ? fgcolor: bgcolor,  // color
+                (x + x2),                                  // x 
+                y,                                         // y
+                0 );                                       // rop_flags
 
-            // Very good!
             bit_mask = (bit_mask >> 1); 
         };
 
@@ -206,11 +201,7 @@ d_draw_char (
         y++; 
         work_char++; 
     };
-
-	// Algo mais ? 
 }
-
-
 
 
 /*
@@ -377,10 +368,12 @@ d_drawchar_transparent (
     work_char = (void *) gws_currentfont_address + (c * gcharHeight);
 
 
-	//
-	// Draw.
-	//
+//
+// Draw
+//
 
+// See:
+// drivers/video/fbdev/pixel.c
 
     for ( y2=0; y2 < gcharHeight; y2++ )
     {
@@ -388,14 +381,15 @@ d_drawchar_transparent (
 
         for ( x2=0; x2 < gcharWidth; x2++ )
         {
-            // Put pixel. 
             if ( ( *work_char & bit_mask ) )
-            { 
-                backbuffer_putpixel ( color, x + x2, y, 0, 0 ); 
+            {
+                backbuffer_putpixel ( 
+                    color,     // color 
+                    (x + x2),  // x
+                    y,         // y
+                    0 );       // rop_flags
             }
-
-            // Rotate bitmask.
-            // very good!
+            // Next bit.
             bit_mask = (bit_mask >> 1); 
         };
 

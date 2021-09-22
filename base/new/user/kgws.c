@@ -1263,7 +1263,7 @@ draw:
                 // device screen
                 // 2D, No clipping or transformation.
                 //pixelBackBufferPutpixel ( color, X, Y ); 
-                backbuffer_putpixel(color,X,Y,0,0);
+                backbuffer_putpixel(color,X,Y,0);
             }
 
              /*

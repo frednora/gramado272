@@ -30,8 +30,10 @@ __load_sequential_sectors (
 
     debug_print ("__load_sequential_sectors:\n");
     
-    for ( i=0; i < sectors; i++ ){
-        my_read_hd_sector ( address + b, lba + i, 0, 0 );
+    for ( i=0; i < sectors; i++ )
+    {
+        ataReadSector ( address + b, lba + i, 0, 0 );
+        
         b = (b +512);
     };
     
@@ -93,9 +95,9 @@ void read_lba ( unsigned long address, unsigned long lba )
             return;
             break;
 
+        // atahdd.c
         case 16:
-           // hdd.c
-            my_read_hd_sector ( address, lba, 0, 0 );
+            ataReadSector ( address, lba, 0, 0 );
             return;
             break;
 

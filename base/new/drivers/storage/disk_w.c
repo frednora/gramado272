@@ -32,9 +32,9 @@ void write_lba ( unsigned long address, unsigned long lba )
             goto fail;
             break;
 
-        //See: hdd.c
+        //See: atahdd.c
         case 16:
-            my_write_hd_sector ( address, lba, 0, 0 ); 
+            ataWriteSector ( address, lba, 0, 0 ); 
             return;
             break;
 
@@ -154,13 +154,13 @@ fs_save_fat (
         disk_ata_wait_irq ();
 
 
-        //my_write_hd_sector ( 
+        //ataWriteSector ( 
         //    (unsigned long) ( VOLUME1_FAT_ADDRESS + off), 
         //    (unsigned long) ( VOLUME1_FAT_LBA     + lbaoff ), 
         //    0, 
         //    0 );
 
-        my_write_hd_sector ( 
+        ataWriteSector ( 
             (unsigned long) ( __fatAddress + off), 
             (unsigned long) ( __fatLBA     + lbaoff ), 
             0, 
@@ -250,13 +250,13 @@ fs_save_rootdir (
         // #bugbug: 
         // Não podemos determinar os valores. Precisamos de estruturas.
 
-        //my_write_hd_sector ( 
+        //ataWriteSector ( 
         //    (unsigned long) ( VOLUME1_ROOTDIR_ADDRESS + roff), 
         //    (unsigned long) ( VOLUME1_ROOTDIR_LBA     + rlbaoff ), 
         //    0, 
         //    0 );
 
-        my_write_hd_sector ( 
+        ataWriteSector ( 
             (unsigned long) ( RootAddress + roff), 
             (unsigned long) ( RootLBA + rlbaoff ), 
             0, 

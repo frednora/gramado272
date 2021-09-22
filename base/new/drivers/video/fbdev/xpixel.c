@@ -1,4 +1,7 @@
 
+// pixel.c
+// Presentation: Put a pixel into the backbuffer.
+
 //D - Destination bitmap
 //P - Selected brush (also called pattern)
 //S - Source bitmap
@@ -21,7 +24,7 @@
  * ao frontbuffer. Para isso ele precisa usasr o diálogo do driver 
  * de vídeo.
  * IN: 
- *     color, x, y, 0, rop_flags
+ *     color, x, y, rop_flags
  */
 
 // #todo
@@ -30,52 +33,29 @@
 
 void 
 backbuffer_putpixel ( 
-    unsigned int ax,    // color, 32bit 
-    unsigned long bx, 
-    unsigned long cx, 
-    unsigned long dx,
-    unsigned long rop_flags )
+    unsigned int  _color,
+    unsigned long _x, 
+    unsigned long _y, 
+    unsigned long _rop_flags )
 {
-
-	// #importante
-	// Esse é o original. Isso funciona.
-	// Não usar.
-	// hal_backbuffer_putpixel ( ax, bx, cx, dx );
-
-
-	// #test
-	// tentando um novo método.
-	// usando o endereço virtual do backbuffer.
-	// precisamos de uma variável global para isso.
-
-    // # todo
-    // Estamos determinando um valor.
-    // Precisamos de uma variável de devinição do sistema.
-    
-    // BACKBUFFER_VA = 0xC0800000
-    // See: gramado/kernel/include/gva.h
-
-// Buffer address
     unsigned char *where = (unsigned char *) BACKBUFFER_VA;
 
-// Color
-    unsigned int color = (unsigned int) (ax & 0xFFFFFFFF);
-
+    unsigned int Color = (unsigned int) (_color & 0xFFFFFFFF);
 
 // A cor passada via argumento.
 // Color bytes
     char b, g, r, a;
 
     // bgra
-    b = (color & 0xFF);
-    g = (color & 0xFF00) >> 8;
-    r = (color & 0xFF0000) >> 16;
-    a = (color >> 24) + 1;
+    b = (Color & 0xFF);
+    g = (Color & 0xFF00) >> 8;
+    r = (Color & 0xFF0000) >> 16;
+    a = (Color >> 24) + 1;
 
 
 // Positions
-    int x = (int) (bx & 0xFFFF);
-    int y = (int) (cx & 0xFFFF);
+    int x = (int) (_x & 0xFFFF);
+    int y = (int) (_y & 0xFFFF);
 
 
 
@@ -163,7 +143,7 @@ backbuffer_putpixel (
 
 // The first byte;
 // 0 ~ FF
-    int operation = (int) (rop_flags & 0xFF);
+    int operation = (int) (_rop_flags & 0xFF);
 
 // flags
 // 16, 32, 64, 128 
