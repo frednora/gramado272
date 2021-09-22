@@ -1691,6 +1691,10 @@ void *xxxCreateWindow (
 
         // center?
         size_t tmp_size = (size_t) strlen ( (const char *) windowname );
+
+        if(tmp_size>64)
+            tmp_size=64;
+
         unsigned long offset = 
             ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) >> 1 );
 
@@ -1705,6 +1709,7 @@ void *xxxCreateWindow (
 // Paint button
 //
 
+        //#todo: nao precis disso.
         if ( (void*) Parent != NULL )
         {
 
@@ -1714,7 +1719,7 @@ void *xxxCreateWindow (
             // as bordas do botao.
 
             __draw_buttom_borders(
-                (struct gws_window_d *)window,
+                (struct gws_window_d *) window,
                 (unsigned int) buttonBorderColor1,
                 (unsigned int) buttonBorderColor2,
                 (unsigned int) buttonBorderColor2_light,
@@ -1807,6 +1812,26 @@ void *CreateWindow (
     gwssrv_debug_print ("CreateWindow: :)\n");
 
 
+
+//
+// name
+//
+
+
+// =================
+// Duplicate
+    char *name_local_copy;
+    name_local_copy = (void*) malloc(256);
+    if( (void*) name_local_copy == NULL){
+        return NULL;
+    }
+    memset(name_local_copy,0,256);
+    strcpy(name_local_copy,windowname);
+// =================
+
+
+
+
 // See:
 // config.h, main.c
     if(config_use_transparency==TRUE)
@@ -1875,7 +1900,7 @@ void *CreateWindow (
                            style, 
                            status, 
                            view, 
-                           (char *) windowname, 
+                           (char *) name_local_copy, //windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
                            desktopid, 
@@ -1911,7 +1936,7 @@ void *CreateWindow (
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
                            WT_SIMPLE, 0, status, view, 
-                           (char *) windowname, 
+                           (char *) name_local_copy, //windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
                            desktopid, clientcolor, color, 0 ); 
@@ -1943,7 +1968,7 @@ void *CreateWindow (
         // Podemos usar o esquema padrão de cores ...
         __w = (void *) xxxCreateWindow ( 
                            WT_BUTTON, 0, status, view, 
-                           (char *) windowname, 
+                           (char *) name_local_copy, //windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
                            desktopid, clientcolor, color, 0 ); 
@@ -1966,7 +1991,7 @@ void *CreateWindow (
     {
         __w = (void *) xxxCreateWindow ( 
                            WT_SIMPLE, 0, status, view, 
-                           (char *) windowname, 
+                           (char *) name_local_copy, //windowname, 
                            x, y, width, height, 
                            (struct gws_window_d *) pWindow, 
                            desktopid, clientcolor, color, 0 );  
@@ -2360,10 +2385,10 @@ int serviceCreateWindow (int client_fd)
 
     Window = (struct gws_window_d *) CreateWindow ( 
                                          type, 
-                                         my_style,     // style
-                                         1,     // status 
-                                         1,     // view
-                                         r.data, 
+                                         my_style,  // style
+                                         1,         // status 
+                                         1,         // view
+                                         r.data,    // name
                                          x, y, w, h, 
                                          Parent, 0, 
                                          COLOR_PINK, color ); 

@@ -1254,6 +1254,7 @@ void create_taskbar (void)
     }
 
 
+// The bar.
 
     __taskbar_window = (struct gws_window_d *) CreateWindow ( 
                                             WT_SIMPLE, 
@@ -1316,9 +1317,10 @@ void create_taskbar (void)
     unsigned long b_left = (unsigned long) (__taskbar_window->width - b_width) >> 1;
     unsigned long b_top = 4;
 
-    // create the button
+// The button.
+
     __taskbar_startmenu_button_window = (struct gws_window_d *) CreateWindow ( 
-        WT_BUTTON, 0, 1, 1,"Start",  
+        WT_BUTTON, 0, 1, 1, "Start",  
         b_left, b_top, b_width, b_height,   
          __taskbar_window, 
          0, 

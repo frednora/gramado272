@@ -567,8 +567,16 @@ wmCreateWindowFrame (
 
     // string at center?
     size_t tmp_size = (size_t) strlen ( (const char *) window->name );
+    
+    if (tmp_size > 64)
+        tmp_size=64;
+
+
     unsigned long offset = 
         ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) / 2 );
+
+
+
 
     if ( Type == WT_OVERLAPPED )
     {
@@ -845,8 +853,17 @@ void wm_flush_rectangle(struct gws_rect_d *rect)
 
 void wm_flush_window(struct gws_window_d *window)
 {
-    if( (void*) window != NULL )
-        gws_show_window_rect(window);
+    if( (void*) window == NULL )
+        return;
+
+    if(window->used != TRUE)
+        return;
+
+    if(window->magic != 1234)
+        return;
+
+// flush
+    gws_show_window_rect(window);
 }
 
 
@@ -887,8 +904,7 @@ void gwssrv_show_backbuffer (void)
 
 void wmRefreshDirtyRectangles(void)
 {
-    int __Dirty = -1;
-    int background_status = -1;
+    int Dirty = FALSE;
 
     struct gws_window_d  *tmp;
     register int i=0;
@@ -897,31 +913,6 @@ void wmRefreshDirtyRectangles(void)
 // #debug
     //gwssrv_debug_print("wmRefreshDirtyRectangles:\n");
 
-//
-// == Check frame validation  ===========================
-//
-
-// Se algo foi modificado no frame.
-// Nothing to do.
-// Ok, we can return or sleep.
-// Mostrar o status se ele estiver habilitado.
-// O problema é que isso conta como frame também aqueles
-// que não foram modificados. 
-// ok, por enquanto.
-// Temos que marcar mesmo quando não ha commits.
-// na verdade devemos contar o fps por janela. 
-
-
-    /*
-    __Dirty = isdirty();
-    if (__Dirty == FALSE)
-    {
-        //gwssrv_debug_print("wm_process_windows: [Not dirty] Nothing to do\n");
-        //rtl_invalidate_window();
-        __update_fps();
-        return;
-    }
-    */
 
 //===================================================================
 // ++  Start
@@ -938,14 +929,15 @@ void wmRefreshDirtyRectangles(void)
 // #todo: update fps
 // See:
 
-    background_status = is_background_dirty();
+    Dirty = (int) is_background_dirty();
 
-    if (background_status == TRUE)
+// Yes. Background is drity.
+// Validate the background.
+
+    if (Dirty == TRUE)
     {
         gws_show_backbuffer();
-        
-        validate_background();  // Validate the background.
-        validate();             // Validate the frame.
+        validate_background();  
         return;
     }
 
@@ -966,7 +958,9 @@ void wmRefreshDirtyRectangles(void)
 // Update
 //
 
-   /*
+/*
+// #debug 
+// Bar for debug.
 // update message/hour/date ...
     if ( (void*) __root_window != NULL ) 
     {
@@ -982,58 +976,49 @@ void wmRefreshDirtyRectangles(void)
                //__root_window->redraw = FALSE;
         }
     }
-    */
+*/
+
+// ======================================================
+// Flush
+// #todo #bugbug
+// Flush all the dirty windows into the framebuffer.
+// It will lookup the main window list.
+// This is a very slow way of doing this.
+// But it is just a test.
 
 
-// Is it time to update all the windows?
+// #test
+    //int UpdateScreenFlag=FALSE;
+    int UpdateScreenFlag=TRUE;
 
-    int UpdateScreenFlag=FALSE;  // Suspended
 
     if(UpdateScreenFlag == TRUE)
     {
 
-        // z-order ...
-        //outra opção é lista encadeada ... see: WindowManager->layer1_list;
-        for (i=0; i<ZORDER_MAX; ++i)
+        // Lookup the main window list.
+
+        for (i=0; i<WINDOW_COUNT_MAX; ++i)
         {
-            //tmp = (struct gws_window_d  *) zList[i];
             tmp = (struct gws_window_d  *) windowList[i];
 
             if ( (void*) tmp != NULL )
             {
+                // It is a valid window.
                 if ( tmp->used == TRUE && tmp->magic == 1234 )
                 {
-                    if ( tmp->dirty == TRUE ){
-                        gws_show_window_rect(tmp);
-                        tmp->dirty = FALSE;
+                    // It is a dirty window.
+                    // Flush the window's rectangle.
+                    if ( tmp->dirty == TRUE )
+                    {
+                        wm_flush_window(tmp);
+                        validate_window(tmp);
                     }
-                    
-                    //if ( tmp->type == WT_OVERLAPPED )
-                    //{
-                        
-                        //grDrawString(tmp->left,tmp->top,COLOR_GREEN,"x");
-                        //invalidate_window(tmp);
-                    //}
-                    
-                    // draw and invalidate.
-                    //if (  tmp != __root_window )
-                    //{
-                        //redraw_window(tmp,FALSE);  //bugbug
-                        //invalidate_window(tmp);
-                    //}
-                    
-                    //if( tmp->id == window_with_focus ) 
-                    //{
-                        //grDrawString(tmp->left,tmp->top,COLOR_GREEN,"x");
-                        //tmp->bg_color = COLOR_GREEN;
-                        //redraw_window(tmp,FALSE);
-                        //invalidate_window(tmp);
-                    //}
                 }
             }
         };
     }
 
+// ========================================================
 
 //flush all the screens?
 //Do we have more than one monitor?
@@ -2633,18 +2618,12 @@ redraw_window (
 
         
         size_t tmp_size = (size_t) strlen ( (const char *) window->name );
+
+        if(tmp_size>64)
+            tmp_size=64;
+
         unsigned long offset = 
         ( ( (unsigned long) window->width - ( (unsigned long) tmp_size * (unsigned long) gcharWidth) ) / 2 );
-         
-
-        //#debug
-        //if ( (void*) window->parent == NULL ){
-            //gwssrv_debug_print ("redraw_window: [WT_BUTTON] Parent NULL\n"); 
-        //}
-
-        //gwssrv_debug_print ("redraw_window: Button Border\n"); 
-        //if ( (void*) window->parent != NULL )
-        //{
 
 
             // redraw the button border.
@@ -2657,56 +2636,28 @@ redraw_window (
                 (unsigned int) border2, //buttonBorderColor2,
                 (unsigned int) xCOLOR_GRAY5, //buttonBorderColor2_light,
                 (unsigned int) COLOR_BLACK );  //buttonBorder_outercolor );
-            
-            /*
-            //board1, borda de cima e esquerda.
-            rectBackbufferDrawRectangle ( 
-                window->left, window->top,  
-                window->width, 1, 
-                border1, 1, 0 );
-
-            rectBackbufferDrawRectangle ( 
-                window->left, window->top,  
-                1, window->height,
-                border1, 1, 0 );
-
-             //board2, borda direita e baixo.
-             rectBackbufferDrawRectangle ( 
-                 (window->left) + (window->width) -1, window->top, 
-                 1, window->height, 
-                 border2, 1, 0 );
-                 
-             rectBackbufferDrawRectangle ( 
-                 window->left, (window->top) + (window->height) -1,  
-                 (window->width), 1, 
-                 border2, 1, 0 );
-             */
              
             // Button label
-            //gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
-            /*
-            if (Selected == 1){
-                grDrawString ( 
-                    (window->left) + offset, //(Parent->left   + window->left) + offset,
-                    (window->top)  +8, //(Parent->top    + window->top)  +8, 
-                    COLOR_WHITE, window->name );
-            }else{
-                // (largura do botão, menos a largura da string)/2
-                // #debug: Rotina provisória
-                //grDrawString ( x +20, y +20, COLOR_TERMINALTEXT, string );
-                grDrawString ( 
-                    (window->left) +offset, //(Parent->left   + window->left) +offset, 
-                    (window->top)  +8, //(Parent->top    + window->top)  +8, 
-                    COLOR_TERMINALTEXT, window->name );
-            };
-            */   
-        //}
 
-      //todo
-      // configurar a estrutura de botão 
-      // e apontar ela como elemento da estrutura de janela.
-      //window->button->?
+            //gwssrv_debug_print ("redraw_window: [FIXME] Button label\n"); 
+            
+            if (Selected == TRUE)
+            {
+                grDrawString ( 
+                    (window->left) +offset, 
+                    (window->top)  +8, 
+                    COLOR_WHITE, window->name );
+            }
+            
+            if (Selected == FALSE)
+            {
+                grDrawString ( 
+                    (window->left) +offset, 
+                    (window->top)  +8, 
+                    COLOR_BLACK, window->name );
+            }
     }
+
 
     //#todo:
     if ( (unsigned long) window->type == WT_EDITBOX )
