@@ -11,6 +11,11 @@ void ps2kbd_initialize_device (void)
 {
     debug_print ("ps2kbd_initialize_device:\n");
 
+// globals
+    keyboard_init_modifier_keys();
+    keyboard_init_lock_keys();
+
+
  // enable keyboard port
     wait_then_write(I8042_STATUS, 0xae);
     keyboard_expect_ack();
@@ -236,7 +241,7 @@ done:
 }
 
 // #todo: Change this name.
-void ldisc_init_modifier_keys (void)
+void keyboard_init_modifier_keys (void)
 {
     // Modifier keys.
 
@@ -256,7 +261,7 @@ void ldisc_init_modifier_keys (void)
 }
 
 // #todo: Change this name.
-void ldisc_init_lock_keys (void)
+void keyboard_init_lock_keys (void)
 {
     // Capital Lock.	
 	capslock_status = 0;

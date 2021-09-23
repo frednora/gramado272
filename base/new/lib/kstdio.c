@@ -1790,7 +1790,8 @@ void __initialize_virtual_consoles(void)
 
 /*
  ******************************************
- * stdioInitialize:
+ * kstdio_initialize:
+ * 
  *     Inicializando stdio pertencente ao kernel base.
  *     Inicializa as estruturas do fluxo padrão.
  *     Quem chamou essa inicialização ?? Em que hora ??
@@ -1812,73 +1813,57 @@ void __initialize_virtual_consoles(void)
 // In this routine:
 // + Initializing the structures for stdin, stdout and stderr
 
-int stdioInitialize (void)
+int kstdio_initialize (void)
 {
     kstdio_standard_streams_initialized =  FALSE;
 
-    // Ja temos suporte a print nesse momento por causa
-    // das configurações de console. Mas nessa rotina 
-    // refaremos as configurações de console.
-    
-    debug_print ("stdioInitialize: [TODO]\n");
-    printf      ("stdioInitialize: [TODO]\n");
+// Ja temos suporte a print nesse momento por causa
+// das configurações de console. Mas nessa rotina 
+// refaremos as configurações de console.
 
+    debug_print ("kstdio_initialize: [TODO]\n");
+    //printf      ("kstdio_initialize: [TODO]\n");
 
-    // ??
-    // Input mode
-    // #bugbug
-    // We have another definition of input mode.
-    // An global io structure.
+// ??
+// Input mode
+// #bugbug
+// We have another definition of input mode.
+// An global io structure.
+
     g_inputmode = INPUT_MODE_MULTIPLE_LINES;
-
-    // Ùltimo erro registrado.
-    errno = 0;
-
-
-    // Buffers used by the standard stream.
-    __clear_prompt_buffers();
-
-
-    // Initialize the global file table.
-    __initialize_file_table();
-
-
-    // Initialize the global inode table.
-    __initialize_inode_table();
-
-
-    // Create standard stream.
-    __initialize_stdin();
-    __initialize_stdout();
-    __initialize_stderr();
-
-
-//
-// Virtual console
-//
-
-    __initialize_virtual_consoles();
-
-//
-// Background
-//
-
-    // #bugbug
-    // Estamos fazendo isso pela segunda vez.
-    // A primeira foi em kernel_main.
-
-    Background_initialize();
 
     stdio_terminalmode_flag = TRUE;
     stdio_verbosemode_flag  = TRUE;
 
-//done:
+// Last registered error.
+    errno = 0;
+
+// Buffers used by the standard stream.
+// Initialize the global file table.
+// Initialize the global inode table.
+    __clear_prompt_buffers();
+    __initialize_file_table();
+    __initialize_inode_table();
+
+// Create standard stream.
+    __initialize_stdin();
+    __initialize_stdout();
+    __initialize_stderr();
+
+// Virtual console
+    __initialize_virtual_consoles();
+
+// Background
+// #bugbug
+// Estamos fazendo isso pela segunda vez.
+// A primeira foi em kernel_main.
+    Background_initialize();
+
+// done
     kstdio_standard_streams_initialized = TRUE;
-    return 0;
-
+    return TRUE;
 fail:
-    x_panic ("kstdio-stdioInitialize: fail\n");
+    return FALSE;
 }
-
 
 

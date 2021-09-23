@@ -702,12 +702,7 @@ regularfile_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-//=====================
-int stdioInitialize (void);
-
-// ===
-
-
+int kstdio_initialize (void);
 
 #endif    
 

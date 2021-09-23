@@ -48,6 +48,8 @@ extern _system_state
 global _kernel_begin 
 _kernel_begin:
 
+    cli
+    cld 
 ;
 ; Jump
 ;
@@ -74,13 +76,10 @@ START:
     mov dword [_magic], edx
     ; ...
 
-; Clear interrupts.
 ; Clear some registers.
 ; Load our own 64-bit gdt.
 ; Setup data registers and base kernel stack.
 ; Load a NULL ldt.
-
-    cli
 
     mov rax, qword __SYSTEM_BOOTING
     mov qword [_system_state], rax 

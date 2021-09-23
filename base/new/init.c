@@ -23,12 +23,16 @@
 // ...
 
 
-#define GCC_VERSION ( __GNUC__ * 10000 \
-            + __GNUC_MINOR__ * 100 \
-            + __GNUC_PATCHLEVEL__ )
 
 
 #include <kernel.h>
+
+
+//static char *s_hostname;
+
+#define GCC_VERSION ( __GNUC__ * 10000 \
+            + __GNUC_MINOR__ * 100 \
+            + __GNUC_PATCHLEVEL__ )
 
 
 unsigned long InitializationPhase;
@@ -181,6 +185,12 @@ void preinit_OutputSupport(void)
 
 int kernel_main(int arch_type)
 {
+
+/*
+    char hostname[64];
+    sprintf(hostname,"gramado");
+    s_hostname = (char *) &hostname[0];
+*/
 
 //
 // Presence level

@@ -200,8 +200,8 @@ void kbdc_wait (unsigned char type);
 
 // ==
 
-void ldisc_init_modifier_keys (void);
-void ldisc_init_lock_keys (void);
+void keyboard_init_modifier_keys (void);
+void keyboard_init_lock_keys (void);
 
 void keyboardDisable (void);
 void keyboardEnable (void);
