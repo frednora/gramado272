@@ -210,20 +210,32 @@ PATH:
 ;
 
 VOLUME:
-    .number: db 0                   ;Número do volume atual.
-    .separador     db ":",0
-    .atual:        dd 0             ;Endereço do nome do volume atual.
-    .boot_manager  db "BM-SHELL",0  ;Estamos no Boot Manager antes de qualquer partição.
-    .p0_name       db "volume0" ,0
-    .p1_name       db "volume1" ,0
-    .p2_name       db "volume2" ,0
-    .p3_name       db "volume3" ,0
-    .p4_name       db "volume4" ,0
-    .p5_name       db "volume5" ,0
-    .p6_name       db "volume6" ,0
-    .p7_name       db "volume7" ,0
-    .p8_name       db "volume8" ,0
-    ;...
+
+;Número do volume atual.
+.number: 
+    db  0
+ 
+.separador:
+    db ":",0
+
+;Endereço do nome do volume atual.
+.atual:
+    dd  0
+
+;Estamos no Boot Manager antes de qualquer partição.
+.boot_manager:  
+    db "bm-shell::", 0  
+
+.p0_name: db "volume0" ,0
+.p1_name: db "volume1" ,0
+.p2_name: db "volume2" ,0
+.p3_name: db "volume3" ,0
+;.p4_name: db "volume4" ,0
+;.p5_name: db "volume5" ,0
+;.p6_name: db "volume6" ,0
+;.p7_name: db "volume7" ,0
+;.p8_name: db "volume8" ,0
+; ...
 
 
 
@@ -245,8 +257,8 @@ DIRECTORY:
 ;
 fat16_ImageName      db 0    ;Salva aqui um endereço de um nome de arquivo.
 fat16_ImageAddress   dd 0    ;Salva aqui o endereço do nome do arquivo.
-fat16_Buffer         dd 0    ;Buffer do arrquivo.    	
-	
+fat16_Buffer         dd 0    ;Buffer do arrquivo.
+
 ;
 ; BPB:
 ; ====
@@ -275,14 +287,14 @@ fat16_bpb:
 	.HiddenSectors:      dd 0x00000000
 	.TotalSectorsLarge:  dd 0x00000000
 	;For extended.
-	.DriveNumber:        db 0x80     
+	.DriveNumber:        db 0x80
 	.Flags:              db 0x00
 	.Signature:          db 29           ;Extended Boot Signature.
 	.VolumeID:           dd 0x980E63F5
-	.VolumeLabel:        db "FREDNORA8MB"
-	.SystemID:           db "FAT16   "	
+	.VolumeLabel:        db "FREDNORA$$$"
+	.SystemID:           db "FAT16   "
 	
-	
+
 ;
 ; Mensagens.
 ;
@@ -300,7 +312,7 @@ msg_fat16_FatFail  db "FAT16: FAT fail"  ,10,13,0
 msg_fat16_diskfail db "FAT16: Disk fail" ,10,13,0
 
 ;Steps.
-msg_fat16_step1 db "Step1: Calculating DATA AREA",13,10,0
+msg_fat16_step1 db "Step1: Calculating DATAAREA",13,10,0
 msg_fat16_step2 db "Step2: Loading ROOT"         ,13,10,0
 msg_fat16_step3 db "Step3: Searching file"       ,13,10,0
 msg_fat16_step4 db "Step4: Loading FAT"          ,13,10,0
@@ -310,7 +322,7 @@ msg_fat16_step5 db "Step5: Loading file"         ,13,10,0
 msg_file_ok:
     db "[BM.BIN]: File found", 13, 10, 0
 msg_file_not_found: 
-    db "[BM.BIN]: File not found! HANG" , 13, 10, 0
+    db "[BM.BIN]: File not found" , 13, 10, 0
 
 
 ;

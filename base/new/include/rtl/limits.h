@@ -16,6 +16,8 @@
 #define OPEN_MAX    GRAMADO_FOPEN_MAX
 
 
+#define PIPE_BUF  GRAMADO_PIPE_BUF
+
 // Number of bits in a 'char'.  
 #define CHAR_BIT  8
 
@@ -32,6 +34,8 @@
  
 // Maximum value an 'unsigned short int' can hold.  (Minimum is 0.) 
 #define USHRT_MAX  65535
+
+
 
 #endif    
 

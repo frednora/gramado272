@@ -19,10 +19,29 @@
 
 exit:
     nop;
+
+; =============================================
+
 do_boot:
-    mov byte [META$FILE.GRAMADO_MODE], 0x00   ;;jail
-    jmp rmStartGUI
-    jmp $
+
+; 320x200
+    ;jmp do_gramado_mode_jail
+
+; 640x480
+    ;jmp do_gramado_mode_p1
+
+; 800x600
+    jmp do_gramado_mode_home
+
+; 1024x768
+    ;jmp do_gramado_mode_p2
+
+; ??
+    ;jmp do_gramado_mode_castle
+    
+    jmp do_boot
+
+; =============================================
 
 ; See: stage3/pm.inc 
 do_gramado_mode_jail:

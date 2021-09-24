@@ -110,14 +110,9 @@ G_START_GUI EQU 0  ;; 1= (YES) 0 = (NO)
 [bits 16]
 
 
-;;===============================================================
-;; bm_start:
-;;
-;;     Entry point
-;;
-
-;; This is the entry point for the BM.BIN.
-;; Jump after the data area.
+; Entry point.
+; This is the entry point for the BM.BIN.
+; Jump after the data area.
 
 os_call_vectors:
     jmp bm_main
@@ -127,10 +122,7 @@ os_call_vectors:
     ;jmp bm_vector4
     ; ...
 
-
-;
 ; Data
-;
 
 ROOTDIRSTART EQU (bootmanagerOEM_ID)
 ROOTDIRSIZE  EQU (bootmanagerOEM_ID+4)
@@ -158,11 +150,9 @@ bootmanagerVolumeID              dd 0x980E63F5
 bootmanagerVolumeLabel           db "QUASI  BMBM"
 bootmanagerSystemID              db "FAT16   "
 
-;;
 ;; Salvando alguns argumentos passados pelo MBR. 
 save_cylinder_numbers: dw 0  ;Numero de cilindros do disco.
 ;;...
-
 
 
 ; ========
@@ -199,13 +189,7 @@ bm_main:
     mov byte [META$FILE.DISK_NUMBER], dl
     mov byte [DISKINFO16_disk_number], dl
 
-;
 ; Get disk info.
-;
-
-;;========================================
-;;getDiskInfo:
-
 ; Get drive parameters: 
 ; =====================
 ; Return: CF set on error.
@@ -224,8 +208,8 @@ bm_main:
     mov ah, byte 08h
     int 0x13 
 
-    ;; #test
-    ;; Set the keyboard repeat rate to the max
+; #test
+; Set the keyboard repeat rate to the max
     ;; mov ax, 0x0305
     ;; xor bx,bx 
     ;; int 0x16
@@ -275,7 +259,6 @@ bm_main:
     mov word [META$FILE.SPT], ax
     mov word [DISKINFO16_spt], ax   
 
-
 ; Cylinders
 ; Obs: 
 ; O valor de CylinderNumbers foi gravado em vari�vel mas precisar� ser 
@@ -292,11 +275,7 @@ bm_main:
     mov word [META$FILE.CYLINDERS], ax
     mov word [DISKINFO16_cylinders], ax
 
-
-;
 ; ========================================
-;
-
 ; Carregar root.
 
 bootmanager_LOADROOT:
@@ -305,9 +284,9 @@ bootmanager_LOADROOT:
 
     xor cx, cx
     xor dx, dx
-    mov ax, 0x0020                          ; 32 byte directory entry.
-    mul WORD [bootmanagerMaxRootEntries]    ; Total size of directory.
-    div WORD [bootmanagerBytesPerSector]    ; Sectors used by directory.
+    mov ax, 0x0020                        ; 32 byte directory entry.
+    mul WORD [bootmanagerMaxRootEntries]  ; Total size of directory.
+    div WORD [bootmanagerBytesPerSector]  ; Sectors used by directory.
     mov word [ROOTDIRSIZE], ax
     mov cx, ax
     ;xchg ax, cx
@@ -316,9 +295,9 @@ bootmanager_LOADROOT:
 ; store in "ax".
 
     xor ax, ax
-    mov al, BYTE [bootmanagerTotalFATs]                   ; Number of FATs.
-    mul WORD [bootmanagerSectorsPerFAT]              ; Sectors used by FATs.
-    add ax, WORD [bootmanagerReservedSectors]    ; Adjust for bootsector.
+    mov al, BYTE [bootmanagerTotalFATs]        ; Number of FATs.
+    mul WORD [bootmanagerSectorsPerFAT]        ; Sectors used by FATs.
+    add ax, WORD [bootmanagerReservedSectors]  ; Adjust for bootsector.
     add ax, WORD [bootmanagerHiddenSectors]
 
 ; Nesse momento ax contem o setor inicial do root dir.
@@ -330,9 +309,9 @@ bootmanager_LOADROOT:
     ;mov WORD [bootmanagerdatasector], 591  ;;SIMULADO In�cio da �rea de dados.
 
 
-    mov ax, word [ROOTDIRSTART]    ; In�cio do root.
-    mov cx, word [ROOTDIRSIZE]       ; Tamanho do root.
-    mov bx, 0x1000                             ; root_buffer. Copy root dir above bootcode
+    mov ax, word [ROOTDIRSTART]  ; Inicio do root.
+    mov cx, word [ROOTDIRSIZE]   ; Tamanho do root.
+    mov bx, 0x1000               ; root_buffer. Copy root dir above bootcode
     call bootmanagerReadSectors
 
     pusha
@@ -340,27 +319,25 @@ bootmanager_LOADROOT:
     call bootmanagerDisplayMessage
     popa
 
-
     ;Debug breakpoint.
     ;jmp $
 
-
     ;Browse root directory for binary image.
-    mov cx, WORD [bootmanagerMaxRootEntries]    ; Load loop counter.
-    mov di, 0x1000                              ; root_buffer, 0x1000, locate first root entry. ?
+    mov cx, WORD [bootmanagerMaxRootEntries]  ; Load loop counter.
+    mov di, 0x1000                            ; root_buffer, 0x1000, locate first root entry. ?
 .bootmanagerLOOP:
     push cx
-    mov cx, 0x000B                    ; eleven character name
-    mov si, bootmanager_ImageName     ; image name to find
+    mov cx, 0x000B                 ; eleven character name
+    mov si, bootmanager_ImageName  ; image name to find
     pusha
     call bootmanagerDisplayMessage
     popa
     push di
-    rep cmpsb                         ; test for entry match
+    rep cmpsb                       ; test for entry match
     pop di
     je bootmanager_LOADFAT
     pop cx
-    add di, 0x0020                    ; queue next directory entry
+    add di, 0x0020                  ; queue next directory entry
     loop .bootmanagerLOOP
     jmp bootmanagerFAILURE
 
@@ -370,26 +347,23 @@ bootmanager_LOADROOT:
 
 ;; Se o nome for encontrado.
 bootmanager_LOADFAT:
+
     pusha
     mov si, bootmanagermsgFAT
     call bootmanagerDisplayMessage
     popa
 
-
     ; Debug breakpoint.
     ;mov ah, 0x00
     ;int 0x16
 
-
-    ; Save starting cluster of boot image.
+; Save starting cluster of boot image.
     mov dx, WORD [di + 0x001A]
-    mov WORD [bootmanagercluster], dx             ; file's first cluster.
+    mov WORD [bootmanagercluster], dx  ; file's first cluster.
 
-;
 ; #BUGBUG ?
 ; NAO ESTAMOS CARREGANDO A FAT INTEIRA.
 ; CARREGAR A FAT INTEIRA D� PROBLEMA.
-;
 
 ; Read FAT into memory (es:bx).?? Onde ??
 ; ?? 0:0x1000 
@@ -400,8 +374,8 @@ bootmanager_LOADFAT:
 
 ; Compute location of FAT and store in "ax".
 
-    mov ax, WORD [bootmanagerHiddenSectors]       ; adjust for bootsector.
-    add ax, WORD [bootmanagerReservedSectors]     ; lba inicial da fat ?.
+    mov ax, WORD [bootmanagerHiddenSectors]    ; adjust for bootsector.
+    add ax, WORD [bootmanagerReservedSectors]  ; lba inicial da fat ?.
     mov cx, 8         ; (apenas 8 setores da fat.) (246/2)  ;; metade da fat  WORD [bootmanagerSectorsPerFAT]
     mov bx, 0x1000    ; fat_buffer ; copy FAT above bootcode.
     call bootmanagerReadSectors
@@ -421,7 +395,6 @@ bootmanager_LOADFAT:
 ; mov si, bootmanagermsgCRLF
 ; call bootmanagerDisplayMessage
 
-
 ;
 ; Load image.
 ;
@@ -438,14 +411,11 @@ bootmanager_LOADFAT:
 ; 
 
 ; gs:bx para a FAT.
-
-    ;; ??
-    ;; Salva o offset da imagem.
+; FAT segment.
+; Salva o offset da imagem.
 
     push bx 
 
-
-    ; FAT segment.
     mov ax, 0 
     mov gs, ax 
 
@@ -474,36 +444,31 @@ bootmanager_LOADIMAGE:
 .bootmanagerDONE:
     mov WORD [bootmanagercluster], dx  ; store new cluster.
 
-; EOF.
+; EOF
+; 0x0FF0 test for end of file.
 
-    cmp dx, 0xFFFF                       ; 0x0FF0 test for end of file.
+    cmp dx, 0xFFFF
     jne bootmanager_LOADIMAGE
     ;jnb bootmanager_LOADIMAGE 
 
 bootmanagerDONE:
 
-;Op��o de mensagem.
-
     ;mov si, bootmanagermsgCRLF
     ;call bootmanagerDisplayMessage
 
 ;========================
-; Aten��o:
-;     Esse � primeiro setor do BM.BIN, ele ira carregar o arquivo BL.BIN 
-; e ir� passar o comando para o stage 2 do (BM).
+; Esse eh primeiro setor do BM.BIN, ele ira carregar o arquivo BL.BIN 
+; e ira passar o comando para o stage 2 do (BM).
 ;=======================
-
-; Mensagem de sucesso.
 
     mov si, bootmanagermsgDONE
     call bootmanagerDisplayMessage
 
-	;Debug breakpoint.
-	;jmp $
+    ;Debug breakpoint.
+    ;jmp $
 
 ; ===================================
 ; Importante:
-;
 ; >> Nesse momento j� conseguimos carregar o BL.BIN em 0x2000:0. Agora 
 ; passamos o comando para o stage2 do BM, onde configuramos o m�quina,
 ; entramos em modo gr�fico, em modo protegido e por fim entramos no 
@@ -541,34 +506,26 @@ bootmanagerDONE:
     push WORD AFTER_DATA 
     retf
 
-
-;;===============================
 ; Fail. 
-;     #todo: Colocar uma mensagem de erro.
+; #todo: Colocar uma mensagem de erro.
 
 bootmanagerFAILURE:
 
     int 0x18
     jmp $
 
-    ;mov ax, 0x8000 
-    ;mov ds, ax
-    ;mov es, ax
-
     ;mov  si, bootmanagermsgFailure
     ;call  bootmanagerDisplayMessage
+
     ;mov  ah, 0x00
     ;int  0x16         ; await keypress
     ;int  0x19         ; warm boot computer
 
 
-
-; =====
 ; bootmanagerDisplayMessage:
 ;     Display ASCIIZ string at "ds:si" via BIOS.
 
 bootmanagerDisplayMessage:
-
     lodsb                  ; load next character
     or al, al              ; test for NUL character
     jz .bootmanagerDONE
@@ -577,12 +534,10 @@ bootmanagerDisplayMessage:
     mov bl, 0x07           ; text attribute
     int 0x10               ; invoke BIOS
     jmp bootmanagerDisplayMessage
-
 .bootmanagerDONE:
     ret
 
 
-; ====
 ; bootmanagerReadSectors:
 ;     Reads "cx" sectors from disk starting at "ax" into memory location 
 ; "es:bx".
@@ -590,13 +545,12 @@ bootmanagerDisplayMessage:
 ; LBA 'ax'. 
 
 bootmanagerReadSectors:
-
     mov WORD [bootmanagerDAPBuffer], bx
     mov WORD [bootmanagerDAPBuffer+2], es
     mov WORD [bootmanagerDAPStart], ax
-
+;Five retries for error. (8??)
 .bootmanagerMAIN:
-    mov di, 0x0005           ;Five retries for error. (8??)
+    mov di, 0x0005
 .bootmanagerSECTORLOOP:
     push ax
     push bx
@@ -617,7 +571,9 @@ bootmanagerReadSectors:
     pop bx
     pop ax
     jnz .bootmanagerSECTORLOOP    ; attempt to read again
+; Fail
     int 0x18
+
 .bootmanagerSUCCESS:
     mov si, bootmanagermsgProgress
     call bootmanagerDisplayMessage
@@ -653,12 +609,8 @@ bootmanagerClusterLBA:
     add ax, WORD 591   ;[bootmanagerdatasector] ; base data sector.(#bugbug Valor determinado.)
     ret
 
-; =============================================================
-
-;
+; ===============================
 ; Dados de supporte.
-;
-
 
 ; DAP.
 bootmanagerDAPSizeOfPacket  db  10h
@@ -672,16 +624,14 @@ bootmanagerabsoluteSector   db 0x00
 bootmanagerabsoluteHead     db 0x00
 bootmanagerabsoluteTrack    db 0x00
 
-
 bootmanagerdatasector  dw 0x0000  ; Data sector.
 bootmanagercluster     dw 0x0000  ; Cluster.
 
-;
+; ===============================================
 ; Messages and strings.
-;
 
 ; File name.
-bootmanager_ImageName
+bootmanager_ImageName:
     db "BL      BIN", 0x0D, 0x0A, 0x00
 
 ; Strings.
@@ -695,17 +645,14 @@ bootmanagermsgDONE      db  0x0D, 0x0A, "DONE", 0x0D, 0x0A, 0x00
 bootmanagermsgCRLF      db  0x0D, 0x0A, 0x00
 ;; ...
 
-
 ;=================
 ; Obs: 
 ; Aqui é o fim do Stage1 do Boot Manager.
-;
 
 ; ===========================================================
 
 ;=================
 ; Obs: Aqui é começo do Stage2 do Boot Manager.
-;
 
 
 [bits 16]
@@ -715,9 +662,7 @@ bootmanagermsgCRLF      db  0x0D, 0x0A, 0x00
 ; Daqui pra frente temos código de inicialização.
 ; SEGUNDO SETOR
 
-;
 ; ==========================================
-;
 
 ; Gramado Boot Manager - This is the stage 2 for the boot manager.
 ; It's a 16bit/32bit program to make some basic system initialization and 
@@ -732,13 +677,13 @@ bootmanagermsgCRLF      db  0x0D, 0x0A, 0x00
 ; e s2header.inc que servir�o de suporte para todos os outros modulos
 ; do stage2.
 ;
-; *IMPORTANTE:
+; IMPORTANTE:
 ;      � IMPRESSIND�VEL A POSSIBILIDADE DE CARREGAR O 'BOOT LOADER' USANDO 
 ; OS RECURSOS DO BIOS DE 16BIT. Esse arquivo deve chamar a rotina de 
 ; carregamento de arquivo. Obs: J� est� implementada a rotina de carregar 
 ; um setor usando fat16 em 16bit usando recursos do BIOS.   
 ;
-; Atribui��es:
+; Atribuiçoes:
 ;     +1 - Configura o sistema. 
 ;     +2 - Entra no modo de inicializa��o configurado. 
 ;
@@ -794,17 +739,10 @@ bootmanagermsgCRLF      db  0x0D, 0x0A, 0x00
 ; OBS: 
 ; � importante receber bem os par�metros de disco passados pelo stage1. 
 ; O stage2 salva os par�metros de disco no META$FILE carregado na mem�ria. 
-; (vol�til).  
-;
-; History:
-;     2015 - Created by Fred Nora.
-;
+; (volatil).
 
-
-;
 ; Algumas constantes usadas pelo stage 2.
 ; Obs: Por conveni�ncia, o desenvolvedor pode manipular essas constantes.
-;
 
 ;;Tipos de bootloader que poder�o ser carregados pelo boot manager.
 ;BOOTLOADER_TYPE_NONE      EQU 0  ;Sem tipo definido. Negligenciado.
@@ -848,20 +786,18 @@ ROOT_LBA      equ  559
 ; A LBAn�o importa, pois ele foi carregado do sistema sistema de 
 ; arquivos e a LBA inicial dele estava armazenada na entrada do 
 ; diret�rio raiz.
-;
+
 
 ; Boot Loader.
 BL_SEGMENT  equ  2000H
 BL_OFFSET   equ  0
 BL_LBA      equ  0
 
-
 ;--------------------------------------- 
 ; Algum suporte para cores no modo texto. 
 ; BLUE    equ     01f00h
 ; RED     equ     02f00h
 ; GREEN   equ     04f00h
-
 
 ;==================================
 ; stage2_main:
@@ -881,10 +817,13 @@ stage2_main:
 ; == Includes ========
 ;
 
-    %include "s2metafile.inc"
+    %include "fs/s2metafile.inc"
+
     %include "s2header.inc"
-    %include "s2bpb.inc"
-    %include "s2gdt.inc"
+    
+    %include "fs/s2bpb.inc"
+    
+    %include "x86/s2gdt.inc"
 
 ; ===============================
 ; #importante
@@ -892,16 +831,20 @@ stage2_main:
 ; Vamos tentar passar os dados de s2config16.inc, pois esta
 ; relativamente proximo.
 
-    %include "s2vesa.inc"  
+    %include "drivers/s2vesa.inc"  
+    
     %include "s2config16.inc"  
 ; ================================
 
 ; lib.
 
-    %include "s2a20.inc"
+    %include "x86/s2a20.inc"
+
     %include "s2lib.inc"
-    %include "s2fat12.inc"
-    %include "s2fat16.inc"
+    
+    %include "fs/s2fat12.inc"
+    %include "fs/s2fat16.inc"
+
     %include "s2menu16.inc"
     %include "s2modes.inc"
     %include "s2detect.inc"
@@ -1185,7 +1128,7 @@ stage2_msg_pe_sigFound:
 ; pm
 ; Comuta para o modo protegido.
 
-    %include  "pm.inc"
+    %include  "x86/pm.inc"
 
 ;--------------------------------------------------------
 ; 32 bits - (Boot Manager 32bit Asm.)
@@ -1208,34 +1151,39 @@ bootmanager_main:
     %include "system.inc"       ; Arquivo de configura��o do sistema.
     %include "init.inc"         ; Arquivo de configura��o da inicializa��o.
     %include "sysvar32.inc"     ; Vari�veis do sistema.
-    %include "gdt32.inc"        ; Gdt.
-    %include "idt32.inc"        ; Idt.
-    %include "ldt32.inc"        ; Ldt.
-    %include "tss32.inc"        ; Tss.
+
+    %include "x86/gdt32.inc"        ; Gdt.
+    %include "x86/idt32.inc"        ; Idt.
+    %include "x86/ldt32.inc"        ; Ldt.
+    %include "x86/tss32.inc"        ; Tss.
+
     %include "stacks32.inc"     ; Stacks.
-    %include "ints32.inc"       ; Handles para as interrup��es.
-    %include "fat16header.inc"  ; Headers para o sistema de arquivos fat16.
+
+    %include "x86/ints32.inc"       ; Handles para as interrup��es.
+
+    %include "fs/fat16header.inc"  ; Headers para o sistema de arquivos fat16.
 
 ; 12 - Monitor.
 
-    %include "screen32.inc"  ; Rotinas de screen em 32 bits.
-    %include "input32.inc"   ; Rotinas de input 2m 32 bits.
+    %include "drivers/screen32.inc"  ; Rotinas de screen em 32 bits.
+    %include "drivers/input32.inc"   ; Rotinas de input 2m 32 bits.
+
     %include "string32.inc"  ; Rotinas de strings em 32 bits.
     %include "font32.inc"    ; Fonte.
 
 ; 11 - Hardware.
 
-    %include "cpuinfo.inc"   ; Rotinas de detec��o e configura��o de cpu.
+    %include "x86/cpuinfo.inc"   ; Rotinas de detec��o e configura��o de cpu.
     %include "hardware.inc"  ; Rotinas de detec��o e configura��o de hardware.
     ; ...
 
 ; 10 - Irqs.
 
-    %include "timer.inc"     ; Irq 0, Timer.
-    %include "keyboard.inc"  ; Irq 1, Keyboard.
-    %include "fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
-    %include "clock.inc"     ; Irq 8, Clock.
-    %include "hdd32.inc"     ; Irq 14/15, Hdd.
+    %include "drivers/timer.inc"     ; Irq 0, Timer.
+    %include "drivers/keyboard.inc"  ; Irq 1, Keyboard.
+    %include "drivers/fdc32.inc"     ; Irq 6, Fdc. (@todo: Suspender o suporte.)
+    %include "drivers/clock.inc"     ; Irq 8, Clock.
+    %include "drivers/hdd32.inc"     ; Irq 14/15, Hdd.
     ; ...
 
 ; 9 - Tasks. (#no tasks)
@@ -1255,17 +1203,19 @@ bootmanager_main:
 
 ; 6 - Disk.
 
-    %include "fat12pm.inc"   ;FAT12 em 32 bits.
-    %include "fat16lib.inc"  ;FAT16 (rotinas).
-    %include "fat16.inc"     ;FAT16 (fun��es principais).
-    %include "ramfs.inc"     ;RamDisk fs.
-    %include "format.inc"    ;Formata.
-    %include "fs32.inc"      ;fs, (ger�ncia os sistemas de arquivos).
+    %include "fs/fat12pm.inc"   ;FAT12 em 32 bits.
+    %include "fs/fat16lib.inc"  ;FAT16 (rotinas).
+    %include "fs/fat16.inc"     ;FAT16 (fun��es principais).
+    %include "fs/ramfs.inc"     ;RamDisk fs.
+    %include "fs/format.inc"    ;Formata.
+    %include "fs/fs32.inc"      ;fs, (ger�ncia os sistemas de arquivos).
 
 ; 5 - File.
 
     %include "installer.inc"   ;Instala metafiles em LBAs espec�ficas.
-    %include "file.inc"        ;Opera��es com aquivos.
+
+    %include "fs/file.inc"        ;Operaçoes com aquivos.
+
     %include "bootloader.inc"  ;Carrega o Boot Loader (BL.BIN).
 
 ; 4 - Debug.
@@ -1281,7 +1231,10 @@ bootmanager_main:
 ; 2 - Boot Manager Mini-Shell.
 ; Prompt de comandos.
 
-    %include "shell.inc"
+    %include "shell32/shell.inc"
+    %include "shell32/shcalls.inc"  ;Chamadas dos comandos.
+    %include "shell32/shlib.inc"    ;Lib de funções do Shell.
+    %include "shell32/shmsg.inc"    ;Mensagens e variáveis do Shell.
 
 ; 1 - Start.
     %include "start.inc"
@@ -1301,8 +1254,9 @@ root_buffer:
 fat_buffer:
     ; nop
 
-
 ;
 ; End.
 ;
+
+
 

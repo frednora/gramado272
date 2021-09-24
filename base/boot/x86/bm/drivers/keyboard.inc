@@ -283,16 +283,19 @@ keyboard_done:
 ;     Pega mensagem do teclado.
 
 get_key:
-	;Pega a nova tecla.
-	mov al, byte [key]
-    
-	;Muda o status.	
-	push bx
-	mov bl, byte 0
-	mov byte [nova_tecla_status], bl
-	pop bx
 
-	RET
+;Pega a nova tecla.
+
+    mov al, byte [key]
+
+;Muda o status.
+
+    push bx
+    mov bl, byte 0
+    mov byte [nova_tecla_status], bl
+    pop bx
+
+    RET
 
 
 

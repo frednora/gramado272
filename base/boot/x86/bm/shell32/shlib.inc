@@ -3,58 +3,30 @@
 ;
 ; Descrição:
 ;     Rotinas de apoio para o Shell do Boot Manager.
-;
-; 2015 - Created.
-; 2017 - ??
-;
+;     2015 - Created.
 
 
-
-
-
-
-
-
-
-
-;---------------------------------------------------
+; ========================
 ; show_new_prompt:    
-;     Cria um prompt de acordo com as configurações.
-;     Ex: BMShell>_
-;++ 
+;     Show the prompt string.
+;     See: shmsg.inc
 
-; Questões:
-; Em que partição está o Shell?
-; Em que diretorio está o Shell?
-
-;; Called by os_command_line in shell.inc.
-
+show_prompt_string:
+    nop
 show_new_prompt:
 
-    mov ebx, 0x00FF0000
-    mov [os_Font_Color], ebx
-
-    ;pega
-    mov eax, dword [VOLUME.atual]    ;VOL
-
-    ;Se temos um novo, Colocamos ele.
-    cmp eax, dword 0
-    jne .new_vol
-
-    ;; Set the prompt string
-    ;; See: fat16header.inc
-
-    mov eax, dword VOLUME.boot_manager
-    call set_volume_atual
-
-.new_vol:
-
-    ;Mostra o volume atual.
-    mov esi, dword [VOLUME.atual]         ; 'volumeX' , 'BM-SHELL'
+    mov esi, dword SHELL.prompt_string
     call os_output
 
-    mov esi, dword SHELL.separador1      ; '>'
+    mov esi, dword SHELL.prompt_string_separator1
     call os_output
+
+    mov esi, dword SHELL.prompt_string_separator1
+    call os_output
+
+    mov esi, dword SHELL.prompt_string_separator2
+    call os_output
+
     ret
 
 ;.new_dir:	
@@ -109,9 +81,9 @@ set_shell_directory:
 
 shelllibPrintVersion:
     call print_ver
-	ret
+    ret
 
 ;
-;fim.
+; End.
 ;
 

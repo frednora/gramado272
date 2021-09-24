@@ -19,9 +19,30 @@
 
 
 SHELL:
-    .volume:      db 0         ;Em que volume está o Shell.
-    .directory:   db 0         ;Em que diretório está o Shell.
-    .separador1:  db '>',0     ;Separador1.
+
+.prompt_string:
+    db 'bm-shell', 0
+
+.prompt_string_separator1:
+    db ':', 0
+
+.prompt_string_separator2:
+    db '>', 0
+
+;Separador1.
+.separador1:
+    db '>', 0 
+
+;Em que volume está o Shell.
+.volume:
+    db 0
+
+;Em que diretório está o Shell.
+.directory:
+    db 0
+
+
+; =============================================
 
 
 ;Prompt:   
@@ -145,8 +166,9 @@ seleciona_p3  db  'p3', 0    ;Seleciona particao 3.
 
 version_msg:
 shellmsg_splash: 
-    db 'Gramado X Boot Manager ',
-    db 'version ', BOOTMANAGER_VER, 13, 10, 0  
+    db 'Gramado Boot Manager ',
+    db 'version ', BOOTMANAGER_VER, 13, 10,
+    db 13, 10, 0  
 
 
 ;;
@@ -216,18 +238,12 @@ dir_title2_string:
     db "Name                     Cluster", 13, \
        "================================", 13, 0
 
-
-;
 ; Help text.
-;
-
+; Message for the 'help' command.
 help_text:
-    db 'boot, reboot, shutdown', 13, 10
-    db 'bootjail, bootp1',       13, 10
-    db 'boothome',               13, 10
-    db 'bootp2, bootcastle',     13, 10
-    db 'disk, part, dir',        13, 10
-    db 'help, cls, ver',         13, 10, 0
+    db 'boot', 13, 10,
+    db 'bootjail, bootp1, boothome, bootp2, bootcastle', 13, 10,
+    db 'cls, dir, disk, help, part, ver', 13, 10, 0
 
 
 ;

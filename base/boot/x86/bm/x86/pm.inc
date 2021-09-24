@@ -491,8 +491,8 @@ pmode_16bit_startgui:
 ;; access rights values in the CS register.
 ;;
 
-    ;; #importante:
-    ;; Usando um jmp de 16 bit modo real.
+;; #importante:
+;; Usando um jmp de 16 bit modo real.
 
     JMP 0:do_rm_startgui 
 
@@ -500,13 +500,12 @@ pmode_16bit_startgui:
 
 do_rm_startgui:
 
+;; 7. 
+;; Load the SS, DS, ES, FS, and GS registers as needed by the 
+;; real-address mode code. If any of the registers are not going 
+;; to be used in real-address mode, write 0s to them.
 
-	;; 7. 
-	;; Load the SS, DS, ES, FS, and GS registers as needed by the 
-	;; real-address mode code. If any of the registers are not going 
-	;; to be used in real-address mode, write 0s to them.
-
-	;; Segmento 0
+;; Segmento 0
 
     cli
     mov ax, 0x0000
@@ -520,11 +519,11 @@ do_rm_startgui:
     mov ss, ax
     mov sp, 0xFFFF
 
-    ;; Reprogram PIC: 
-    ;; Voltando ao estado legado.
-    ;; Changes: 
-    ;; IRQ 0-7 to INT 08h-0Fh  
-    ;; IRQ 8-15 to INT 70h-77h
+;; Reprogram PIC: 
+;; Voltando ao estado legado.
+;; Changes: 
+;; IRQ 0-7 to INT 08h-0Fh  
+;; IRQ 8-15 to INT 70h-77h
 
     mov al, 10001b       ; Begin PIC 1 initialization.
     out 20h, al
@@ -546,31 +545,30 @@ do_rm_startgui:
     out 0A1h, al
     in al, 21h
 
-
-	; Mask off all interrupts for now. 
-	; PERMITE TODAS AS INTS.
-	; Enable interrupts
+; Mask off all interrupts for now. 
+; PERMITE TODAS AS INTS.
+; Enable interrupts
 
     mov al, 0
     out 0x21, al
     out 0xA1, al
 
-    ; #importante
-    ; Renable interrupts.
+; #importante
+; Renable interrupts.
 
     sti 
 
-	; #importante:
-	; Entraremos no modo texto para exibimos mensagens em modo real.
-	; set text mode for screen
+; #importante:
+; Entraremos no modo texto para exibimos mensagens em modo real.
+; set text mode for screen
 
 .enableTextMode:
 
-    ; #bugbug
-    ; Não precisamso disso, pois estamos entrando no modo
-    ; gráfico através do vesa?
-    ; Mas o que acontece se falhar?
-    ; Precisaremos de um verbose em modo texto.
+; #bugbug
+; Não precisamos disso, pois estamos entrando no modo
+; gráfico através do vesa?
+; Mas o que acontece se falhar?
+; Precisaremos de um verbose em modo texto.
 
     mov ax, 0x0003
     int 0x10
@@ -653,75 +651,75 @@ do_rm_startgui:
 
 ;; ======================
 ;; 0x010F - 320x200
-gramado_mode_JAIL:
+.Lgramado_mode_JAIL:
     cmp al, byte 0x00
-    jne gramado_mode_P1
+    jne .Lgramado_mode_P1
     mov word [META$FILE.VIDEO_MODE], 0x010F
     jmp ____gramado_mode_done
 
 
 ;; ======================
 ;; 0x0112 - 640x480
-gramado_mode_P1:
+.Lgramado_mode_P1:
     cmp al, byte 0x01
-    jne gramado_mode_HOME
+    jne .Lgramado_mode_HOME
     mov word [META$FILE.VIDEO_MODE], 0x0112
     jmp ____gramado_mode_done
 
 
 ;; ======================
 ;; 0x0115 - 800x600
-gramado_mode_HOME:
+.Lgramado_mode_HOME:
     cmp al, byte 0x02
-    jne gramado_mode_P2
+    jne .Lgramado_mode_P2
     mov word [META$FILE.VIDEO_MODE], 0x0115
     jmp ____gramado_mode_done
 
 
 ;; ======================
 ;; 0x0118 - 1024x768
-gramado_mode_P2:
+.Lgramado_mode_P2:
     cmp al, byte 0x03
-    jne gramado_mode_CASTLE
+    jne .Lgramado_mode_CASTLE
     mov word [META$FILE.VIDEO_MODE], 0x0118
     jmp ____gramado_mode_done
 
 
 ;; ======================
 ;; ??
-gramado_mode_CASTLE:
+.Lgramado_mode_CASTLE:
     cmp al, byte 0x04
-    jne gramado_mode_CALIFORNIA
+    jne .Lgramado_mode_CALIFORNIA
     mov word [META$FILE.VIDEO_MODE], 0x0118 ;;todo: more then that.
     jmp ____gramado_mode_done
 
 
 ;; ======================
 ;; ??
-gramado_mode_CALIFORNIA:
+.Lgramado_mode_CALIFORNIA:
     cmp al, byte 0x05
-    jne gramado_mode_CASTLE
+    jne .Lgramado_mode_CASTLE
     mov word [META$FILE.VIDEO_MODE], 0x0118   ;;todo: more then that.
     jmp ____gramado_mode_done
 
 
 ;#todo
-;gramado_mode_CALIFORNIA2:
-;gramado_mode_CALIFORNIA3:
-;gramado_mode_CALIFORNIA4:
+;.Lgramado_mode_CALIFORNIA2:
+;.Lgramado_mode_CALIFORNIA3:
+;.Lgramado_mode_CALIFORNIA4:
 ;; ...
 
 
-    ;;
-    ;; == FAIL ====================================================
-    ;;
+;;
+;; == FAIL ====================================================
+;;
     
-    ;; Well, it fails.
-    ;; So we need to use the default video mode,
-    ;; and select the default 'gramado mode' in the arguments.
+;; Well, it fails.
+;; So we need to use the default video mode,
+;; and select the default 'gramado mode' in the arguments.
     
-    ;; #IMPORTANTE
-    ;; Definição do arquivo main.asm
+;; #IMPORTANTE
+;; Definição do arquivo main.asm
 
     mov word [META$FILE.VIDEO_MODE], G_VIDEO_MODE
 
@@ -731,15 +729,15 @@ gramado_mode_CALIFORNIA:
 ;;
 ;;
 
-    ; Inicializa o modo selecionado.
-    ; See: stage2/lib16/s2modes.inc
+; Inicializa o modo selecionado.
+; See: stage2/lib16/s2modes.inc
     
 ____gramado_mode_done:
 
-    ;; Saving the gramado mode in a tmp variable.
-    ;; We will save in the boot block in the future.
-    ;; See: bootloader.inc. Defined here.
-    ;; See: start.inc. Where we setup the boot block
+;; Saving the gramado mode in a tmp variable.
+;; We will save in the boot block in the future.
+;; See: bootloader.inc. Defined here.
+;; See: start.inc. Where we setup the boot block
     
     xor eax, eax
     mov al, byte [META$FILE.GRAMADO_MODE]
