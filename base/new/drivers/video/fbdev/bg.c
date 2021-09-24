@@ -6,9 +6,9 @@
 
 // #bugbug
 // Essa rotina é sensível, pois agora usamos 64bit.
+// Called by kernel_main()
 void backgroundDraw (unsigned int color)
 {
-    
     unsigned long deviceWidth  = (unsigned long) screenGetWidth();
     unsigned long deviceHeight = (unsigned long) screenGetHeight();
 
@@ -25,7 +25,6 @@ void backgroundDraw (unsigned int color)
         deviceWidth, deviceHeight, 
         color,
         0 );   //rop_flags
-
 
 
     /*
@@ -54,7 +53,8 @@ void backgroundDraw (unsigned int color)
 // Called by kernel_main().
 int Background_initialize(void)
 {
-    printf ("Background_initialize: TODO\n");
+
+    // printf ("Background_initialize: TODO\n");
 
     backgroundDraw ( (unsigned int) COLOR_BLACK );
     

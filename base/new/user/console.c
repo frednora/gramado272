@@ -2032,7 +2032,6 @@ void csi_at (int nr, int console_number)
 int VirtualConsole_initialize(void)
 {
 
-
 // No shell for now.
 // No input in prompt[].
 
@@ -2090,18 +2089,17 @@ int VirtualConsole_initialize(void)
 void console_banner(unsigned long banner_flags)
 {
 
-    //if( banner_flags & 2 ){  set_up_cursor (0,0);  }
-    set_up_cursor (0,1);
+// Serial
+    if ( Initialization.serial_log == TRUE )
+        debug_print ("Welcome to Gramado OS!\n");
 
-    debug_print ("Welcome to Gramado OS!\n");
-    printf      ("Welcome to Gramado OS!\n");
-
-
-    //if( banner_flags & 1 ){  refresh_screen();  }
-
-    //asm("hlt");
+// Virtual console
+    if( Initialization.console_log == TRUE )
+    {
+        set_up_cursor (0,1);
+        printf      ("Welcome to Gramado OS!\n");
+    }
 }
-
 
 
 

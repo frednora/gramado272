@@ -145,8 +145,7 @@ void preinit_Globals(int arch_type)
 void preinit_Serial(void)
 {
     serial_init();
-    
-    //debug_print("\n");
+
     debug_print("\n");
     debug_print("== X ========\n");
     debug_print("preinit_Serial: Serial debug initialized!\n");
@@ -163,17 +162,22 @@ void preinit_OutputSupport(void)
 // precisamos calcular se a quantidade mapeada é suficiente.
 
     refresh_screen_enabled = FALSE;
-    
-    // #
-    // As estruturas de console sao estruturas de tty,
-    // mas s~ao um array de estruturas, n~ao precisa de malloc,
-    // por isso podem ser chamadas nesse momento.
+
+// #
+// As estruturas de console sao estruturas de tty,
+// mas sao um array de estruturas, nao precisa de malloc,
+// por isso podem ser chamadas nesse momento.
     
     // #test
     // We need to test it better.
 
     VirtualConsole_initialize();
+
+    // #IMPORTAT: 
+    // We do not have all the runtime support yet.
+    // We can't use printf yet.
 }
+
 
 
 //
@@ -185,6 +189,22 @@ void preinit_OutputSupport(void)
 
 int kernel_main(int arch_type)
 {
+
+// See:
+// init.h
+
+    Initialization.phase1 = FALSE;
+    Initialization.phase2 = FALSE;
+    Initialization.phase3 = FALSE;
+
+    Initialization.hal = FALSE;
+    Initialization.microkernel = FALSE;
+    Initialization.executive = FALSE;
+    Initialization.gramado = FALSE;
+
+    Initialization.serial_log = FALSE;
+    Initialization.console_log = FALSE;
+
 
 /*
     char hostname[64];
@@ -359,22 +379,25 @@ int kernel_main(int arch_type)
     //
 
     PROGRESS("---------------------\n");
-    PROGRESS(" Initializing landos \n");
+    PROGRESS(" Initializing newos \n");
     // Now we have serial port output.
-    // =================================================
+
+
+// =================================================
+// Initialize the virtual console structures.
+// #IMPORTAT: 
+// We do not have all the runtime support yet.
+// We can't use printf yet.
 
     PROGRESS("Kernel:0:1\n");
-    // Initialize the virtual console structures.
-    // #IMPORTAT: We do not have all the runtime support yet.
-    // We can't use printf yet.
 
     preinit_OutputSupport();
 
-    // =================================================
 
+// =================================================
+// Show some basic info.
 
     PROGRESS("Kernel:0:2\n");
-    // Show some basic info.
 
     debug_print ("Initializing landos kernel ...\n");
 
@@ -407,13 +430,9 @@ int kernel_main(int arch_type)
 
 
 // ====================================
-
-//
-// video
-//
+// Video support
 
     PROGRESS("Kernel:0:3\n");
-    // Video support
 
     debug_print ("[Kernel] kernel_main: Initializing video support ...\n");
     Video_initialize();
@@ -421,64 +440,58 @@ int kernel_main(int arch_type)
 
 
 // ====================================
-
-//
 // Runtime
-//
+// #bugbug:
+// We need the runtime initialization for the messages.
+// What about to initialize it early?! now!!!!
+// See: runtime.c
+// #bugbug
+// Here the background is not initialized yet,
+// so, we have a lot of dirty things.
 
     PROGRESS("Kernel:0:4\n");
-    // Runtime
-
-    // #bugbug:
-    // We need the runtime initialization for the messages.
-    // What about to initialize it early?! now!!!!
-    // See: core/runtime.c
-
-    // #bugbug
-    // Here the background is not initialized yet,
-    // so, we have a lot of dirty things.
 
     debug_print ("[Kernel] kernel_main: Initializing runtime\n");
     Runtime_initialize();
 
 
 // =========================
-    PROGRESS("Kernel:0:5\n");
-    // Clear the screen.
-    // print some basic info.
-
-//
+// Clear the screen.
+// print some basic info.
 // Setup printing resources.
-//
+// ROM BIOS 8x8 font
+// #todo: Isso ja foi feito em outro lugar?
 
-    // ROM BIOS 8x8 font
-    // #todo: Isso ja foi feito em outro lugar?
+    PROGRESS("Kernel:0:5\n");
+
     gws_currentfont_address = (unsigned long) BIOSFONT8X8;
     set_char_width(8);
     set_char_height(8);
     gfontSize = FONT8X8;
 
-
-
-//
-// == Background ===================
-//
-
+// Background
 // Initializing background 
 // for the very first time.
 // Now we have a black screen.
 // But the cursor position is wrong yet.
-
-    // #todo
-    // See: user/draw/view/bg.c
+// #todo
+// See: drivers/video/fbdev/bg.c
 
     Background_initialize();
+
+// Ok, agora podemos usar o console virtual
+// para verbose.
+
 
 
 // ++
 // ======================================
 // Screen size
-    
+// #importante
+// Essa rotina calcula a memória que precisamos
+// e nos diz se podemos usar o refresh screen.
+// Isso habilita o uso do console como verbose para log.
+
     unsigned long bytes_per_pixel = 0;
     unsigned long pitch = 0;
     unsigned long sz_in_kb = 0;
@@ -492,9 +505,10 @@ int kernel_main(int arch_type)
         pitch = (xBootBlock.deviceWidth * bytes_per_pixel);
     }  
 
-    if (pitch == 0){
+    if (pitch == 0)
+    {
         refresh_screen_enabled = FALSE;
-        printf ("Screen size fail. pitch\n");
+        debug_print("Screen size fail. pitch\n");
     }
 
     if (pitch != 0)
@@ -503,23 +517,43 @@ int kernel_main(int arch_type)
         screen_size_in_kb = sz_in_kb;
         
         // #debug
-        printf ("Screen size: %d KB\n", sz_in_kb);
+        //printf ("Screen size: %d KB\n", sz_in_kb);
         
         // fail
         if ( sz_in_kb >= 2048 ){
             refresh_screen_enabled = FALSE;
-            printf ("Screen size fail sz_in_k\n");
+            debug_print ("Screen size fail sz_in_k\n");
         }
     
         // ok
         // Ok We can use the refresh routine.
         // Because we have memory enough for that.
-        if ( sz_in_kb < 2048 ){
+        if ( sz_in_kb < 2048 )
+        {
             refresh_screen_enabled = TRUE;  
         }
     }
 // ======================================
 // --
+
+//
+// Full console initialization.
+//
+
+// We can't live without this.
+
+    if( refresh_screen_enabled != TRUE )
+    {
+        debug_print("kernel_main: refresh_screen_enabled != TRUE\n");
+        Initialization.console_log = FALSE;
+        die();
+    }
+
+// OK. 
+// We have a virtual console
+// and we can use the printf.
+
+    Initialization.console_log = TRUE;
 
 
 //

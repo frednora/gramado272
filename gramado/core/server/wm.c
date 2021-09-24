@@ -1217,6 +1217,7 @@ void activate_last_window(void)
     if ( last_window->type != WT_OVERLAPPED )
         return;
 
+// Activate
     set_active_window(last_window->id);
 }
 
@@ -1227,6 +1228,13 @@ void wm_add_window_into_the_list( struct gws_window_d *window)
 {
     struct gws_window_d  *Next;
 
+
+// ========================
+
+    //if( window == __root_window )
+        //return;
+
+// ========================
 
     if( (void*) window == NULL )
         return;
@@ -1241,24 +1249,39 @@ void wm_add_window_into_the_list( struct gws_window_d *window)
         return;
 
 
-    Next = first_window;
-
-// somos a primeira da lista
-    if( (void*) Next == NULL )
+// =====================================
+// Se não existe uma 'primeira da fila'.
+// Então somos a primeira e a última.
+    if( (void*) first_window == NULL )
     {
         first_window = window;
         last_window  = window;
         goto done;
     }
 
-    while( (void*) Next->next != NULL)
+// Invalid first window.
+    if ( first_window->magic != 1234 )
+    {
+        first_window = window;
+        last_window  = window;
+        goto done;
+    }
+
+
+// ===================================
+// Se exite uma 'primeira da fila'.
+    Next = first_window;
+
+    while( (void*) Next->next != NULL )
     {
         Next = Next->next;
     };
 
-    Next->next = (struct gws_window_d *) window;
+// Agora somos a última da fila.
+    Next->next  = (struct gws_window_d *) window;
 
 done:
+    last_window  = (struct gws_window_d *) window;
     window->next = NULL;
     set_active_window(window->id);
 }
@@ -3513,6 +3536,11 @@ gws_resize_window (
         return -1;
     }
 
+// #todo
+    //if(window == __root_window)
+        //return -1;
+
+
     // Só precisa mudar se for diferente.
     if ( window->width  != cx ||
          window->height != cy )
@@ -3582,6 +3610,12 @@ gwssrv_change_window_position (
         gwssrv_debug_print("gwssrv_change_window_position: window\n");
         return -1;
     }
+
+
+// #todo
+    //if(window == __root_window)
+        //return -1;
+
 
     /*
     if ( window->left != x ||

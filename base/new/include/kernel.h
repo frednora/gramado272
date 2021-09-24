@@ -254,7 +254,7 @@ unsigned long SavedBPP;
 
 
 #include "user/ws.h"
-#include "user/kgws.h"
+#include "user/graphics.h"
 #include "user/vk.h"
 #include "user/kbdabnt2.h"
 #include "user/window.h"

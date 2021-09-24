@@ -71,7 +71,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 
 
 
-OBJS = kgws.o \
+OBJS = graphics.o \
 kgwm.o \
 vt.o \
 console.o \
@@ -82,13 +82,10 @@ userenv.o \
 char.o dtext.o    
 
 
-
 all:
 
-
-	$(CC) -c kgws.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kgws.o
-	$(CC) -c kgwm.c  $(KERNEL_INCLUDE) $(CFLAGS) -o kgwm.o
-
+	$(CC) -c graphics.c  $(KERNEL_INCLUDE) $(CFLAGS) -o graphics.o
+	$(CC) -c kgwm.c      $(KERNEL_INCLUDE) $(CFLAGS) -o kgwm.o
 
 	$(CC) -c vt.c   $(KERNEL_INCLUDE) $(CFLAGS) -o vt.o
 	$(CC) -c console.c  $(KERNEL_INCLUDE) $(CFLAGS) -o console.o 

@@ -726,8 +726,13 @@ void kinguio_puts(const char* str)
 int kinguio_printf(const char *fmt, ...)
 {
     int ret=0;
-
     char buf[256];
+
+
+// If the virtual console isn't full initialized yet.
+    if( Initialization.console_log != TRUE )
+        return -1;
+
     memset(buf,0,256); 
 
     va_list ap;
@@ -1850,7 +1855,7 @@ int kstdio_initialize (void)
     __initialize_stdout();
     __initialize_stderr();
 
-// Virtual console
+// Virtual console (again)
     __initialize_virtual_consoles();
 
 // Background

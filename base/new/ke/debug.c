@@ -31,6 +31,10 @@ void debug_print ( char *data )
 {
     register int i=0;
 
+
+    if( Initialization.serial_log != TRUE )
+        return;
+
     if ( (void *) data == NULL ){ return; }
     if (*data == 0)             { return; }
 
@@ -47,6 +51,10 @@ void debug_print ( char *data )
 
 void PROGRESS( char *string )
 {
+
+    if( Initialization.serial_log != TRUE )
+        return;
+
     if( (void*) string == NULL ){
         return;
     }

@@ -218,13 +218,7 @@ NormalByte:
     if ( foreground_thread >= 0 && 
          foreground_thread < THREAD_COUNT_MAX )
     {
-        
-        // Hub for different input sources.
-        //console_interrupt (
-            //foreground_thread,
-            //CONSOLE_DEVICE_KEYBOARD,
-            //__raw );
-       
+
        // Handler for keyboard input.
        xxxKeyEvent(
            (int) foreground_thread,

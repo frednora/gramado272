@@ -136,10 +136,13 @@ int serial_init_port ( uint16_t port )
 
 // # We don't have debug messages in this routine.
 
-int serial_init (void){
-
+int serial_init (void)
+{
     int Status = -1;
-    
+
+
+    Initialization.serial_log = FALSE;
+
     //__breaker_com1_initialized = 0;
     //__breaker_com2_initialized = 0;
     //__breaker_com3_initialized = 0;
@@ -166,6 +169,9 @@ int serial_init (void){
     //__breaker_com3_initialized = 1;
     //__breaker_com4_initialized = 1;
 
+
+// done
+    Initialization.serial_log = TRUE;
     return 0;
 }
 

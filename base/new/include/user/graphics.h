@@ -140,36 +140,6 @@ void *ui_get_system_icon ( int n );
 // ========
 
 
-// See: kgwm.c
-void 
-wmRegisterWSCallbacks(
-    unsigned long callback0,
-    unsigned long callback1,
-    unsigned long callback2 );
-
-
-
-
-// Send input to the window manager
-// inside the window server
-// gwssrv.bin
-unsigned long wmSendInputToWindowManager(
-    unsigned long wid,
-    unsigned long msg,
-    unsigned long long1,
-    unsigned long long2);
-
-
-
-// See: kgwm.c
-unsigned long 
-wmProcedure ( 
-    struct window_d *window, 
-    int msg, 
-    unsigned long long1, 
-    unsigned long long2 );
-
-
 //
 //  Compositor
 //
@@ -203,15 +173,6 @@ postto_eventqueue(
     int message,
     unsigned long ascii_code,
     unsigned long raw_byte );
-
-// Send message.
-// Pega um scancode, transforma em caractere e envia na forma de mensagem
-// para a thread de controle associada com a janela que tem o foco de entrada.
-
-int 
-xxxKeyEvent (
-    int tid, 
-    unsigned char raw_byte );
 
 
 

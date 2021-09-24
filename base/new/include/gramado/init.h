@@ -28,6 +28,12 @@ struct initialization_d
     int executive;
     int gramado;
 
+// Se ja podemos usar o dispositivo serial para log.
+    int serial_log;
+
+// Se ja podemos usar o console virtual para log.
+    int console_log;
+
     // ...
 }; 
 

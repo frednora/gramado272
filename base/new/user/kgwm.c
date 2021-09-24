@@ -23,6 +23,14 @@ extern unsigned long wmData_Callback1;
 extern unsigned long wmData_Callback2;
 
 
+//keyboard support
+//#define KEYBOARD_KEY_PRESSED  0x80
+#define KEYBOARD_KEY_MASK  0x7F
+//#define KEYBOARD_FULL      1
+//#define KEYBOARD_EMPTY     0
+//#define KEYBOARD_OBF       0x01    //Output buffer flag.
+
+
 // ============================
 static unsigned long presence_level=32;
 static unsigned long flush_fps=30;
@@ -547,6 +555,513 @@ fail:
     refresh_screen();
     return 0;
 }
+
+
+/*
+ ***************
+ * xxxKeyEvent:
+ * 
+ *     Envia uma mensagem de teclado para a janela com o 
+ * foco de entrada.
+ */
+
+// Pega um scancode, transforma em caractere e envia 
+// na forma de mensagem para a thread de controle associada 
+// com a janela que tem o foco de entrada.
+
+// #todo
+// #importante
+// Precisa conferir ke0 antes de construir a mensagem,
+// para assim usar o array certo. ke0 indica o teclado estendido.
+
+// #todo
+// Na verdade é 'translate' and 'dispatch'.
+// Cria o evento usando o rawbyte, traduz o raw byte para ascii,
+// e por fim envia para o buffer da tty de teclado e para
+// a thread do processo em foreground. Tudo depende
+// do input mode.
+
+// Called by console_interrupt() in console.c
+
+// Is this the forground thread?
+// #bugbug: Não estamos usando o parâmetro tid.
+// Lembrando que numa interrupção de teclado,
+// não temos o contexto salvo. Então não podemos chamar o
+// scheduler. Mas podemos acionar uma flag
+// que de alguma direção para o escalonador.
+
+// IN:
+// target thread, raw byte 
+
+int 
+xxxKeyEvent (
+    int tid, 
+    unsigned char raw_byte )
+{
+
+// #todo
+// Devemos considerar os marcadores de teclado extendido
+// obtidos em DeviceInterface_PS2Keyboard() em ps2kbd.c
+
+    // ??
+    // __has_e0_prefix and __has_e1_prefix
+
+    // Step 0 
+    // Declarações de variáveis.
+
+
+    struct process_d  *__p;
+    struct thread_d   *t;
+
+
+    unsigned long status = 0;
+    int msg_status = -1;
+    int save_pos = 0;
+
+
+    // Pegando o argumento e convertendo para ascii
+    unsigned char Keyboard_RawByte  =0;
+    unsigned char Keyboard_ScanCode =0;    // The scancode.
+
+    //==============
+    // [event block]
+    struct window_d  *Event_Window;            //arg1 - window pointer
+    int               Event_Message       =0;  //arg2 - message number
+    unsigned long     Event_LongASCIICode =0;  //arg3 - ascii code
+    unsigned long     Event_LongRawByte   =0;  //arg4 - raw byte
+    //===================
+
+    // Inicializando a janela, 
+    // pois os outros elementos já foram incializados logo acima.
+    Event_Window = NULL;
+
+    // true for keyup and false for keydown.
+    // int Break = TRUE;
+
+    debug_print("xxxKeyEvent:\n");
+
+    if (tid<0 || tid >= THREAD_COUNT_MAX){
+        debug_print("xxxKeyEvent: tid\n");
+        return (int) (-1);
+    }
+
+
+// =============
+// Step1
+// Pegar o RawByte.
+// O driver pegou o scancode e passou para a disciplina de linha 
+// através de parâmetro.
+
+    Keyboard_RawByte = raw_byte;
+
+    //if ( Keyboard_RawByte == 0 )
+        //return -1;
+
+    if ( Keyboard_RawByte == 0xFF )
+        return -1;
+
+// #todo
+// The last byte was a prefix
+    //if( __has_e0_prefix == 1 )
+        //goto GotE0;
+
+// #todo
+// The last byte was a prefix
+    //if(__has_e1_prefix == 1 )
+        //goto GotE1;
+
+
+//
+// Debug
+//
+
+// ++
+// ===================
+
+    // #debug.
+    // Show the scancode if the flag is enabled.
+    // Talvez isso nem seja necess'ario.
+    
+    // #hackhack
+    // Variable not initialized yet.
+
+    /*
+    scStatus = FALSE;
+    if (scStatus == TRUE){
+        printf ("raw byte {%d,%x} \n", 
+            Keyboard_RawByte, Keyboard_RawByte );
+        // Refresh screen?
+        refresh_screen();
+    }
+    */
+
+// ===================
+// --
+
+// #todo
+// Enable these shortcuts
+// Se temos a flag ou não
+    //if ( Keyboard_RawByte > 0x7F )
+         //goto key_released;
+    //if ( Keyboard_RawByte < 0x7F )
+         //goto key_pressed;
+
+
+// ==========
+// Step 2
+// Tratar as mensagens.
+// Traduzir rawbyte em evento.
+
+// #test
+    //int isDown=0;
+    //isDown = !(Keyboard_RawByte & 0x80);
+
+
+// ================================================
+//key_released:
+
+    // Não está pressioanda
+    if ( (Keyboard_RawByte & 0x80) != 0 )
+    {
+        // Break = TRUE;
+        
+        // Desativando o bit de paridade caso esteja ligado.
+
+        Keyboard_ScanCode = Keyboard_RawByte;
+        Keyboard_ScanCode &= KEYBOARD_KEY_MASK;
+
+        // Configurando se é do sistema ou não.
+        // #todo: 
+        // Aqui podemos chamar uma rotina interna que faça essa checagem.
+        // Os primeiros 'case' é quando libera tecla do sistema.
+        // O case 'default' é pra quando libera tecla que não é do sistema.
+
+        switch (Keyboard_ScanCode)
+        {
+            // left shift liberado.
+            case VK_LSHIFT: 
+                shift_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_LSHIFT: Liberada\n"); refresh_screen();
+                break;
+
+            // left control liberado.
+            case VK_LCONTROL:
+                ctrl_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_LCONTROL: Liberada\n"); refresh_screen();
+                break;
+
+            // left winkey liberada.
+            case VK_LWIN:
+                winkey_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_LWIN: Liberada\n"); refresh_screen();
+                break;
+
+            // left alt liberado.
+            case VK_LMENU:
+                alt_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_LMENU: Liberada\n"); refresh_screen();
+                break;
+
+            // right winkey liberada.
+            case VK_RWIN:
+                winkey_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_RWIN: Liberada\n"); refresh_screen();
+                break;
+
+            // control menu.
+            case VK_CONTROL_MENU:
+                //controlmenu_status = 0; //@todo
+                Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_CONTROL_MENU: Liberada\n"); refresh_screen();
+                break;
+
+            //right control liberada.
+            case VK_RCONTROL:
+                ctrl_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_RCONTROL: Liberada\n"); refresh_screen();
+                break;
+
+            // right Shift liberado.
+            case VK_RSHIFT:
+                shift_status = FALSE;  Event_Message = MSG_SYSKEYUP;
+                //printf ("VK_RSHIFT: Liberada\n"); refresh_screen();
+                break;
+
+            // Funções liberadas.
+            case VK_F1: case VK_F2: case VK_F3: case VK_F4:
+            case VK_F5: case VK_F6: case VK_F7: case VK_F8:
+            case VK_F9: case VK_F10: case VK_F11: case VK_F12:
+                Event_Message = MSG_SYSKEYUP;
+                break;
+
+            // ...
+
+            // A tecla liberada NÃO é do sistema.
+            default:
+                Event_Message = MSG_KEYUP;
+                break;
+        };
+
+        // Selecionando o char para os casos de tecla liberada.
+        
+        // Analiza: 
+        // Se for tecla normal, pega o mapa de caracteres apropriado.
+        // minúscula
+        // Nenhuma tecla de modificação ligada.
+
+        if (Event_Message == MSG_KEYUP)
+        {
+            // Minúsculas.
+            if (capslock_status == FALSE)
+            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            // Maiúsculas.
+            if (capslock_status == TRUE)
+            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            // ...
+        }
+
+        // Analiza: Se for do sistema usa o mapa de caracteres apropriado. 
+        // Normal.
+        
+        if (Event_Message == MSG_SYSKEYUP)
+        {   
+            // se liberada teclas de sistema como capslock ligado
+            if (capslock_status == FALSE)
+            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            // se liberada teclas de sistema como capslock desligado
+            if (capslock_status == TRUE)
+            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            // ...
+        }
+
+
+        // Nothing.
+        goto done;
+    }// FI
+
+
+// ================================================
+// key_pressed:
+
+    // Está ressionada.
+    if ( (Keyboard_RawByte & 0x80) == 0 ) 
+    {
+        // Break = FALSE;
+        
+        Keyboard_ScanCode = Keyboard_RawByte;
+        Keyboard_ScanCode &= KEYBOARD_KEY_MASK; //Desativando o bit de paridade caso esteja ligado.
+
+        // O Último bit é zero para key press.
+        // Checando se é a tecla pressionada é o sistema ou não.
+        // #todo: 
+        // Aqui podemos chamar uma rotina interna que faça essa checagem.
+
+        switch (Keyboard_ScanCode)
+        {
+            // back space será tratado como tecla normal
+
+            // #todo: tab,
+            // tab será tratado como tecla normal por enquanto.
+
+            // caps lock keydown
+            // muda o status do capslock não importa o anterior.
+            case VK_CAPITAL:
+                if (capslock_status == FALSE){ 
+                    capslock_status = TRUE; 
+                    Event_Message = MSG_SYSKEYDOWN; 
+                    break; 
+                }
+                if (capslock_status == TRUE){ 
+                    capslock_status = FALSE; 
+                    Event_Message = MSG_SYSKEYDOWN; 
+                    break; 
+                }
+                break; 
+
+            // left shift pressionada.
+            // case KEY_SHIFT:
+            case VK_LSHIFT:
+                shift_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_LSHIFT: Pressionada\n"); refresh_screen();
+                break;
+
+            // left control pressionada.
+            // case KEY_CTRL:
+            case VK_LCONTROL:
+                ctrl_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_LCONTROL: Pressionada\n"); refresh_screen();
+                break;
+
+            // left winkey pressionada.
+            case VK_LWIN:
+                winkey_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_LWIN: Pressionada\n"); refresh_screen();
+                break;
+
+            // left alt pressionada.
+            case VK_LMENU:
+                alt_status = TRUE;  Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_LMENU: Pressionada\n"); refresh_screen();
+                break;
+
+            // #todo 
+            // alt gr.
+
+            // right winkey pressionada.
+            case VK_RWIN:
+                winkey_status = TRUE;  Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_RWIN: Pressionada\n"); refresh_screen();
+                break;
+
+            // #todo: 
+            // Control menu.
+
+            // right control pressionada.
+            case VK_RCONTROL:
+                ctrl_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_RCONTROL: Pressionada\n"); refresh_screen();
+                break;
+
+            // right shift pressionada.
+            case VK_RSHIFT:
+                shift_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                //printf ("VK_RSHIFT: Pressionada\n"); refresh_screen();
+                break;
+
+            case VK_F1: case VK_F2: case VK_F3: case VK_F4:
+            case VK_F5: case VK_F6: case VK_F7: case VK_F8:
+            case VK_F9: case VK_F10: case VK_F11: case VK_F12:
+                Event_Message = MSG_SYSKEYDOWN;
+                break;
+
+            // num Lock.
+            // Muda o status do numlock não importa o anterior.
+            case VK_NUMLOCK:
+                if (numlock_status == FALSE){
+                    numlock_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                    break;
+                }
+                if (numlock_status == TRUE){ 
+                    numlock_status = FALSE; Event_Message = MSG_SYSKEYDOWN; 
+                    break; 
+                }
+                break;
+
+            // Scroll Lock.
+            // Muda o status do numlock não importa o anterior.
+            case VK_SCROLL:
+                if (scrolllock_status == FALSE){  
+                    scrolllock_status = TRUE; Event_Message = MSG_SYSKEYDOWN;
+                    break;
+                }
+                if (scrolllock_status == TRUE){ 
+                    scrolllock_status = FALSE; Event_Message = MSG_SYSKEYDOWN; 
+                    break; 
+                }
+                break;
+
+            //...
+
+            // A tecla pressionada não é do sistema.
+            default:
+                // printf("keyboard debug: default: MSG_KEYDOWN\n");
+                Event_Message = MSG_KEYDOWN;
+                break;
+        };
+
+        // ==============================
+        // Teclas de digitaçao
+        // Uma tecla normal foi pressionada.
+        // mensagem de digitação.
+        if (Event_Message == MSG_KEYDOWN)
+        {
+            // Minúsculas.
+            if (capslock_status == FALSE)
+            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            // Maiúsculas.
+            if (capslock_status == TRUE)
+            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            // ...
+        }
+
+        // ==============================
+        // Teclas de sistema
+        // Uma tecla do sistema foi pressionada.
+        if (Event_Message == MSG_SYSKEYDOWN)
+        {   
+            // se pressionamos teclas de sistema como capslock ligado
+            if (capslock_status == FALSE)
+            { Event_LongASCIICode = map_abnt2[Keyboard_ScanCode];   goto done; }
+            // se pressionamos teclas de sistema como capslock desligado
+            if (capslock_status == TRUE)
+            { Event_LongASCIICode = shift_abnt2[Keyboard_ScanCode]; goto done; }
+            // ...
+        }
+
+        // Nothing.
+        goto done;
+        
+    } // FI
+
+
+// == Dispatch =======================================================
+
+
+// Done.
+// Para finalizar, vamos enviar a mensagem para fila certa.
+// Fixing the rawbyte to fit in the message arg.
+// See: kgwm.c
+    
+done:
+
+    Event_LongRawByte = (unsigned long) ( Keyboard_RawByte & 0x000000FF );
+
+
+
+// Não tem virtual key '0'.
+
+    if ( Event_LongASCIICode == 0 )
+        return -1;
+
+
+// #todo
+// Check 'control + alt + del'.
+
+
+// Teclas de digitação.
+// Manda para o window server.
+// Ele vai imprimir na janela com foco de entrada
+// e enviar mensagem para a thread com foco.
+
+/*
+    if ( Event_Message == MSG_KEYDOWN )
+    {
+        if ( ShellFlag!=TRUE ){
+            wmSendInputToWindowManager(0, MSG_KEYDOWN, Event_LongASCIICode, Event_LongRawByte);
+            return 0;
+        }
+    }
+*/
+
+
+// Process the event using the system's window procedures.
+// It can use the kernel's virtual console or
+// sent the evento to the loadable window server.
+// See: kgwm.c
+
+    wmProcedure(
+        (struct window_d *) Event_Window,    // opaque pointer
+        (int)               Event_Message,
+        (unsigned long)     Event_LongASCIICode,
+        (unsigned long)     Event_LongRawByte );
+
+
+    return 0;
+}
+
+
+//==========
+
 
 
 // called by I_init()
