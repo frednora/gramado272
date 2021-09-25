@@ -1988,7 +1988,7 @@ int sys_initialize_component (int n)
         
         case 1:
             //PS2_early_initialization();
-            PS2_initialize();
+            //PS2_initialize();
             return 0;
             break;
 

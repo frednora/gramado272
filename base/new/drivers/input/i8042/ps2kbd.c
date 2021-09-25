@@ -74,11 +74,32 @@ void DeviceInterface_PS2Keyboard(void){
     static int __has_e1_prefix = 0;
 
 
-    // ??
-    // See: Serenity os.
-    //u8 status = IO::in8(I8042_STATUS);
-    //if (!(((status & I8042_WHICH_BUFFER) == I8042_KEYBOARD_BUFFER) && (status & I8042_BUFFER_FULL)))
-        //return;
+// =============================================
+// #test
+
+#define I8042_STATUS 0x64
+#define I8042_WHICH_BUFFER 0x20
+#define I8042_BUFFER_FULL 0x01
+#define I8042_MOUSE_BUFFER 0x20
+#define I8042_KEYBOARD_BUFFER 0x00
+
+// #test
+// buffer full?
+    unsigned char status = in8(I8042_STATUS);
+    if (!(status & I8042_BUFFER_FULL))
+        return;
+
+// which device?
+    int is_mouse_device = 
+        ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) 
+        ? TRUE 
+        : FALSE;
+
+    //Yes it is a mouse.
+    if ( is_mouse_device == TRUE )
+        return;
+// =============================================
+
 
 
     //não precisamos perguntar para o controlador se
