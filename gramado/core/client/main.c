@@ -1042,13 +1042,19 @@ int main ( int argc, char *argv[] )
     {
         gws_redraw_window(client_fd,game_window,0);
 
-        // Interface 1: Command line interpreter.
+        // Interface: terminal.
+        // Uma interface voltada para window manager estilo tiling.
+        // Janelas com frames simples e textos dentro delas.
+        // Sem botões.
+        gws_clone_and_execute("terminal.bin");
+
+        // Interface: Command line interpreter.
         //gws_clone_and_execute("cmdline.bin");
 
-        // Interface 2: File manager.
-        gws_clone_and_execute("fileman.bin");
+        // Interface: File manager.
+        //gws_clone_and_execute("fileman.bin");
 
-        // Interface 1: Test app.
+        // Interface: Test app.
         //gws_clone_and_execute("editor.bin");
     }
 
