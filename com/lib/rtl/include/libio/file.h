@@ -87,11 +87,12 @@ struct _iobuf
     // Pointer to the base of the file. 
     // Sometimes used as a buffer pointer.
     unsigned char *_base;    
-    
-    
-	// current position in (some) buffer
-	// Current position of file pointer (absolute address).
+
+// current position in (some) buffer
+// Current position of file pointer (absolute address).
+
     unsigned char *_p;
+
 
 	// read space left for getc()
     int _r;
@@ -99,7 +100,19 @@ struct _iobuf
 	// write space left for putc()
     int _w;
 
+
+// The size of the file. 
+// Tem que ser menor que o buffer.
+// BUFSIZ - _cnt.
+
+    int _fsize;
+
+// Quantidade de bytes disponiveis no buffer.
 // Number of available characters in buffer.
+// Isso também representa o tamanho do arquivo,
+// pois quando incluimos bytes no arquivo, então
+// Essa quantidade diminue.
+
     int _cnt;
 
 

@@ -455,6 +455,7 @@ int __fflush (FILE *stream)
     { 
         stream->_p = stream->_base;
         stream->_w = 0;  // ajust.
+        //stream->_r = 0;  // ajust.
 
         // #debug
         debug_print ( "__fflush: [FAIL] _w\n");
@@ -474,6 +475,8 @@ int __fflush (FILE *stream)
 // que é um dispositivo do tipo console. O kernel escreverá no 
 // console 0.  
 
+    if ( Count > BUFSIZ )
+        Count=BUFSIZ;
 
 //#ifdef _POSIX_
     nwrite = write ( fileno(stream), stream->_base, Count );
@@ -601,7 +604,6 @@ int ____bfill (FILE *stream){
 // Temos que reiniciar.
 
     stream->_cnt = (BUFSIZ-1);
-
     stream->_p = stream->_base;
     stream->_w = 0;
     stream->_r = 0;
@@ -627,44 +629,47 @@ int ____bfill (FILE *stream){
     n_read = (int) read ( 
                        fileno(stream), 
                        stream->_p,
-                       1 );
+                       BUFSIZ );
 
-    if ( n_read < 0  ){return EOF;}
-    if ( n_read == 0 ){return EOF;}
+    if ( n_read < 0  ){
+        stream->_fsize = 0;
+        stream->_cnt = (BUFSIZ);
+        return EOF;
+    }
+    
+    if ( n_read == 0 ){
+        stream->_fsize = 0;
+        stream->_cnt = (BUFSIZ);
+        return EOF;
+    }
 
+    // enchemos o buffer
     if ( n_read >= (BUFSIZ-1) )
     {
-        stream->_cnt = (BUFSIZ-1);
-        return EOF;
+        stream->_fsize = BUFSIZ;
+        stream->_cnt = 0;
+        stream->_p = stream->_base;
+        stream->_w = 0;
+        stream->_r = 0;
+        return BUFSIZ;
     }
 
 
 // Update
 // Number of available characters in buffer.
+// >>> O buffer deve ser do tamanho da quantidade
+// de bytes lidos la no kernel
+// se a quantidade estiver dentro dos limites padrões.
 
-    // #bugbug
-    //stream->_cnt = (stream->_cnt - n_read);
-
-    // >>> O buffer deve ser do tamanho da quantidade
-    // de bytes lidos la no kernel
-    // se a quantidade estiver dentro dos limites padrões.
-    
-    stream->_cnt = n_read;
-
+    stream->_fsize = n_read;
+    stream->_cnt = (stream->_lbfsize - n_read);
     stream->_p = stream->_base;
     stream->_w = 0;
     stream->_r = 0;
 
-
-// #todo:
-// flags, error, eof ...
-// stream->
-
 //done:
-
 // Retornamos a quantidade disponível para leitura.
 // Isso será usado por __getc.
-
     return (int) n_read;
 }
 
@@ -725,30 +730,38 @@ int __getc ( FILE *stream )
     // Return the char.
     }
 
-    // Se o ponteiro de leitura for inválido.
-    // Não podemos acessar um ponteiro nulo ... 
-    // no caso endereço.
-    
-    if ( stream->_p == 0 )
+
+// Se o ponteiro de leitura for inválido.
+// Não podemos acessar um ponteiro nulo ... 
+// no caso endereço.
+
+    if ( (void*) stream->_p == NULL )
     {
-        debug_print ("__getc: [BUGBUG] invalid offset\n");
-        printf      ("__getc: [BUGBUG] invalid offset\n");
-        //stream->_base = stream->_p;
+        debug_print ("__getc: [BUGBUG] invalid stream->_p\n");
+        printf      ("__getc: [BUGBUG] invalid stream->_p\n");
         return EOF;
     }
 
+// Se a quantidade de bytes restantes no buffer for
+// maior que zero e menor que
 
-// Se tem coisa no buffer
-    if ( stream->_cnt > 0 && stream->_cnt <= BUFSIZ )
+    if ( stream->_cnt > 0 && 
+         stream->_cnt <= BUFSIZ && 
+         stream->_r < stream->_fsize )
     {
+
         ch = (int) *stream->_p;
         
         stream->_p++;
+        stream->_r++;
         stream->_cnt--;
         
         return (int) ch;
     }
 
+// Depois de consumirmos todo nosso buffer local,
+// até chegarmos ao fim do arquivo, não do buffer.
+// Ou chegamos ao fim do buffer.
 // Atingimos o fim do buffer na libc.
 // Se acabou o buffer.
 // O _cnt decrementou e chegou a zero.
@@ -757,28 +770,23 @@ int __getc ( FILE *stream )
 // Então vamos encher o buffer NOVAMENTE em ring3 dessa stream
 // e atualizarmos o cnt.
 
-    if ( stream->_cnt <= 0 )
+    if ( stream->_cnt <= 0 || stream->_r >= stream->_fsize )
     {
         //debug_print("__getc: [DEBUG] ring3 buffer is empty\n");
 
         // Coloque bytes no buffer dessa stream.
         nreads = (int) ____bfill(stream);
 
-        // Se falhou ou se nada foi lido do arquivo para o buffer.
-        // Então __getc não tem um char para oferecer.
-        // Retornamos EOF.
+        // Falhou. Não conseguimos ler.
         if (nreads <= 0)
         {
-            //debug_print ("__getc: [DEBUG] ____bfill fail\n");
-            //printf      ("__getc: [DEBUG] ____bfill fail\n");
+            // nada no buffer local.
+            stream->_fsize = 0;
+            stream->_cnt = BUFSIZ; //temos todo o espaço disponível.
+            stream->_p = stream->_base;
+            stream->_w = 0;  
+            stream->_r = 0;
             
-            if (nreads == (-1))
-                stream->_flags = (stream->_flags | _IOEOF); 
-
-            if (nreads != (-1))
-                stream->_flags = (stream->_flags | _IOERR); 
-
-            stream->_cnt = 0;
             return EOF;
         }
 
@@ -788,12 +796,34 @@ int __getc ( FILE *stream )
         // Atualiza.
         // Retorna o buffer que pegamos do buffer em ring3.
         
-        ch = (int) *stream->_p;
+        if (nreads > BUFSIZ)
+            nreads = BUFSIZ;
         
-        stream->_p++;
-        stream->_cnt--;
- 
-        return (int) ch;
+        // Se nosso buffer tem alguma coisa.
+        if( nreads > 0 )
+        {
+            // Os elementos da estrutura foram configurados por ____bfill.
+            
+            // O ponteiro está na base. Vamos ler o primeiro byte.
+            ch = (int) *stream->_p;
+            
+            stream->_p++;    // incrementamos o ponteiro
+            stream->_r++;    // incrementamos o offset de leitura.
+            stream->_cnt--;
+
+            
+            return (int) (ch & 0xFF);
+        }
+
+        // Algo deu errado.
+        // Vamos para o fim do buffer
+        // para que ele seja cheio novamente.
+        
+        stream->_cnt = 0;
+        stream->_w = BUFSIZ;  // o escritor eta no fim do arquivo.
+        stream->_r = BUFSIZ;  // o leitor eta no fim do arquivo.
+
+        return EOF;
     }
 
 
@@ -842,34 +872,43 @@ int __putc (int ch, FILE *stream)
     //#bugbug
     // O buffer precisa já estar inicializado.
     
+// Se nosso ponteiro de escrita é maior que
+// o tamanho do buffer.
+// Não podemos escrever além do buffer.
+//
+
     //if (stream->_w > stream->_lbfsize)
-    if (stream->_w > BUFSIZ)
+    if (stream->_w >= BUFSIZ)
     {
        debug_print("__putc: [FAIL] Overflow\n");
        printf     ("__putc: [FAIL] Overflow\n");
        stream->_cnt = 0;
-       return -1;
+       return -1;  //EOF
     }
 
 // Coloca no buffer.
+    stream->_base[stream->_w] = ch;
 
-    stream->_base[stream->_w++] = ch;
+// Incrementa o offset de escrita.
+    stream->_w++;
 
-    // #bugbug: 
-    // _cnt++ ?
-
+// Se chegamos ao fim do arquivo.
     if (stream->_w >= BUFSIZ)
     {
         debug_print("__putc: [BUGBUG] Overflow 2\n");
         printf     ("__putc: [BUGBUG] Overflow 2\n");
+        
         stream->_cnt = 0;
         fflush (stream);
 
         return (int) ch;
     }
 
-
     //if (stream->_flags == _IONBF || (stream->_flags == _IOLBF && ch == '\n'))
+
+// Se o char que colocamos no buffer é um '\n'.
+// Então vamos enviar o buffer para o kernel
+
     if ( ch == '\n' )
     { 
         fflush(stream);

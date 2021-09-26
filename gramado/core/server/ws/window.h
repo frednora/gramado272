@@ -478,10 +478,14 @@ struct gws_window_d
 
     int client_fd;
 
-
-// Client's pid and tid.
+// pid do cliente.
 
     int client_pid;
+
+// Client's pid and tid.
+// tid é usado para saber qual é a thread associada
+// com a janela que tem o foco de entrada.
+
     int client_tid;
 
 

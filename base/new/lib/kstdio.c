@@ -4,6 +4,58 @@
 #include <kernel.h>
 
 
+// service 8002
+// IN: fd for the new stdin
+// OUT: TRUE or FALSE.
+int sys_setup_stdin( int stdin_fd )
+{
+    struct process_d *p;
+    file *f;
+
+    if( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+        return FALSE;
+
+    p = (struct process_d *) processList[current_process];
+
+    if ( (void*)p==NULL )
+        return FALSE;
+
+    if(p->used != TRUE)
+        return FALSE;
+
+    if(p->magic != 1234)
+        return FALSE;
+
+    if(stdin_fd < 0 || stdin_fd >= 32)
+        return FALSE;
+
+    f = (file *) p->Objects[stdin_fd];
+
+    if ( (void*)f==NULL )
+        return FALSE;
+
+    if(f->used != TRUE)
+        return FALSE;
+
+    if(f->magic != 1234)
+        return FALSE;
+
+
+// The new stdin.
+    stdin = (file *) f;
+
+// Permission for writing.
+    stdin->sync.can_write = TRUE;
+
+// flags
+    stdin->_flags |= __SWR;
+
+// ok, we have a new stdin.
+// this way the keyboard can put the bytes into this new file.
+
+    return TRUE;
+}
+
 
 int is_socket (file *f)
 {

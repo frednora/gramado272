@@ -420,6 +420,7 @@ int sys_read (unsigned int fd, char *ubuf, int count)
 //==========================================================
 // stdin
 
+    /*
     if ( __file->_file == 0 ){
         debug_print("sys_read: Reading from stdin\n");
         // Shortcut
@@ -427,6 +428,7 @@ int sys_read (unsigned int fd, char *ubuf, int count)
             goto RegularFile;
         }
     }
+    */
 
 //==========================================================
 // stdout
@@ -533,7 +535,7 @@ int sys_read (unsigned int fd, char *ubuf, int count)
                 debug_print("sys_read: [DEBUG] lemos mais que 0 bytes em um socket.\n");
                 __file->socket_buffer_full = FALSE;     // buffer vazio
                 __file->_flags &= ~__SRD;                 //nao posso mais LER.            
-                __file->_flags |= __SWR;                // pode escrever.
+                __file->_flags |= __SWR;                // pode escrever também
                 
                 
                 debug_print("sys_read: WAKEUP WRITER\n");
@@ -592,22 +594,23 @@ RegularFile:
         // #todo: wake the one that was waiting to write.
 
         if ( __file->_flags & __SRD )
-        {     
+        {
             nbytes = (int) file_read_buffer ( 
                                (file *) __file, 
                                (char *) ubuf, 
                                (int) count );
 
             // Se conseguimos ler.
-            if ( nbytes>0)
+            if ( nbytes>0 )
             {
                 // ok to write.
                 __file->_flags = __SWR;
+                __file->sync.can_write = TRUE;
         
                 // #test
                 // Acordar quem esperava por esse evento
                 //do_thread_ready( __file->tid_waiting );
-                return (int) nbytes;        
+                return (int) nbytes; 
             }
         
             //Não conseguimos ler.
@@ -865,6 +868,7 @@ int sys_write (unsigned int fd, char *ubuf, int count)
 // =======================================================
 // stdin
 
+    /*
     if ( __file->_file == 0 ){
         debug_print("sys_write: Writing into stdin\n");
         // Shortcut
@@ -872,6 +876,7 @@ int sys_write (unsigned int fd, char *ubuf, int count)
             goto RegularFile;
         }
     }
+    */
 
 // =======================================================
 // stdout
@@ -1089,7 +1094,8 @@ RegularFile:
 
             if (nbytes>0)
             { 
-                __file->_flags |= __SRD;
+                __file->_flags = __SRD;
+                __file->sync.can_read = TRUE;
                 do_thread_ready( __file->tid_waiting );
                 return (int) nbytes;
             }
@@ -1227,8 +1233,9 @@ int file_read_buffer ( file *f, char *buffer, int len )
         goto fail;
     }
 
+    /*
     // stdin
-    if( f->_file == 0)
+    if( f->_file == 0 )
     {
         if( f->_lbfsize != PROMPT_SIZE)
         {
@@ -1236,6 +1243,7 @@ int file_read_buffer ( file *f, char *buffer, int len )
            goto fail;
         }
     }
+    */
 
 //=======================================
 
@@ -1293,22 +1301,22 @@ int file_read_buffer ( file *f, char *buffer, int len )
             goto fail;
         }
 
-        // Se o offset de leitura ultrapassa os limites.
-        // arquivo circular?? depende do tipo. #todo
-        //if ( f->_r < 0 || f->_r >= BUFSIZ )
-        if ( f->_r < 0 || f->_r > BUFSIZ )
-        {
-            //#bugbug
-            //printf ("file_read_buffer: _r [TEST] RESETING ...\n");
-            debug_print("file_read_buffer: _r limits\n");
-            
-            //goto fail;
-            f->_p = f->_base;
-            f->_r = 0; 
-            
-            return EOF;
+        // ler no início do arquivo.
+        if ( f->_r < 0 ){
+            f->_r = 0;
         }
         
+        // nao leremos depois do fim do arquivo.
+        if ( f->_r > f->_lbfsize )
+        {
+            debug_print("file_read_buffer: f->_r > f->_lbfsize\n");
+            f->_r = f->_lbfsize;
+            f->_w = f->_lbfsize;
+            f->_p = (f->_base + f->_lbfsize);
+            f->_cnt = 0;
+            return EOF;
+        }
+
         // Se o offset de leitura for maior que
         // o offset de escrita, então temos que esperar.
         // #bugbug: mas talvez isso não seja assim para pipe.
@@ -1316,32 +1324,55 @@ int file_read_buffer ( file *f, char *buffer, int len )
         {
             debug_print("file_read_buffer: f->_r > f->_w\n");
             
-            // fix it for stdin
-            if ( f->_file == 0 ){
-                f->_r = f->_w;
-            }
+            f->_r = f->_w;
+            
+            //faremos o ajuste logo abaixo.
+            //f->_p = (f->_base + f->_r);
 
             // You also can write now.
             // But i can still read.
-            f->_flags |= __SWR;
+            //f->_flags = __SWR;
 
-            return 0;
+            //return 0;
         }
     
-        // Se a quantidade que desejamos escrever
+        if (local_len <= 0 )
+        {
+            //f->_flags = __SWR;
+            return -1;
+        }
+        
+        // Se a quantidade que desejamos ler
         // é maior que o espaço que temos.
-        if( local_len < 0 || local_len > f->_lbfsize )
+        if( local_len > f->_lbfsize )
         {
             //printf ("file_read_buffer: [FAIL] local_len limits\n");
             //goto fail;
         
             //#test #bugbug
             // leia tudo então. hahaha
-            local_len = f->_lbfsize;
+            local_len = (f->_lbfsize - 1);
         }
  
-        // vamos ler daqui.
+ 
+        // Se o tanque que queremos ler é maior
+        // que o que nos resta da buffer,
+        // então vamos ler apenas o resto do buffer.
+        if(local_len > f->_cnt)
+            local_len = f->_cnt;
+ 
+        // #delta
+        // Se o tanto que queremos ler
+        // é maior que o tanto que foi efetivamente escrito,
+        // então leremos somente o que foi escrito.
+        
+        if ( local_len > (f->_base + f->_w) - (f->_base + f->_r) ) 
+            local_len = (f->_base + f->_w) - (f->_base + f->_r);
+            
+        // Vamos ler daqui.
+        // A partir do offset de leitura.
         f->_p = (f->_base + f->_r);
+
 
         // read
         
@@ -1354,9 +1385,13 @@ int file_read_buffer ( file *f, char *buffer, int len )
         // atualizamos o offset de escrita.
         f->_r = (f->_r + local_len);
 
+        if ( f->_r > f->_w )
+            f->_r = f->_w;
+
         // You also can write now.
         // But i can still read.
-        f->_flags |= __SWR;
+        f->_flags = __SWR;
+        f->sync.can_write = TRUE;
 
         return (int) local_len;
     }
@@ -1395,41 +1430,45 @@ int file_write_buffer ( file *f, char *string, int len )
         goto fail;
     }
 
-    if ( len > BUFSIZ ){
+    if ( len >= BUFSIZ ){
         printf ("file_write_buffer: len > BUFSIZ\n");
         goto fail;
     }
 
 
-    //
-    // Copy!
-    //
-    
-    // Socket file.
-    // Se o arquivo é um socket, então não concatenaremos 
-    // escrita ou leitura.
-    if ( f->____object == ObjectTypeSocket )
-    {
+//
+// Copy!
+//
+
+// Socket file.
+// Se o arquivo é um socket, então não concatenaremos 
+// escrita ou leitura.
+    if ( f->____object == ObjectTypeSocket ){
         memcpy ( (void *) f->_base, (const void *) string, len ); 
         return len;
     }
 
-    //não concatenaremos
-    if ( f->____object == ObjectTypePipe )
-    {
+// não concatenaremos
+    if ( f->____object == ObjectTypePipe ){
         memcpy ( (void *) f->_base, (const void *) string, len ); 
         return len;
     }
-    
-    // Normal file.
-    // Tem que atualizar o ponteiro para que o próximo
-    // write seja depois desse write.
-    // Para isso o ponteiro precisa estar no base quando
-    // o write for usado pela primeira vez.
-    // Mas se o write for usado num arquivo aberto com 
-    // open(), então o ponteiro deve estar no fim do arquivo.
-    
-    //#todo: Normal file object
+
+// Normal file.
+// Tem que atualizar o ponteiro para que o próximo
+// write seja depois desse write.
+// Para isso o ponteiro precisa estar no base quando
+// o write for usado pela primeira vez.
+
+// Mas se o write for usado num arquivo aberto com 
+// open(), então o ponteiro deve estar no fim do arquivo.
+// Isso não significa que está no fim do buffer.
+// Nesse caso o aplicative deveria usar rewind() antes
+// para ter um ponteiro de escrita adequado.
+
+// #todo: 
+// Normal file object
+
     if ( f->____object == ObjectTypeFile ||
          f->____object == ObjectTypeTTY  ||
          f->____object == ObjectTypeIoBuffer)
@@ -1444,72 +1483,92 @@ int file_write_buffer ( file *f, char *string, int len )
             goto fail;
         }
     
+        if (f->_w < 0)
+        {
+            f->_p = f->_base;
+            f->_w = 0;
+            f->_r = 0;
+            f->_cnt = f->_lbfsize;
+            return EOF;
+        }
 
-        // se o offset de escrita ultrapassa os limites.
-        // arquivo circular?? depende do tipo. #todo
-        if( f->_w < 0 || f->_w > BUFSIZ )
+        // Se o offset de escrita ultrapassa os limites.
+        if( f->_w >= BUFSIZ )
         {
             //#bugbug
-            //printf ("file_write_buffer: _w [TEST] RESETING ...\n");
-            debug_print("file_write_buffer: _w limits\n");
-            //goto fail;
+            debug_print("file_write_buffer: f->_w >= BUFSIZ\n");
+            printf     ("file_write_buffer: f->_w >= BUFSIZ\n");
             
-            f->_p = f->_base;
-            f->_w = 0; 
-            f->_cnt = f->_lbfsize;
-            
+            f->_w = BUFSIZ; 
+            f->_cnt = 0;
+
             return EOF;
         }
         
         //if ( f->_w 
     
         // recalculando quanto espaço temos.
-        f->_cnt = (f->_lbfsize - f->_w);
+        //f->_cnt = (f->_lbfsize - f->_w);
     
-        // se a qunatidade que temos ultrapassa os limites.
-        if( f->_cnt < 0 || f->_cnt > BUFSIZ )
+        // Se a quantidade que temos ultrapassa os limites.
+        
+        // fim do arquivo.
+        if( f->_cnt < 0)
+        {
+            f->_cnt = 0;
+            f->_w = f->_lbfsize;
+            f->_r = f->_lbfsize;
+            f->_p = (f->_base + f->_w);
+            return EOF;
+        }
+        
+        // inicio do arquivo
+        if( f->_cnt > f->_lbfsize )
         {
             printf ("file_write_buffer: _cnt\n");
-            //goto fail;
-                f->_p = f->_base; 
-                f->_w = 0;
-                f->_cnt = f->_lbfsize; 
+            
+            f->_cnt = f->_lbfsize;
+            f->_p = f->_base; 
+            f->_w = 0;
+            f->_r = 0;
         }
 
-        // se o que desejamos escrever eh maior que o espaço que temos.
-        if( len < 0 || len > f->_cnt || len > f->_lbfsize)
+        if( len < 0 )
+            return -1;
+
+        // Se o que desejamos escrever é maior que o espaço que temos.
+        if( len > f->_cnt )
         {
-            printf ("file_write_buffer: len limits %d\n",len);
-            //goto fail;
+            // Estamos no fim do arquivo
+            if ( f->_cnt <= 0 )
+            {
+                f->_w = f->_lbfsize;
+                f->_r = f->_lbfsize;
+                f->_p = f->_base + f->_lbfsize;
+                f->_cnt = 0; 
+                return -1;
+            }
             
-            //se o len eh maior que o espaço disponivel
-            //mas o espaço disponivel eh maior que zero.
+            // Só podemos escrever esse tanto.
             if ( f->_cnt > 0 )
             {
                 len = f->_cnt; 
             }
-            
-            //fim do arquivo
-            if ( f->_cnt <= 0 )
-            {
-                f->_p = f->_base; 
-                f->_w = 0;
-                f->_cnt = f->_lbfsize; 
-            }
         }
 
         // write.
-        
-        // Se o offset de leitura for maior que o
-        // offset de escrita. Então estabilizaremos o leitor.
-        // #bugbug: Não no caso de pipes.
-        if (f->_r > f->_w){
-            f->_r = f->_w;
+        // Se o offset de escrita é menor que o offset de leitura.
+        // Então adiantaremos o offset de escrita.
+        // pois nao devemos tocar no offset de leitura.
+        if (f->_w < f->_r)
+        {
+            f->_w = f->_r;
+            f->_cnt = ( f->_lbfsize - f->_w );
         }
-        
+
         // vamos escrever aqui.
         f->_p = (f->_base + f->_w);
-    
+
         //escrevemos usando o ponteiro de escrita.
         memcpy ( (void *) f->_p, (const void *) string, len ); 
     
@@ -1523,7 +1582,8 @@ int file_write_buffer ( file *f, char *string, int len )
         f->_cnt = (f->_cnt - len);
         
         // You can read now.
-        f->_flags |= __SRD;
+        f->_flags = __SRD;
+        f->sync.can_read = TRUE;
         
         debug_print ("file_write_buffer: ok, done\n");
            

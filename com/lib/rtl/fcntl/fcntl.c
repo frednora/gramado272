@@ -113,13 +113,19 @@ int open (const char *pathname, int flags, mode_t mode)
     int fd = -1;
     char tmp_path[64];
 
-    // #importante
-    // adaptando para fat16.
-    // #todo: devemos fazer isso em ring0, não aqui.
-    // isso funcionou.
+// #importante
+// adaptando para fat16.
+// #todo: devemos fazer isso em ring0, não aqui.
+// isso funcionou.
 
-    stdio_fntos( (char *) pathname );
+    // #todo: nao fazer isso em ring3.
+    // pois ja estamos fazendo em ring0.
+    //stdio_fntos( (char *) pathname );
+    
     sprintf(tmp_path,pathname);
+
+
+     //printf ("DEBUG-FOPEN: %s\n",tmp_path);
 
 //
 // Size

@@ -253,9 +253,9 @@ wmProcedure (
                     if ( UseSTDIN == TRUE )
                     {
                         //debug_print ("wmProcedure: Writing into stdin ...\n");
-                        stdin->sync.can_write = TRUE;
-                        ch_buffer[0] = (char) (long1 & 0xFF);
-                        sys_write(0,ch_buffer,1);
+                        //stdin->sync.can_write = TRUE;
+                        //ch_buffer[0] = (char) (long1 & 0xFF);
+                        //sys_write(0,ch_buffer,1);
                         return 0;
                     }
                 }
@@ -1044,6 +1044,35 @@ done:
 */
 
 
+// #test
+// Coloque sempre no arquivo
+
+    // Mensagens de digitação.
+    if ( Event_Message == MSG_KEYDOWN )
+    {
+        stdin->sync.can_write = TRUE;
+        stdin->_flags = __SWR;
+        char ch_buffer[2]; 
+        ch_buffer[0] = (char) (Event_LongASCIICode & 0xFF);
+        
+        // Write
+        // #bugbug: 
+        // Estamos dentro do kernel.
+        // Vamos escrever diretamente no buffer do arquivo,
+        // dado seu ponteiro de estrutura.
+        // O fd do processo atual não serveria nesse momento.
+        // See: sys.c
+
+        file_write_buffer ( 
+            (file *) stdin, 
+            (char *) ch_buffer, 
+            (int) 1 );
+
+        stdin->sync.can_read = TRUE;  // O aplicativo precisa disso.
+        stdin->_flags = __SRD;       // O worker no kernel precisa disso.
+    }
+
+
 // Process the event using the system's window procedures.
 // It can use the kernel's virtual console or
 // sent the evento to the loadable window server.
@@ -1054,7 +1083,6 @@ done:
         (int)               Event_Message,
         (unsigned long)     Event_LongASCIICode,
         (unsigned long)     Event_LongRawByte );
-
 
     return 0;
 }

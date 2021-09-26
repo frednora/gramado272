@@ -3862,7 +3862,7 @@ sys_read_file_from_disk (
 
     // Convertendo o formato do nome do arquivo.    
     // >>> "12345678XYZ"
-    // #bugbug: Isso ja foi feito em ring3 por open().
+    // #todo: nao fazer isso em ring3.
 
     fs_fntos ( (char *) file_name );
 

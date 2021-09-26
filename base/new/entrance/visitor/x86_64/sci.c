@@ -878,6 +878,14 @@ void *gde_extra_services (
                             (unsigned long) arg4 );
     }
 
+// Setup stdin pointer
+// See: kstdio
+    if (number == 8002 )
+    {
+        // IN: fd
+        return (void *) sys_setup_stdin((int) arg2);
+    }
+
 
     // test: pegando o endereço de um buffer de icone..
     // queremos saber se ele eh compartilhado.
@@ -1423,6 +1431,7 @@ void *sci0 (
             return (void *) sys_get_message( (unsigned long) &message_address[0] );
             break;
 
+        // tlib.c
         // Post message to tid.
         // Asynchronous.
         // IN: tid, message buffer address.

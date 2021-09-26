@@ -302,17 +302,17 @@ sys_post_message_to_tid(
     if( message_buffer == 0 )
         return 0;
 
-    unsigned long *event = (unsigned long *) message_buffer;
+    unsigned long *buf = (unsigned long *) message_buffer;
 
 // Post message.
 // Asynchronous.
 
     post_message_to_tid(
-        tid,         //tid
-        event[0],    //window
-        event[1],    //msg code
-        event[2],    //long1
-        event[3] );  //long2
+        tid,       //tid
+        buf[0],    //window
+        buf[1],    //msg code
+        buf[2],    //long1
+        buf[3] );  //long2
 
     return 0;
 }

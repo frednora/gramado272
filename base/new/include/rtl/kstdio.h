@@ -651,6 +651,11 @@ int print ( char **out, int *varg );
 #define printk   kinguio_printf
 #define sprintf  mysprintf
 
+//=============================================
+
+
+// service 8002
+int sys_setup_stdin( int stdin_fd );
 
 // #suspensa
 // Essa implementação foi feita para 32bit e não funciona

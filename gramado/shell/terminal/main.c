@@ -50,6 +50,7 @@
 // /windows-command-line-introducing-the-windows-pseudo-console-conpty/
 // ...
 
+//#include <ctype.h>
 
 // #todo:
 // We need to change the name of this document??
@@ -1387,24 +1388,32 @@ int main ( int argc, char *argv[] )
     char data[2];
     int nread=0;
 
+    FILE *new_stdin;
+    new_stdin = (FILE *) fopen("gramado.txt","a+");
+
+    //seleciona o novo stdin
+    gramado_system_call(8002,fileno(new_stdin),0,0);
+
     //fputc('A',stdin);
     //fputs("This is a string in stdin",stdin);
-    rewind(stdin);
+    rewind(new_stdin);
 
     //rtl_focus_on_this_thread();
 
     while (1){
 
-        C=fgetc(stdin);
-        if(C>0)
+        C = fgetc(new_stdin);
+        if(C > 0)
         {
-            terminalProcedure( 
+            //if( isalnum(C) )
+            //{ 
+              terminalProcedure( 
                 client_fd,            // socket
                 Terminal.window_id,   // window ID
                 MSG_KEYDOWN,          // message code
                 C,                    // long1 (ascii)
                 C );                  // long2 (ascii)
-
+            //}
             //printf("%c",C);
             //fflush(stdout);
         }
