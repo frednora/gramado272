@@ -92,6 +92,73 @@ void terminalInitWindowLimits (void);
 void terminalInitSystemMetrics (void);
 
 
+void clear_terminal_client_window(int fd);
+void doPrompt(int fd);
+
+//====================================================
+
+
+void clear_terminal_client_window(int fd)
+{
+     gws_redraw_window(fd,Terminal.client_window_id,TRUE);
+
+// Cursor do console do terminal.
+
+     //#define SYSTEMCALL_SETCURSOR  34
+     //gramado_system_call ( 34, 2, 2, 0 );
+
+// Cursor do terminal.
+    cursor_x = 0;
+    cursor_y = 0;
+}
+
+void doPrompt(int fd)
+{
+    int i=0;
+
+
+    if(fd<0)
+        return;
+
+    // Clean prompt buffer.
+    
+    for ( i=0; i<PROMPT_MAX_DEFAULT; i++ ){ prompt[i] = (char) '\0'; };
+    
+    prompt[0] = (char) '\0';
+    prompt_pos    = 0;
+    prompt_status = 0;
+    prompt_max    = PROMPT_MAX_DEFAULT;  
+
+// Escrevia no console.
+    // Prompt
+    //printf("\n");
+    //printf("cmdline: Type something\n");
+    //printf("$ ");
+    //fflush(stdout);
+
+// Cursor do terminal.
+    cursor_x = 0;
+    cursor_y++;
+
+// draw prompt symbol.
+    gws_draw_char ( 
+        fd, 
+        Terminal.client_window_id, 
+        (cursor_x*8), 
+        (cursor_y*8), 
+        COLOR_WHITE, 
+        '>' ); 
+
+// Increment x.
+    cursor_x++;
+
+// Refresh client window.
+
+    if(Terminal.client_window_id < 0)
+        return;
+
+    gws_refresh_window(fd,Terminal.client_window_id);
+}
 
 
 
@@ -1084,82 +1151,60 @@ terminalProcedure (
 
 {
 
-    int SendToChild = FALSE;
+    if (fd<0)
+        return -1;
 
+    if (window<0)
+        return -1;
 
-    //int stdin_fd=0;
-    //stdin_fd = stdin->_file;
+    if (msg<0)
+        return -1;
 
+// ==================
 
-    // #important
-    // The terminal application can handle
-    // many kinds of input, but we will send
-    // only keydown to the child via stdin.
-
-    if ( msg == MSG_KEYDOWN )
+    switch(msg)
     {
-        if (SendToChild == TRUE)
-        {
-            printf ("terminal: [TODO] Send input to child\n");
-            return 0;
-        }
-        
-        // We will not send to the child, 
-        // so print it.
-        
-        // #todo: 
-        // Print it using the libgws.
-        // Using a terminal routine for that.
-        // terminalPrintChar();
-        // gws_...()
+        case MSG_KEYDOWN:
+            switch(long1)
+            {
+                case VK_RETURN:
+                    //printf("RETURN \n");
+                    doPrompt(fd);
+                    return 0;
+                    break;
 
-        // Using the virtual console.
-        //printf ("%c", long1 );
-        //fflush(stdout);
-        
-        // #bugbug
-        // #todo: This routine is very good. We need to work on that thing.
-        //tputc ( 
-            //(int) fd, window, (int) long1, (int) 1 );
+                // draw the char using the window server
+                // Criar uma função 'terminal_draw_char()'
+                default:
+                    
+                    // draw char
+                    gws_draw_char ( 
+                        fd, 
+                        window, 
+                        (cursor_x*8), 
+                        (cursor_y*8), 
+                        COLOR_WHITE, 
+                        long1 );
 
-        // draw the char using the widnow server
-        gws_draw_char ( 
-            fd, 
-            window, 
-            (cursor_x*8), 
-            (cursor_y*8), 
-            COLOR_WHITE, 
-            long1 );
+                    // refresh window
+                    gws_refresh_window(fd,window);
 
-        // refresh window
-        gws_refresh_window(fd,window);
-        
-        //update cursor positions
-        cursor_x++;
-        if( cursor_x > 20){cursor_x=0;}
-        
-        return 0;
-    }
+                    // update cursor positions
+                    cursor_x++;
+                    if( cursor_x > 20){cursor_x=0;}
 
+                    return 0;
 
-    if ( msg == MSG_SYSKEYDOWN )
-    {
-        if ( long1 == VK_F4 ){
-            printf("terminal: Exiting ...\n");
-            exit(0);
-        }
-    }
+                    break;
+            };
+            break;
 
+        default:
+            break;
+    };
+
+// done
     return 0;
-    
-    /*
-    return (int) gws_default_procedure ( 
-                     fd, 
-                     (int) window, 
-                     msg, 
-                     long1, 
-                     long2 );
-    */
 }
 
 
@@ -1273,6 +1318,9 @@ int main ( int argc, char *argv[] )
         (unsigned long) mwWidth, 
         (unsigned long) mwHeight );
 
+
+// ===================================================
+
 //
 // main window
 //
@@ -1289,6 +1337,10 @@ int main ( int argc, char *argv[] )
                       mwColor, 
                       mwColor );
 
+    Terminal.main_window_id = main_window;
+
+// ===================================================
+
 //
 // Client area window
 //
@@ -1299,9 +1351,9 @@ int main ( int argc, char *argv[] )
                           main_window,0,wColor,wColor);
       
     // Saving the window id.
-    Terminal.window_id = terminal_window;
+    Terminal.client_window_id = terminal_window;
     
-    if (Terminal.window_id<0){
+    if (Terminal.client_window_id<0){
         gws_debug_print ("terminal: [FAIL] create main window return fail\n");
     }
 
@@ -1373,65 +1425,63 @@ int main ( int argc, char *argv[] )
 // #bugbug
 // It needs to be an 'editbox' for typing messages.
 
+/*
     gws_async_command(
          client_fd,
          9,             // set focus
          terminal_window,
          terminal_window );
+*/
 
+    //rtl_focus_on_this_thread();
+
+
+
+/*
+//================
+//cls
+     gws_redraw_window(client_fd,Terminal.client_window_id,TRUE);
+     //#define SYSTEMCALL_SETCURSOR  34
+     gramado_system_call ( 34, 2, 2, 0 );
+//=================
+*/
+
+    clear_terminal_client_window(client_fd);
+    doPrompt(client_fd);
 
 //
 // Loop!
 //
 
     int C=0;
-    char data[2];
-    int nread=0;
-
     FILE *new_stdin;
     new_stdin = (FILE *) fopen("gramado.txt","a+");
 
-    //seleciona o novo stdin
-    gramado_system_call(8002,fileno(new_stdin),0,0);
+// O kernel seleciona qual será 
+// o arquivo para teclado ps2.
 
-    //fputc('A',stdin);
-    //fputs("This is a string in stdin",stdin);
+    gramado_system_call(
+        8002,
+        fileno(new_stdin),
+        0,
+        0 );
+
     rewind(new_stdin);
 
-    //rtl_focus_on_this_thread();
-
     while (1){
-
         C = fgetc(new_stdin);
-        if(C > 0)
+        if (C > 0)
         {
-            //if( isalnum(C) )
-            //{ 
-              terminalProcedure( 
+            terminalProcedure( 
                 client_fd,            // socket
-                Terminal.window_id,   // window ID
+                Terminal.client_window_id,   // window ID
                 MSG_KEYDOWN,          // message code
                 C,                    // long1 (ascii)
                 C );                  // long2 (ascii)
-            //}
-            //printf("%c",C);
-            //fflush(stdout);
         }
-
-        // nao usar isso
-        //if ( rtl_get_event() == TRUE ){  
-        //    terminalProcedure ( 
-                //client_fd,
-                //RTLEventBuffer[0], 
-                //RTLEventBuffer[1], 
-                //RTLEventBuffer[2], 
-                //RTLEventBuffer[3] ); 
-        //}
     };
 
- 
 //exit:
-    
     debug_print ("terminal: bye\n"); 
     printf      ("terminal: bye\n");
     return 0;

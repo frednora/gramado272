@@ -462,8 +462,9 @@ struct terminal_d
 {
     int client_fd;
     
-    int window_id;
- 
+    int main_window_id;
+    int client_window_id;
+
     int pid;
     int uid;
     int gid;
