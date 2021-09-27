@@ -1,5 +1,5 @@
 
-
+// detect.c
 
 #include <kernel.h>
 
@@ -7,7 +7,8 @@
 
 int detect_IsQEMU(void)
 {
-    if ( (void *) processor == NULL ){
+    if ( (void *) processor == NULL )
+    {
         x_panic ("detect_IsQEMU: FAIL\n");
     }
 
@@ -20,10 +21,8 @@ int detect_IsQEMU(void)
     }
 
     g_is_qemu = FALSE;
-
     return FALSE;
 }
-
 
 
 /*
@@ -38,30 +37,24 @@ int detect_IsQEMU(void)
 
 int hal_probe_cpu (void)
 {
-    unsigned long eax=0;
-    unsigned long ebx=0;
-    unsigned long ecx=0;
-    unsigned long edx=0;
-
+    unsigned int eax=0;
+    unsigned int ebx=0;
+    unsigned int ecx=0;
+    unsigned int edx=0;
 
     debug_print ("hal_probe_cpu:\n");
 
-//#ifdef HAL_VERBOSE
-    //printf ("hal_probe_cpu:\n");
-//#endif
-
-    // Check processor structure.
+// Check processor structure.
     if ( (void *) processor == NULL ){
         x_panic ("hal_probe_cpu: [FAIL] processor\n");
     }
 
-
-    // Check vendor.
+// Check vendor
     cpuid ( 0, eax, ebx, ecx, edx ); 
 
-    //=======================
-    // Confere se é intel.
-    // TestIntel:
+//=======================
+// Confere se é intel.
+// TestIntel:
 
     if ( ebx == CPUID_VENDOR_INTEL_1 && 
          edx == CPUID_VENDOR_INTEL_2 && 
@@ -71,9 +64,9 @@ int hal_probe_cpu (void)
         return 0;
     }
 
-    //=======================
-    // Confere se é Amd.
-    // TestAmd:
+//=======================
+// Confere se é Amd.
+// TestAmd:
 
     if ( ebx == CPUID_VENDOR_AMD_1 && 
          edx == CPUID_VENDOR_AMD_2 && 
@@ -83,9 +76,9 @@ int hal_probe_cpu (void)
         return 0;
     }
 
-    // Desconhecido.
-    // todo: Aqui é um erro fatal.
-    // Fail:
+// Fail:
+// Desconhecido.
+// todo: Aqui é um erro fatal.
 
     processor->Type = Processor_NULL;
 
@@ -93,7 +86,6 @@ int hal_probe_cpu (void)
 
     return (int) (-1);
 }
-
 
 
 /*
@@ -104,8 +96,8 @@ int hal_probe_cpu (void)
 
 // Called by init_architecture_dependent() in core/init.c
 
-int hal_probe_processor_type (void){
-
+int hal_probe_processor_type (void)
+{
     unsigned int eax=0;
     unsigned int ebx=0;
     unsigned int ecx=0;
@@ -178,34 +170,36 @@ int hal_probe_processor_type (void){
 }
 
 
-
+// ====================================
 // MSR
-// Accessing Model Specific Registers 
-//Each MSR that is accessed by the RDMSR and WRMSR group of instructions 
-//is identified by a 32-bit integer. MSRs are 64-bit wide. 
-//The presence of MSRs on your processor is 
-//indicated by CPUID.01h:EDX[bit 5].
+// Accessing 'Model Specific Registers'
+// Each MSR that is accessed by the 
+// RDMSR and WRMSR group of instructions 
+// is identified by a 32-bit integer. 
+// MSRs are 64-bit wide. 
+// The presence of MSRs on your processor is indicated 
+// by CPUID.01h:EDX[bit 5].
+// See: cpu.h
 
-
-const unsigned long CPUID_FLAG_MSR = (1 << 5);
+const unsigned int CPUID_FLAG_MSR = (1 << 5);
  
 int cpuHasMSR (void)
 {
-    unsigned long a=0;
-    unsigned long b=0;
-    unsigned long c=0;
-    unsigned long d=0;
+    unsigned int a=0;
+    unsigned int b=0;
+    unsigned int c=0;
+    unsigned int d=0;
 
-    cpuid(1, a, b, c, d);
+    cpuid(1,a,b,c,d);
     return (int) (d & CPUID_FLAG_MSR);
 }
 
 
 void 
 cpuGetMSR ( 
-    unsigned long msr, 
-    unsigned long *lo, 
-    unsigned long *hi )
+    unsigned int msr, 
+    unsigned int *lo, 
+    unsigned int *hi )
 {
     asm volatile ("rdmsr" : "=a"(*lo), "=d"(*hi) : "c"(msr));
 }
@@ -213,12 +207,38 @@ cpuGetMSR (
 
 void 
 cpuSetMSR ( 
-    unsigned long msr, 
-    unsigned long lo, 
-    unsigned long hi )
+    unsigned int msr, 
+    unsigned int lo, 
+    unsigned int hi )
 {
     asm volatile ("wrmsr" : : "a"(lo), "d"(hi), "c"(msr));
-}    
+}
+
+
+
+
+/* Example: Get CPU's model number */
+/*
+static int get_model(void);
+static int get_model(void)
+{
+    int ebx, unused;
+    cpuid(0, unused, ebx, unused, unused);
+    return ebx;
+}
+*/
+
+/* Example: Check for builtin local APIC. */
+/*
+//  CPUID_FEAT_EDX_APIC = 1 << 9,  
+static int check_apic(void);
+static int check_apic(void)
+{
+    unsigned int eax, unused, edx;
+    cpuid(1, &eax, &unused, &unused, %edx);
+    return edx & CPUID_FEAT_EDX_APIC;
+}
+*/
 
 
 

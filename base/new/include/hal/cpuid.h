@@ -12,10 +12,9 @@
 
 
 
-//cpuid.
+// cpuid.
 #define cpuid( in, a, b, c, d)\
     asm ("cpuid": "=a" (a), "=b" (b), "=c" (c), "=d" (d) : "a" (in));
-
 
 
 // Vendor Strings. 
@@ -188,10 +187,6 @@ enum {
 #define  CPUID_FEAT_EDX_TM1          (1 << 29)
 #define  CPUID_FEAT_EDX_IA64         (1 << 30)
 #define  CPUID_FEAT_EDX_PBE          (1 << 31)
-
-
-
-
 
 
 

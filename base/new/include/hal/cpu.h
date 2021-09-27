@@ -23,10 +23,9 @@
 #define SI_SM 3    // SMM.
 
 
-//#define IA32_APIC_BASE_MSR          0x1B
-//#define IA32_APIC_BASE_MSR_BSP      0x100  // Processor is a BSP
-//#define IA32_APIC_BASE_MSR_ENABLE   0x800
-
+#define IA32_APIC_BASE_MSR          0x1B
+#define IA32_APIC_BASE_MSR_BSP      0x100  // Processor is a BSP
+#define IA32_APIC_BASE_MSR_ENABLE   0x800
 
 
 /*
@@ -275,10 +274,11 @@ unsigned long processorsList[PROCESSORS_MAX_COUNT];
 //#todo: move it to detext.h
 int detect_IsQEMU(void);
 
-int cpuHasMSR (void);
-void cpuGetMSR(unsigned long msr, unsigned long *lo, unsigned long *hi);
-void cpuSetMSR(unsigned long msr, unsigned long lo, unsigned long hi);
+// MSR support.
 
+int cpuHasMSR (void);
+void cpuGetMSR(unsigned int msr, unsigned int *lo, unsigned int *hi);
+void cpuSetMSR(unsigned int msr, unsigned int lo, unsigned int hi);
 
 #endif    
 

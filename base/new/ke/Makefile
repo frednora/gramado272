@@ -79,9 +79,7 @@ reboot.o \
 request.o \
 detect.o \
 hal.o \
-pit.o \
-ports64.o \
-rtc.o \
+apic.o pit.o ports64.o rtc.o \
 x64init.o x64.o x64info.o x64fault.o \
 queue.o \
 mk.o \
@@ -102,8 +100,13 @@ all:
 	$(CC) -c arch/x86_64/x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
 
 	# hal
+
 	$(CC) -c hal/hal.c             $(KERNEL_INCLUDE) $(CFLAGS) -o hal.o
 	$(CC) -c hal/detect.c          $(KERNEL_INCLUDE) $(CFLAGS) -o detect.o
+
+	$(CC) -c hal/x86_64/apic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o apic.o
+	#$(CC) -c hal/x86_64/pic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pic.o
+
 	$(CC) -c hal/x86_64/pit.c      $(KERNEL_INCLUDE) $(CFLAGS) -o pit.o
 	$(CC) -c hal/x86_64/ports64.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ports64.o
 	$(CC) -c hal/x86_64/rtc.c      $(KERNEL_INCLUDE) $(CFLAGS) -o rtc.o
