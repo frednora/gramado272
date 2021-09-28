@@ -486,13 +486,10 @@ cmdlineProcedure (
                     break;
                 
                 // input
-                default:
-                    
+                default:                
                     input(long1);
-                    
                     printf("%c",long1);
                     fflush(stdout);
-                    
                     break;
             }
             break;

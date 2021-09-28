@@ -1,16 +1,12 @@
 /*
  * File: main.c
  *
- *    Client side application for Gramado Network Server.
- *    Using socket to connect with gns.
- *    AF_GRAMADO family.
- * 
- * 
- *       O propósito é testar o servidor gns.
- *
- * 2020 - Created by Fred Nora.
+ *     Simple virtual terminal.
+ *     2021 - Created by Fred Nora.
  */
 
+// #test
+// For now it has a small embedded command line interpreter.
 
 // The POSIX terminal interface.
 // Raw or Canonical?
@@ -93,6 +89,7 @@ void terminalInitSystemMetrics (void);
 
 
 void clear_terminal_client_window(int fd);
+void compareStrings(int fd);
 void doPrompt(int fd);
 
 //====================================================
@@ -111,6 +108,69 @@ void clear_terminal_client_window(int fd)
     cursor_x = 0;
     cursor_y = 0;
 }
+
+void compareStrings(int fd)
+{
+    //printf("\n");
+
+    if ( strncmp(prompt,"test",4) == 0 )
+    {
+        cursor_y++;
+
+        cursor_x=0;   
+        gws_draw_char ( 
+            fd, 
+            Terminal.client_window_id, 
+            (cursor_x*8), 
+            (cursor_y*8), 
+            COLOR_WHITE, 
+            '\\' ); 
+
+        cursor_x=1;
+        gws_draw_char ( 
+            fd, 
+            Terminal.client_window_id, 
+            (cursor_x*8), 
+            (cursor_y*8), 
+            COLOR_WHITE, 
+            'o' ); 
+
+        cursor_x=2;
+        gws_draw_char ( 
+            fd, 
+            Terminal.client_window_id, 
+            (cursor_x*8), 
+            (cursor_y*8), 
+            COLOR_WHITE, 
+            '/' ); 
+
+        goto exit_cmp;
+    }
+
+    if ( strncmp(prompt,"reboot",6) == 0 )
+    {
+        rtl_reboot();
+        goto exit_cmp;
+    }
+
+    if ( strncmp(prompt,"cls",3) == 0 )
+    {
+        // Redraw and show the client window.
+        gws_redraw_window(
+            fd,
+            Terminal.client_window_id,
+            TRUE );
+        cursor_x = 0;
+        cursor_y = 0;
+        goto exit_cmp;
+    }
+
+    //printf("Command not found\n");
+
+exit_cmp:
+    doPrompt(fd);
+}
+
 
 void doPrompt(int fd)
 {
@@ -1169,14 +1229,16 @@ terminalProcedure (
             {
                 case VK_RETURN:
                     //printf("RETURN \n");
-                    doPrompt(fd);
+                    //doPrompt(fd);
+                    input('\0');
+                    compareStrings(fd);
                     return 0;
                     break;
 
                 // draw the char using the window server
                 // Criar uma função 'terminal_draw_char()'
                 default:
-                    
+                    input(long1);
                     // draw char
                     gws_draw_char ( 
                         fd, 
