@@ -77,75 +77,79 @@ __libio_system_call (
 
 // #bugbug: return size
 // retorna o valor.
-unsigned char libio_inport8 (unsigned int port)
+unsigned char libio_inport8 (unsigned short port)
 {
     unsigned char _Ret=0;
 
 
-    _Ret = (unsigned char) __libio_system_call ( 126, 
+    _Ret = (unsigned char) __libio_system_call ( 
+                               (unsigned long) 126, 
                                (unsigned long) 8, 
-                               (unsigned long) port, 
-                               (unsigned long) port );
+                               (unsigned long) (port & 0xFFFF), 
+                               (unsigned long) (port & 0xFFFF) );
 
-    return (unsigned char) _Ret;
+    return (unsigned char) (_Ret & 0xFF);
 }
 
 
-// #bugbug: return size
 //retorna o valor.
-unsigned short libio_inport16 (unsigned int port)
+unsigned short libio_inport16 (unsigned short port)
 {
     unsigned short _Ret=0;
-    
-    _Ret = (unsigned short) __libio_system_call ( 126, 
+
+    _Ret = (unsigned short) __libio_system_call ( 
+                                (unsigned long) 126, 
                                 (unsigned long) 16, 
-                                (unsigned long) port, 
-                                (unsigned long) port );
-    return (unsigned short) _Ret;
+                                (unsigned long) (port & 0xFFFF), 
+                                (unsigned long) (port & 0xFFFF) );
+    return (unsigned short) (_Ret & 0xFFFF);
 }
 
 
 //retorna o valor.
-unsigned long libio_inport32 (unsigned int port)
+unsigned int libio_inport32 (unsigned short port)
 {
-    unsigned long _Ret=0;
-    
-    _Ret = (unsigned long) __libio_system_call ( 126, 
-                               (unsigned long) 32, 
-                               (unsigned long) port, 
-                               (unsigned long) port );
-    return (unsigned long) _Ret;
-}
+    unsigned int _Ret=0;
 
+    _Ret = (unsigned int) __libio_system_call ( 
+                               (unsigned long) 126, 
+                               (unsigned long) 32, 
+                               (unsigned long) (port & 0xFFFF), 
+                               (unsigned long) (port & 0xFFFF) );
+    return (unsigned int) (_Ret & 0xFFFFFFFF);
+}
 
 //
 // == OUT ======================================================
 //
 
-void libio_outport8 ( unsigned int port, unsigned char value)
+void libio_outport8 ( unsigned short port, unsigned char value)
 {
-    __libio_system_call ( 127, 
-         (unsigned long) 8, 
-         (unsigned long) port, 
-         (unsigned long) value );
+    __libio_system_call ( 
+        (unsigned long) 127, 
+        (unsigned long) 8, 
+        (unsigned long) (port & 0xFFFF), 
+        (unsigned long) (value & 0xFF) );
 }
 
 
-void libio_outport16 ( unsigned int port, unsigned short value)
+void libio_outport16 ( unsigned short port, unsigned short value)
 {
-    __libio_system_call ( 127, 
+    __libio_system_call ( 
+        (unsigned long) 127, 
         (unsigned long) 16, 
-        (unsigned long) port, 
-        (unsigned long) value );
+        (unsigned long) (port & 0xFFFF), 
+        (unsigned long) (value & 0xFFFF) );
 }
 
 
-void libio_outport32 ( unsigned int port, unsigned long value)
+void libio_outport32 ( unsigned short port, unsigned int value)
 {
-    __libio_system_call ( 127, 
+    __libio_system_call ( 
+        (unsigned long) 127, 
         (unsigned long) 32, 
-        (unsigned long) port, 
-        (unsigned long) value );
+        (unsigned long) (port & 0xFFFF), 
+        (unsigned long) (value & 0xFFFFFFFF) );
 }
 
 

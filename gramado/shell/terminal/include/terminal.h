@@ -253,12 +253,10 @@ unsigned long __tmp_y;
 
 
 // Colors
- 
- 
+// #deprecated: using fg_color and bg_color.
 //cores do texto. 
-unsigned long backgroung_color;  //pano de fundo.
-unsigned long foregroung_color;  //texto.
-
+//unsigned long backgroung_color;  //pano de fundo.
+//unsigned long foregroung_color;  //texto.
 
 
 
@@ -550,9 +548,10 @@ unsigned long wpWindowTop;
 //               Cursor                //  
 //=======================================
 
+//#deprecated: using cursor_x and cursor_y
 //linha e coluna atuais
-int textCurrentRow;
-int textCurrentCol;
+//int textCurrentRow;
+//int textCurrentCol;
 
 
 //#importante:

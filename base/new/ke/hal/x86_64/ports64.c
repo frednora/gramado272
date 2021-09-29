@@ -1,5 +1,6 @@
 
-// i/o ports
+// ports64.c
+// i/o ports for xx86_64.
 
 #include <kernel.h>
 
@@ -29,8 +30,8 @@ in16 (unsigned short port)
 
     return (unsigned short) (ret & 0xFFFF);
 }
-unsigned int 
 
+unsigned int 
 in32 (unsigned short port)
 {
     unsigned int ret=0;
@@ -100,60 +101,65 @@ void wait_ns (int count)
         io_delay ();
 }
 
-
-unsigned int portsx86_IN ( int bits, unsigned int port )
+// Service 126.
+// #todo
+// Criar um parâmetro que seja um buffer para retornar o valor
+// e retorno da função deve indicar se a operação foi concluida com
+// sucesso ou não. Pois existe a possibilidade
+// de o aplicativo enviar valores inválidos nos parâmetros.
+unsigned int portsx86_IN ( int bits, unsigned short port )
 {
+    unsigned int Value=0;
+
     switch (bits){
-
-        case 8:
-            return (unsigned int) in8 ((int) port);
-            break;
-
-        case 16:
-            return (unsigned int) in16 ( (int) port);
-            break;
-
-        case 32:
-            return (unsigned int) in32 ( (int) port);
-            break;
-
-        default:
-            //debug_print ("portsx86_IN: FAIL\n");
-            return 0;
-            break;
+    case 8:
+        Value = (unsigned int) in8((unsigned short) port);
+        return (unsigned int) (Value & 0xFF);
+        break;
+    case 16:
+        Value = (unsigned int) in16((unsigned short) port);
+        return (unsigned int) (Value & 0xFFFF);
+        break;
+    case 32:
+        Value = (unsigned int) in32((unsigned short) port);
+        return (unsigned int) (Value & 0xFFFFFFFF);
+        break;
     };
+
+//fail
+    //debug_print ("portsx86_IN: FAIL\n");
+    return 0;
 }
 
-
+// Service 127
+// #todo
+// Criar um parâmetro que seja um buffer para retornar o valor
+// e retorno da função deve indicar se a operação foi concluida com
+// sucesso ou não. Pois existe a possibilidade
+// de o aplicativo enviar valores inválidos nos parâmetros.
 void 
 portsx86_OUT ( 
     int bits, 
-    unsigned int port, 
+    unsigned short port, 
     unsigned int value )
 {
 
     switch (bits){
-
-        case 8:
-            out8 ( (int) port, (unsigned char) value );
-            return;
-            break;
-
-        case 16:
-            out16 ( (int) port, (unsigned short) value );
-            return;
-            break;
-
-        case 32:
-            out32 ( (int) port, (unsigned int) value );
-            return;
-            break;
-
-        default:
-            //debug_print ("portsx86_OUT: FAIL\n");
-            return;
-            break;
+    case 8:
+        out8 ( (unsigned short) port, (unsigned char) (value & 0xFF) );
+        return;
+        break;
+    case 16:
+        out16 ( (unsigned short) port, (unsigned short) (value & 0xFFFF) );
+        return;
+        break;
+    case 32:
+        out32 ( (unsigned short) port, (unsigned int) (value & 0xFFFFFFFF) );
+        return;
+        break;
     };
+
+    //debug_print ("portsx86_OUT: FAIL\n");
 }
 
 

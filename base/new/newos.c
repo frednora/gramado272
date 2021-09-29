@@ -1,6 +1,7 @@
 
+// newos.c
 // The interface for the kernel services.
-// Probably some of these sysbols will be exported
+// Probably some of these sysbols will be exported.
 
 #include    "newos.h"
 
@@ -10,8 +11,8 @@
 
 void newos_reboot(unsigned long reboot_flags)
 {
-	sys_reboot();
-	//hal_reboot();
+    sys_reboot();
+    //hal_reboot();
 }
 
 
@@ -27,8 +28,9 @@ newos_register_ws_callbacks(
 // Who can do this?
 // Only the gwssrv.bin.
 
-    if(pid != KernelProcess->pid)
+    if(pid != KernelProcess->pid){
         panic("newos_register_ws_callbacks: pid");
+    }
 
     //#todo: filter parameters
     wmRegisterWSCallbacks(
@@ -42,8 +44,9 @@ newos_register_ws_callbacks(
 
 unsigned long newos_get_system_metrics(int index)
 {
-    if(index<0)
-        return -1;
+    if(index<0){
+        return 0;
+    }
 
     return (unsigned long) sys_get_system_metrics ( (int) index );
 }
@@ -59,7 +62,13 @@ pid_t newos_getpid(void)
 int newos_start_thread( struct thread_d *thread )
 {
     if( (void*) thread == NULL )
-        return -1;
+        return (-1);
+
+    if(thread->used != TRUE)
+        return (-1);
+
+    if(thread->magic != 1234)
+        return (-1);
 
     SelectForExecution ( (struct thread_d *) thread );
     return 0;
@@ -122,9 +131,4 @@ void newos_set_cursor( unsigned long x, unsigned long y )
         (unsigned long) x, 
         (unsigned long) y );
 }
-
-
-
-
-
 

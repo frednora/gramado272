@@ -1,4 +1,4 @@
-// 'reboot' command for Gramado.
+// 'shutdown' command for Gramado.
 
 // rtl
 #include <rtl/gramado.h>
@@ -13,25 +13,22 @@
 #include <libio.h>
 
 
-// isso eh uma rotina de test
+// local worker
 // Vai escrever em uma porta ja inicializada pelo kernel.
-void serial_write_char (char data) 
+void __serial_write_char (unsigned char data) 
 {
     while (( libio_inport8(0x3F8 + 5) & 0x20 ) == 0);
 
-    libio_outport8 (0x3F8, data);
+    libio_outport8 ( 0x3F8, (unsigned char) data );
 }
 
 
-//
-// main
-//
-
-    // #test
-    // Testing shutdown in virtual machines.
-    // #todo:
-    // We can ask the system if we are in qemu or not.
-    // See: https://wiki.osdev.org/Shutdown
+// main:
+// #test
+// Testing shutdown in virtual machines.
+// #todo:
+// We can ask the system if we are in qemu or not.
+// See: https://wiki.osdev.org/Shutdown
 
 int main ( int argc, char *argv[] )
 {
@@ -57,10 +54,10 @@ int main ( int argc, char *argv[] )
     // qemu
     // In newer versions of QEMU, you can do shutdown with:
     if (isQEMU == TRUE){
-        //serial_write_char('1');
-        //serial_write_char('2');
-        //serial_write_char('3');
-        //serial_write_char(' ');
+        //__serial_write_char('1');
+        //__serial_write_char('2');
+        //__serial_write_char('3');
+        //__serial_write_char(' ');
         debug_print ("SHUTDOWN.BIN: [QEMU] Shutting down \n");
         libio_outport16 (0x604, 0x2000);
     }
@@ -82,9 +79,6 @@ int main ( int argc, char *argv[] )
 fail:
     printf ("shutdown: [FAIL] Not running on qemu.\n");
     exit(0);
-
-
-
     return (int) (-1);
 }
 

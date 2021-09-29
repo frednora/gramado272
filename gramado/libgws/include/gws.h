@@ -225,8 +225,8 @@ gws_draw_char (
     int window,
     unsigned long x,
     unsigned long y,
-    unsigned long color,
-    unsigned long c );
+    unsigned int color,
+    unsigned int ch );
 
 // Draw a text.
 int 

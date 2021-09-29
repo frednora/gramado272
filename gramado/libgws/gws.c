@@ -151,8 +151,8 @@ __gws_drawchar_request (
     int window_id,
     unsigned long left,
     unsigned long top,
-    unsigned long color,
-    unsigned long c );
+    unsigned int color,
+    unsigned int ch );
 int __gws_drawchar_response(int fd);
 
 
@@ -1726,8 +1726,8 @@ __gws_drawchar_request (
     int window_id,
     unsigned long left,
     unsigned long top,
-    unsigned long color,
-    unsigned long c )
+    unsigned int color,
+    unsigned int ch )
 {
     // Isso permite ler a mensagem na forma de longs.
     unsigned long *message_buffer = (unsigned long *) &__gws_message_buffer[0];   
@@ -1750,18 +1750,17 @@ __gws_drawchar_request (
 
 // The parameters.
 
-    message_buffer[0] = 0;             // window
-    message_buffer[1] = GWS_DrawChar;  // Draw char
-    message_buffer[2] = 0;
-    message_buffer[3] = 0;
+    message_buffer[0] = (unsigned long) 0;             // window
+    message_buffer[1] = (unsigned long) GWS_DrawChar;  // Draw char
+    message_buffer[2] = (unsigned long) 0;
+    message_buffer[3] = (unsigned long) 0;
 
-    message_buffer[4] = window_id;
-    message_buffer[5] = (left & 0xFFFF); 
-    message_buffer[6] = (top  & 0xFFFF); 
-    message_buffer[7] = (color & 0xFFFFFFFF); 
-    message_buffer[8] = c;        // The 'char'.
+    message_buffer[4] = (unsigned long) window_id;
+    message_buffer[5] = (unsigned long) (left & 0xFFFF); 
+    message_buffer[6] = (unsigned long) (top  & 0xFFFF); 
+    message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF); 
+    message_buffer[8] = (unsigned long) ( ch & 0xFF );    // The 'char'.
     // ...
-
 
 // Write
 
@@ -2397,14 +2396,12 @@ gws_draw_char (
     int window,
     unsigned long x,
     unsigned long y,
-    unsigned long color,
-    unsigned long c )
+    unsigned int color,
+    unsigned int ch )
 {
 
     int response=0;
-
     int Value=0;
-
 
 
     if (fd<0){
@@ -2423,8 +2420,8 @@ gws_draw_char (
         (int) window,         // window id
         (unsigned long) x,    // left
         (unsigned long) y,    // top
-        (unsigned long) color,
-        (unsigned long) c );
+        (unsigned int) (color & 0xFFFFFFFF),
+        (unsigned int) (ch & 0xFF) );
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 

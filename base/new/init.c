@@ -1,5 +1,5 @@
 
-// main.c
+// init.c
 
 // This file and theis folder will be the control panel
 // for the initialization routine.
@@ -24,7 +24,6 @@
 
 
 
-
 #include <kernel.h>
 
 
@@ -40,8 +39,6 @@ unsigned long InitializationPhase;
 #define RELEASE_TYPE_NULL  0
 #define RELEASE_TYPE_RC    1
 #define RELEASE_TYPE_BETA  2
-
-
 
 // ==========================
 
@@ -125,7 +122,6 @@ void preinit_Globals(int arch_type)
     IOControl.useEventQueue = TRUE;  // The current model.
     IOControl.initialized = TRUE;    // IO system initialized.
 
-
 //
 // Scheduler policies
 //
@@ -153,11 +149,11 @@ void preinit_Serial(void)
 
 void preinit_OutputSupport(void)
 {
-    // Virtual Console.
-    // See: user/console.c
-    
+// Virtual Console.
+// See: user/console.c
+
     debug_print ("[Kernel] kernel_main: Initializing virtual consoles ...\n");
-    
+
 // O refresh ainda não funciona, 
 // precisamos calcular se a quantidade mapeada é suficiente.
 
@@ -167,23 +163,19 @@ void preinit_OutputSupport(void)
 // As estruturas de console sao estruturas de tty,
 // mas sao um array de estruturas, nao precisa de malloc,
 // por isso podem ser chamadas nesse momento.
-    
-    // #test
-    // We need to test it better.
+
+// #test
+// We need to test it better.
 
     VirtualConsole_initialize();
 
-    // #IMPORTAT: 
-    // We do not have all the runtime support yet.
-    // We can't use printf yet.
+// #IMPORTAT: 
+// We do not have all the runtime support yet.
+// We can't use printf yet.
 }
 
 
-
-//
 // main
-//
-
 // Called by START in 
 // entrance/warden/unit0/x86_64/head_64.asm.
 
@@ -240,13 +232,11 @@ int kernel_main(int arch_type)
 
 // ==================
 
-
     int Status = (-1);
     //int Options=0;
     //int SafeMode = FALSE;
     //unsigned long MemorySyze=0;
     int i=0;
-
 
     // Magic
     unsigned long bootMagic = (unsigned long) (magic & 0x00000000FFFFFFFF); 
@@ -270,11 +260,10 @@ int kernel_main(int arch_type)
     fb[0] = 0x00FFFFFF;
 
 
-//
-// magic
-//
+// Check magic
+// Paint a white screen if magic is ok.
+// Paint a colored screen if magic is not ok.
 
-    // Paint a white screen if magic is ok.
     if ( bootMagic == 1234 )
     {
         for (i=0; i<320*50; i++){
@@ -282,7 +271,6 @@ int kernel_main(int arch_type)
         };
     }
 
-    // Paint a colored screen if magic is not ok.
     if ( bootMagic != 1234 )
     {
         for (i=0; i<320*50; i++){
@@ -290,62 +278,53 @@ int kernel_main(int arch_type)
         };
     }
 
-    // Hack Hack
+// Hack Hack
     VideoBlock.useGui = TRUE;
 
-
-//
 // Boot block
-//
+// Saving the boot block
+// Structure in this document.
+// We will have a global one in gdef.h
 
-    // Saving the boot block
-    // Structure in this document.
-    // We will have a global one in gdef.h
-    
-    xBootBlock.lfb_pa         = (unsigned long) xxxxBootBlock[bbOffsetLFB_PA];
-    xBootBlock.deviceWidth    = (unsigned long) xxxxBootBlock[bbOffsetX];
-    xBootBlock.deviceHeight   = (unsigned long) xxxxBootBlock[bbOffsetY];
-    xBootBlock.bpp            = (unsigned long) xxxxBootBlock[bbOffsetBPP];
-    xBootBlock.last_valid_pa  = (unsigned long) xxxxBootBlock[bbLastValidPA];
+    xBootBlock.lfb_pa        = (unsigned long) xxxxBootBlock[bbOffsetLFB_PA];
+    xBootBlock.deviceWidth   = (unsigned long) xxxxBootBlock[bbOffsetX];
+    xBootBlock.deviceHeight  = (unsigned long) xxxxBootBlock[bbOffsetY];
+    xBootBlock.bpp           = (unsigned long) xxxxBootBlock[bbOffsetBPP];
+    xBootBlock.last_valid_pa = (unsigned long) xxxxBootBlock[bbLastValidPA];
 
-
-//
 // Gramado mode.
-//
+// Gramado mode. (jail, p1, home ...)
 
- 
-    // Gramado mode. (jail, p1, home ...)
     current_mode = (unsigned long) xxxxBootBlock[bbGramadoMode];
 
     // ...
 
-    // See: kernel.h
+// See: 
+// kernel.h
+
     SavedLFB = (unsigned long) xBootBlock.lfb_pa;
     SavedX   = (unsigned long) xBootBlock.deviceWidth;
     SavedY   = (unsigned long) xBootBlock.deviceHeight;
     SavedBPP = (unsigned long) xBootBlock.bpp;
 
-    // Last valid physical address
-    // Used to get the available physical memory.
+// Last valid physical address.
+// Used to get the available physical memory.
+
     blSavedLastValidAddress = (unsigned long) xBootBlock.last_valid_pa; 
 
-    // Memory size in KB.
+// Memory size in KB.
     blSavedPhysicalMemoryInKB = (blSavedLastValidAddress / 1024);
 
 
-//
 // #todo
-//
-
-    // Setup the real boot block structure at gdef.h
-    // BootBlock
+// Setup the real boot block structure at gdef.h
+// BootBlock
 
     screenSetSize (SavedX,SavedY);
 
+// teste para a máquina real.
+// preto
 
-    // teste para a máquina real.
-    
-    // preto
     if ( xBootBlock.deviceWidth == 320 )
     {
         for (i=0; i<40*40; i++){
@@ -556,10 +535,7 @@ int kernel_main(int arch_type)
     Initialization.console_log = TRUE;
 
 
-//
 // BANNER!
-//
-
 // Welcome message.
 // This is the first message in the screen
 
@@ -570,9 +546,7 @@ int kernel_main(int arch_type)
     //while(1){}
 
 
-//
 // Show gramado mode.
-//
 
     switch (current_mode){
 
@@ -710,11 +684,7 @@ int kernel_main(int arch_type)
     //while(1){}
 
 
-
-//
 // Display device
-//
-
 // See:
 // halvid.h
 // gva.h
@@ -749,13 +719,13 @@ int kernel_main(int arch_type)
 
 
 //=============================
+// Initialize current archtecture.
 
     PROGRESS("Kernel:0:6\n"); 
-    // Initialize current archtecture.
 
-	// #todo
-	// A partir daqui faremos inicializações de partes
-	// dependentes da arquitetura.
+// #todo
+// A partir daqui faremos inicializações de partes
+// dependentes da arquitetura.
 
     // Hack hack
     // Também usado por outras rotinas dainicialização.
@@ -776,7 +746,7 @@ int kernel_main(int arch_type)
                 x_panic("Panic: Error 0x01");
             }
             if (Status == TRUE){
-                debug_print ("kernel_main: Calling x64ExecuteInitialProcess()\n");
+                debug_print ("kernel_main: Calling I_x64ExecuteInitialProcess()\n");
                 Background_initialize();
                 I_x64ExecuteInitialProcess();
             }

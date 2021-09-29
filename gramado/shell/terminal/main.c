@@ -56,6 +56,9 @@
 
 int cursor_x = 0;
 int cursor_y = 0;
+unsigned int fg_color;
+unsigned int bg_color;
+unsigned int prompt_color;
 
 //
 // == ports ====================================
@@ -123,7 +126,7 @@ void compareStrings(int fd)
             Terminal.client_window_id, 
             (cursor_x*8), 
             (cursor_y*8), 
-            COLOR_WHITE, 
+            fg_color, 
             '\\' ); 
 
         cursor_x=1;
@@ -132,7 +135,7 @@ void compareStrings(int fd)
             Terminal.client_window_id, 
             (cursor_x*8), 
             (cursor_y*8), 
-            COLOR_WHITE, 
+            fg_color, 
             'o' ); 
 
         cursor_x=2;
@@ -141,7 +144,7 @@ void compareStrings(int fd)
             Terminal.client_window_id, 
             (cursor_x*8), 
             (cursor_y*8), 
-            COLOR_WHITE, 
+            fg_color, 
             '/' ); 
 
         goto exit_cmp;
@@ -164,6 +167,13 @@ void compareStrings(int fd)
         cursor_y = 0;
         goto exit_cmp;
     }
+
+// Empty buffer
+   if( *prompt == 0 )
+       goto exit_cmp;
+
+// Clone.
+    rtl_clone_and_execute(prompt);
 
     //printf("Command not found\n");
 
@@ -206,7 +216,7 @@ void doPrompt(int fd)
         Terminal.client_window_id, 
         (cursor_x*8), 
         (cursor_y*8), 
-        COLOR_WHITE, 
+        prompt_color, 
         '>' ); 
 
 // Increment x.
@@ -445,81 +455,72 @@ test_child_message(void)
 
 //int prev;
 
-void terminal_write_char (int fd, int window, int c)
+void 
+terminal_write_char (
+    int fd, 
+    int window, 
+    int c )
 {
-
-    static char prev = 0;
-
-    unsigned long x = (textCurrentCol*8);
-    unsigned long y = (textCurrentRow*8);
+    static char prev=0;
+    unsigned long x = (cursor_x*8);
+    unsigned long y = (cursor_y*8);
 
 
-    // #todo
-    // Ver no kernel esse tipo de rotina
-    // tab;
+    if (fd<0)
+        return;
+
+    if (window<0)
+        return;
+
+    if (c<0)
+        return;
+
+// #todo
+// Ver no kernel esse tipo de rotina
+// tab;
     
 
     if ( c == '\r' )
     {
-        textCurrentCol=0; //TTY[console_number].cursor_x = TTY[console_number].cursor_left;  
+        cursor_x=0;
         prev = c;
-        return;    
+        return;
     }
-    
+
     //if ( c == '\n' && prev == '\r' ) 
     if ( c == '\n')
     {
          //printf("NEWLINE\n");
-         textCurrentCol=0; // começo da linha ...(desnecessário)
-         textCurrentRow++;  //linha de baixo
+         cursor_x=0; // começo da linha ...(desnecessário)
+         cursor_y++;  //linha de baixo
          //começo da linha
          prev = c; 
          return;
     }
 
+// Draw!
+// Draw the char into the given window.
+// Vamos pintar o char na janela usando o window server.
+// White on black
+// IN: fd, wid, l, t, color, ch.
 
-    // Refresh!
-    // Vamos escrever o char na tela usando o window server.
-
-    // Imprimindo o char na tela usando o window server.
-    // Testing draw a char in a window.
-    // Isso funciona. Precisamos das rotinas do noraterm
-    // pra lidar com caracteres ... o x e o y.
-    
-    /*
-    terminal_drawchar_request (
-        (int) fd,             // fd,
-        (int) 0,              // window id,
-        (unsigned long) x,    // left,
-        (unsigned long) y,    // top,
-        (unsigned long) COLOR_RED,
-        (unsigned long) c );
-
-    terminal_drawchar_response((int) fd);  
-    */
-    
-    
-    //Testing libgws: OK
- 
     gws_draw_char (
-        (int) fd,             // fd,
-        (int) window,              // window id,
-        (unsigned long) x,    // left,
-        (unsigned long) y,    // top,
-        (unsigned long) COLOR_WHITE,
+        (int) fd,
+        (int) window,
+        (unsigned long) (x & 0xFFFF),
+        (unsigned long) (y & 0xFFFF),
+        (unsigned long) fg_color,
         (unsigned long) c );
 
-
-    // Coloca no buffer de linhas e colunas.
+// Coloca no buffer de linhas e colunas.
     terminalInsertNextChar ( (char) c ); 
-    
-    
-    //circula
-    textCurrentCol++;
-    if (textCurrentCol>__wlMaxColumns)
+
+// Circula
+    cursor_x++;
+    if (cursor_x>__wlMaxColumns)
     {
-        textCurrentRow++;    //próxima linha.
-        textCurrentCol=0;    //começo da linha
+        cursor_y++;  //próxima linha.
+        cursor_x=0;  //começo da linha
     }
 }
 
@@ -546,7 +547,7 @@ void terminalInsertNextChar (char c)
 			
 	// Coloca no buffer.
 
-    LINES[textCurrentRow].CHARS[textCurrentCol] = (char) c;
+    LINES[cursor_y].CHARS[cursor_x] = (char) c;
 }
 
 
@@ -576,9 +577,9 @@ void lf (void)
 {
     // Enquanto for menor que o limite de linhas, avança.
 
-    if ( textCurrentRow+1 < __wlMaxRows )
+    if ( cursor_y+1 < __wlMaxRows )
     {
-        textCurrentRow++; 
+        cursor_y++; 
         return;
     }
 
@@ -593,7 +594,7 @@ void lf (void)
 //carriege return
 void cr (void)
 {
-    textCurrentCol = 0;
+    cursor_x = 0;
 }
 
 
@@ -618,8 +619,8 @@ void ri (void)
 // # terminal stuff
 void del (void)
 {
-    LINES[textCurrentRow].CHARS[textCurrentCol] = (char) '\0';
-    LINES[textCurrentRow].ATTRIBUTES[textCurrentCol] = 7;
+    LINES[cursor_y].CHARS[cursor_x] = (char) '\0';
+    LINES[cursor_y].ATTRIBUTES[cursor_x] = 7;
 }
 
 
@@ -977,7 +978,7 @@ terminalGetCharXY (
 
 
 // # terminal stuff
-// Insere um caractere sentro do buffer.
+// Insere um caractere dentro do buffer.
 
 void 
 terminalInsertCharXY ( 
@@ -999,16 +1000,16 @@ terminalInsertCharXY (
 // # terminal stuff
 static void save_cur (void)
 {
-    textSavedCol = textCurrentCol;
-    textSavedRow = textCurrentRow;
+    textSavedCol = cursor_x;
+    textSavedRow = cursor_y;
 }
 
 
 // # terminal stuff
 static void restore_cur (void)
 {
-    textCurrentCol = textSavedCol;
-    textCurrentRow = textSavedRow;
+    cursor_x = textSavedCol;
+    cursor_y = textSavedRow;
 }
 
 
@@ -1067,26 +1068,26 @@ int textGetBottomRow (void)
 
 void textSetCurrentRow ( int number )
 {
-    textCurrentRow = (int) number; 
+    cursor_y = (int) number; 
 }
 
 
 int textGetCurrentRow (void)
 {
-    return (int) textCurrentRow;
+    return (int) cursor_y;
 }
 
 
 
 void textSetCurrentCol ( int number )
 {
-    textCurrentCol = (int) number; 
+    cursor_x = (int) number; 
 }
 
 
 int textGetCurrentCol (void)
 {
-    return (int) textCurrentCol; 
+    return (int) cursor_x; 
 }
 
 
@@ -1106,8 +1107,8 @@ void move_to ( unsigned long x, unsigned long y )
 	//screen_buffer_x = x;
 	//screen_buffer_y = y;
 	
-    textCurrentCol = x;
-    textCurrentRow = y;
+    cursor_x = x;
+    cursor_y = y;
 
 	//screen_buffer_pos = ( screen_buffer_y * __wlMaxColumns + screen_buffer_x ) ;
 }
@@ -1120,7 +1121,7 @@ int pad_to (int count, char *string){
 
     register int i=0;
 
-    i = strlen (string);
+    i = strlen(string);
 
     if (i >= count){
         string[i++] = ' ';
@@ -1183,7 +1184,7 @@ void _draw(int fd, int c)
                       (int) 0,              // window id,
                       (unsigned long) __tmp_x,    // left,
                       (unsigned long) __tmp_y,    // top,
-                      (unsigned long) COLOR_WHITE,
+                      (unsigned long) fg_color,
                       (unsigned long) c );
       
                     
@@ -1245,7 +1246,7 @@ terminalProcedure (
                         window, 
                         (cursor_x*8), 
                         (cursor_y*8), 
-                        COLOR_WHITE, 
+                        fg_color, 
                         long1 );
 
                     // refresh window
@@ -1360,7 +1361,7 @@ int main ( int argc, char *argv[] )
     unsigned long mwHeight = (h >> 1);
     unsigned long mwLeft   = ( ( w - mwWidth ) >> 1 );
     unsigned long mwTop    = ( ( h - mwHeight) >> 1 ); 
-    unsigned long mwColor = COLOR_RED;
+    unsigned int mwColor   = COLOR_WINDOW; //COLOR_RED;
 
 //
 // Client area window
@@ -1370,7 +1371,7 @@ int main ( int argc, char *argv[] )
     unsigned long wTop    = 34;  // por causa da title bar
     unsigned long wWidth  =  mwWidth  -2 -2;
     unsigned long wHeight =  mwHeight -2 -34;
-    unsigned long wColor = COLOR_BLACK;
+    unsigned int wColor   = bg_color; //COLOR_BLACK;
 
 
 // The surface of this thread.
@@ -1563,19 +1564,26 @@ int main ( int argc, char *argv[] )
 // então estão mais para terminal do que para shell.
 
 
-void terminalTerminal (void){
-	
-	int i=0;
-	int j=0;
-	
-	// Internas.
-	
+void terminalTerminal (void)
+{
+    int i=0;
+    int j=0;
+
+// Internas.
+
     //shellStatus = 0;
     //shellError = 0;
-	
-	//
-	// ## Inicializando as estruturas de linha ##
-	//
+
+
+    cursor_x=0;
+    cursor_y=0;
+    bg_color=COLOR_BLACK;
+    fg_color=COLOR_WHITE;
+    prompt_color = COLOR_GREEN;
+
+//
+// # Inicializando as estruturas de linha ##
+//
 	
 	//inicializamos com espaços.
 	for ( i=0; i<32; i++ )
@@ -1603,33 +1611,29 @@ void terminalTerminal (void){
 	// Usar o get system metrics para pegar o 
 	// tamanho da tela.
 	
-	//inicializa as metricas do sistema.
-	terminalInitSystemMetrics ();
-	
-    //inicializa os limites da janela.
-	terminalInitWindowLimits ();
-	
-	//inicia o tamanho da janela.
-	terminalInitWindowSizes ();
-	
-	//inicializar a posição da janela.
-	terminalInitWindowPosition ();
+//inicializa as metricas do sistema.
+    terminalInitSystemMetrics();
+
+//inicializa os limites da janela.
+    terminalInitWindowLimits();
+
+//inicia o tamanho da janela.
+    terminalInitWindowSizes();
+
+//inicializar a posição da janela.
+    terminalInitWindowPosition();
  
- 
-    //
-	// initialize visible area.
-	// #todo: criar função para isso
-	// É melhor que seja pequena por enquanto pra não ativar
-	// o scroll do kernel e só usar o scroll desse terminal.
-	
+// initialize visible area.
+// #todo: criar função para isso
+// É melhor que seja pequena por enquanto pra não ativar
+// o scroll do kernel e só usar o scroll desse terminal.
+
 	//textTopRow = 0;
 	//textBottomRow = 24;
     //terminalNewVisibleArea ( 0, 19);
 
-
 	//...	
 
-	
 	// Obs:
 	// prompt[] - Aqui ficam as digitações. 
 
@@ -1673,14 +1677,13 @@ void terminalTerminal (void){
 	//@todo
 	//tentando posicionar o cursor dentro da janela
 	//terminalSetCursor( (shell_info.main_window->left/8) , (shell_info.main_window->top/8));	
-	
+
 	//shellPrompt();
 }
 
 
-void terminalInitSystemMetrics(void){
-
-
+void terminalInitSystemMetrics(void)
+{
 	//Tamanho da tela. (full screen)
 	smScreenWidth = gws_get_system_metrics(1);
 	smScreenHeight = gws_get_system_metrics(2); 

@@ -1453,37 +1453,39 @@ void *sci0 (
             return NULL;
             break;
 
-		// 126
-		// Permitindo que drivers e servidores em usermode acessem
-		// as portas.
+
+        // 126
+        // Permitindo que drivers e servidores em usermode acessem
+        // as portas.
         // #todo: This operation needs permition?
+        // #bugbug
+        // #todo: 
+        // Tem que resolver as quest�es de privil�gios.
+        // IN: bits, port
+
         case SYS_USERMODE_PORT_IN:
-			// #bugbug
-			// #todo: 
-			// Tem que resolver as quest�es de privil�gios.
-            //bits, port
             return (void *) portsx86_IN ( 
-                                (int) arg2, 
-                                (unsigned long) arg3 );
+                                (int) (arg2 & 0xFFFFFFFF), 
+                                (unsigned short) (arg3 & 0xFFFF) );
             break;
 
-
-
-		// 127
-		// Permitindo que drivers e servidores em usermode acessem
-		// as portas.
+        // 127
+        // Permitindo que drivers e servidores em usermode acessem
+        // as portas.
         // #todo: This operation needs permition?
+        // #bugbug
+        // #todo: 
+        // Tem que resolver as quest�es de privil�gios.
+        // IN: bits, port, value
+
         case SYS_USERMODE_PORT_OUT:
-			//#bugbug
-			//#todo: 
-			// Tem que resolver as quest�es de privil�gios.
-			//bits, port, value
             portsx86_OUT ( 
                 (int) arg2, 
-                (unsigned long) arg3, 
-                (unsigned long) arg4 );
+                (unsigned short) (arg3 & 0xFFFF), 
+                (unsigned int)   (arg4 & 0xFFFFFFFF) );
             return NULL;
             break;
+
 
         // 132 - d_draw_char
         // Desenha um caractere e pinta o pano de fundo.

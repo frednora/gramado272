@@ -1,32 +1,25 @@
 
-
-
+// runtime.c
 
 #include <kernel.h>
 
-/*
- *********************************
- * init_runtime:
- *     Initializing run time. 
- *     Kernel heap and stack stuffs.
- *     @todo: Mudar para runtimeInit().
- */
+
+// init_runtime:
+//     Initializing run time. 
+//     Kernel heap and stack stuffs.
+//     #todo: Mudar para runtimeInit().
 
 int init_runtime (void)
 {
     int Status = 0;
 
-
     debug_print ("init_runtime:\n");
     debug_print ("[Kernel] init_runtime: Initializing runtime ...\n");
 
 
-    //
-    // Current arch.
-    //
-    
-    // #hack hack
-    
+// Current arch.
+// #hack hack
+
     current_arch = CURRENT_ARCH_X86_64;
 
     switch (current_arch){
@@ -36,7 +29,6 @@ int init_runtime (void)
         // See: 
         // mm/memory.c
         // mm/pages.c
- 
 
         case CURRENT_ARCH_X86_64:
             debug_print ("[x86_64] init_runtime: [TODO] CURRENT_ARCH_X86_64\n");
@@ -97,14 +89,14 @@ int init_runtime (void)
 //#endif
 
 
-    debug_print ("init_runtime: done\n");
+    debug_print ("init_runtime: fail\n");
     //refresh_screen();
-    return 0; 
+    return FALSE;
 
 fail:
     debug_print ("[Kernel] init_runtime: Runtime fail\n");
     refresh_screen();
-    return (-1);
+    return FALSE;
 }
 
 
@@ -114,15 +106,14 @@ int Runtime_initialize(void)
 {
     int Status=0;
 
+    debug_print ("Runtime_initialize:\n");
 
     g_module_runtime_initialized = FALSE;
-    
-    debug_print ("Runtime_initialize:\n");
-    
+
+
     Status = (int) init_runtime();
 
-    if ( Status < 0 )
-    {
+    if (Status != TRUE){
         debug_print ("Runtime_initialize: Runtime fail. *hang\n");
         // No message support at the moment ?!
         asm ("cli \n");
@@ -137,7 +128,4 @@ int Runtime_initialize(void)
     
     return 0;
 }
-
-
-
 
