@@ -1,0 +1,10 @@
+
+
+	Folders:
+
+
+	admin/ Admin stuff.
+	base/ A kind of place for data access tier.
+	com/ A kind of place for communication tier.
+	gramado/ a kind of place for presentation tier.
+
