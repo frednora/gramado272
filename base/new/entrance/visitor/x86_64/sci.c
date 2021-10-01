@@ -512,11 +512,30 @@ void *gde_extra_services (
     }
 
 
-
-
-
     // Get current desktop
     if (number == 519){  return (void *) CurrentDesktop; }
+
+
+    // network server
+    // 521 - set ns PID for a given desktop
+    // Register a network server.
+    // gramado_ports[11] = ws_pid
+
+    if ( number == 521 )
+    {
+        __desktop = ( struct desktop_d *) arg2;
+        if ( (void *) __desktop != NULL )
+        {
+            if ( __desktop->used == TRUE && 
+                 __desktop->magic == 1234 )
+            {
+                __desktop->ns = (int) arg3;
+                socket_set_gramado_port(GRAMADO_NS_PORT,(pid_t)current_process);
+                return (void *) TRUE;  //ok 
+            }
+        }
+        return NULL; //fail
+    }    
 
 
     // 600 - dup

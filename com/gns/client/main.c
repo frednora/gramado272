@@ -54,10 +54,11 @@
 
 #include <rtl/gramado.h>
 
-// gns
+// ??
 #include <packet.h>
 
 
+#include <gns.h>
 
 //
 // == ports ====================================
@@ -84,14 +85,16 @@ char __buffer[512];
 //#define SERVER_PACKET_TYPE_ERROR      1003
 
 
+/*
 void gnst_yield(void);
+*/
 
-
+/*
 // Hello!
 // Podemos isso na lib.
 int gnst_hello_request(int fd);
 int gnst_hello_response(int fd);
-
+*/
 
 //...
 
@@ -107,11 +110,12 @@ int gerar_numero(int lim_inf, int lim_sup)
 
 
 
-
+/*
 void gnst_yield(void)
 {
     gramado_system_call (265,0,0,0); //yield thread.
 }
+*/
 
 
 
@@ -128,12 +132,11 @@ struct sockaddr_in addr = {
 
 
 
-
+/*
 int gnst_hello_response(int fd)
 {
     unsigned long *message_buffer = (unsigned long *) &__buffer[0];   
     int n_reads = 0;    // For receiving responses.
-
 
     //
     // waiting
@@ -206,7 +209,6 @@ __again:
             break; 
     };
 
-
     //
     // done:
     //
@@ -221,10 +223,12 @@ process_reply:
 
     return TRUE;
 }
+*/
 
 
-int gnst_hello_request (int fd){
-
+/*
+int gnst_hello_request (int fd)
+{
     // Isso permite ler a mensagem na forma de longs.
     unsigned long *message_buffer = (unsigned long *) &__buffer[0];   
 
@@ -273,8 +277,10 @@ new_message:
 
     return 0;
 }
+*/
 
 
+/*
 // internal
 // #todo: 
 // Move these routine to the client-side library.
@@ -285,7 +291,8 @@ int gnst_hello (int fd)
         debug_print("gnst_hello: fd\n");
     }
 
-    gnst_hello_request(fd);
+    //gnst_hello_request(fd);
+    __gns_hello_request(fd);
     
     // Avisamos que um request foi enviado.
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
@@ -299,16 +306,13 @@ int gnst_hello (int fd)
         gnst_yield();
     };
 
-    return (int) gnst_hello_response(fd);
+    //return (int) gnst_hello_response(fd);
+    return (int) __gns_hello_response(fd);
 }
+*/
 
 
-
-/*
- * main:
- * 
- * 
- */
+// main:
 
 int main ( int argc, char *argv[] ){
 
@@ -381,23 +385,13 @@ int main ( int argc, char *argv[] ){
         exit(1);
     }
 
-    // no loop.
-    //gnst_hello (client_fd);
-    //gnst_hello (client_fd);
-    //gnst_hello (client_fd);
-    //gnst_hello (client_fd);
-    
-    //int i=0;
-    //for(i=0; i<50; i++)
-    //    gnst_yield();
-
     while(1){
 
         printf("gns.bin: Send message\n");
-        gnst_hello (client_fd);
+        gns_hello (client_fd);
 
         printf("gns.bin: Sleep\n");
-        gnst_yield();
+        gns_yield();
     };
     
 

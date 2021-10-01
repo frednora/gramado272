@@ -244,7 +244,7 @@ void xxxHandleNextRequest(int fd){
     //debug_print ("Sending response ...\n");  
 
     //# it works.
-    char *m = (char *) (&__buffer[0] + 16);
+    char *m = (char *) (&__buffer[0] + 128);
     sprintf( m, "GRAMADO 501 Not Implemented\n\n");
     //sprintf( m, "HTTP/1.1 501 Not Implemented\n\n");
     //sprintf( m, "HTTP/1.1 400 Bad Request\n Content-Type: text/html\n Content-Length: 0\n");
@@ -586,10 +586,7 @@ int main (int argc, char **argv)
     debug_print ("gnssrv: Initializing...\n");
     printf      ("gnssrv: Initializing...\n");
 
-//
 // Register
-//
-
 // Register this process as the network server.
 // See: connect.c
 

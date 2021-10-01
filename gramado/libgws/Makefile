@@ -44,7 +44,6 @@ all-c:
 finalize:
 	-mkdir obj/
 	-cp *.o obj/
-
 clean:
 	-rm *.o
 	

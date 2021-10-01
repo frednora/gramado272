@@ -33,8 +33,8 @@ CFLAGS = -m64 \
 
 LIBC     = ../../lib/rtl/include/
 LIBCOBJ  = ../../lib/rtl/obj
-LIBIO    = ../../lib/lib/libio01/include/
-LIBIOOBJ = ../../lib/lib/libio01/obj
+LIBIO    = ../../lib/libio01/include/
+LIBIOOBJ = ../../lib/libio01/obj
 
 
 #Objects

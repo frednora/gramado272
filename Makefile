@@ -143,7 +143,7 @@ communication-tier:
 
 	@echo "Build: Building usermode libraries ..."
 	$(Q) $(MAKE) -C com/lib/rtl/
-	$(Q) $(MAKE) -C com/lib/lib/
+	$(Q) $(MAKE) -C com/lib/
 
 	@echo "Build: Building cmd applications ..."
 
@@ -261,8 +261,8 @@ clean:
 	-rm *.o
 
 	-rm -rf com/lib/rtl/obj/*.o
-	-rm -rf com/lib/lib/libgns/obj/*.o
-	-rm -rf com/lib/lib/libio01/obj/*.o
+	-rm -rf com/lib/libgns/obj/*.o
+	-rm -rf com/lib/libio01/obj/*.o
 
 	-rm -rf gramado/core/cmdline/*.o
 

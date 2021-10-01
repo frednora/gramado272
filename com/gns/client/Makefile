@@ -30,18 +30,18 @@ CFLAGS = -m64 \
 	-s \
 	-Werror=strict-prototypes    
 
-
 LIBC      = ../../lib/rtl/include/
 LIBCOBJ   = ../../lib/rtl/obj
+LIBGNS    = ../../lib/libgns/include/
+LIBGNSOBJ = ../../lib/libgns/obj
 
-	##
-	## Objects
-	##
+#
+# Objects
+#
 
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \
-unistd.o termios.o ioctl.o socket.o    
-
+unistd.o termios.o ioctl.o socket.o gns.o    
 
 
 
@@ -51,8 +51,11 @@ all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I include/ -o main.o
-
+	gcc  -c  main.c  $(CFLAGS) \
+    -I $(LIBC) \
+    -I $(LIBGNS) \
+    -I include/ \
+    -o main.o
 
 all-c:
 
@@ -70,8 +73,8 @@ all-c:
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
 
-	
-	
+	cp $(LIBGNSOBJ)/gns.o .
+
 hello-link:
 	ld -m elf_x86_64 -T ../link.ld -o GNS.BIN $(myObjects)    
 
