@@ -1,4 +1,5 @@
 
+// atainit.c
 
 #include <kernel.h>  
 
@@ -26,6 +27,7 @@ ataDialog (
 
         case 1:
             debug_print ("ataDialog: Initialize ata\n");
+            // IN: ?? forcepio.
             ata_initialize ( (int) long1 );
             Status = 0;
             return (int) Status;

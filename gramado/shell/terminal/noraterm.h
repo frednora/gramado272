@@ -6,10 +6,10 @@
  * 
  */
 
-#define WINDOW_LEFT      0      
-#define WINDOW_TOP       0      
-#define WINDOW_WIDTH     800    
-#define WINDOW_HEIGHT    600-24   
+//#define WINDOW_LEFT      0      
+//#define WINDOW_TOP       0      
+//#define WINDOW_WIDTH     800    
+//#define WINDOW_HEIGHT    600-24   
 
 
 // rtl

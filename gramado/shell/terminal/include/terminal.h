@@ -458,6 +458,8 @@ typedef enum terminal_api_message_number_d {
 
 struct terminal_d
 {
+    int initialized;
+    
     int client_fd;
     
     int main_window_id;
@@ -466,6 +468,17 @@ struct terminal_d
     int pid;
     int uid;
     int gid;
+
+    unsigned long left;
+    unsigned long top;
+
+    // In pixels.
+    unsigned long width;
+    unsigned long height;
+
+    // In chars.
+    unsigned long width_in_chars;
+    unsigned long height_in_chars;
     
     // ...
 };

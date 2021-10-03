@@ -72,16 +72,14 @@ unsigned int prompt_color;
 
 // #test
 // Tentando deixar o buffer aqui e aproveitar em mais funções.
-char __buffer[512];
+//char __buffer[512];
 
 #define IP(a, b, c, d) (a << 24 | b << 16 | c << 8 | d)
 
 
-
+// prototypes
 
 void __send_to_child (void);
-
-
 
 //constructor.
 void terminalTerminal (void);
@@ -100,16 +98,19 @@ void doPrompt(int fd);
 
 void clear_terminal_client_window(int fd)
 {
-     gws_redraw_window(fd,Terminal.client_window_id,TRUE);
 
-// Cursor do console do terminal.
+    if( fd<0)
+        return;
 
-     //#define SYSTEMCALL_SETCURSOR  34
-     //gramado_system_call ( 34, 2, 2, 0 );
+// Redraw the client window.
+     gws_redraw_window(
+         fd,
+         Terminal.client_window_id,
+         TRUE );
 
 // Cursor do terminal.
-    cursor_x = 0;
-    cursor_y = 0;
+    cursor_x = Terminal.left;
+    cursor_y = Terminal.top;
 }
 
 void compareStrings(int fd)
@@ -150,21 +151,13 @@ void compareStrings(int fd)
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"reboot",6) == 0 )
-    {
+    if ( strncmp(prompt,"reboot",6) == 0 ){
         rtl_reboot();
         goto exit_cmp;
     }
 
-    if ( strncmp(prompt,"cls",3) == 0 )
-    {
-        // Redraw and show the client window.
-        gws_redraw_window(
-            fd,
-            Terminal.client_window_id,
-            TRUE );
-        cursor_x = 0;
-        cursor_y = 0;
+    if ( strncmp(prompt,"cls",3) == 0 ){
+        clear_terminal_client_window(fd);
         goto exit_cmp;
     }
 
@@ -173,6 +166,10 @@ void compareStrings(int fd)
        goto exit_cmp;
 
 // Clone.
+// #important:
+// For now the system will crash if the
+// command is not found.
+
     rtl_clone_and_execute(prompt);
 
     //printf("Command not found\n");
@@ -1253,8 +1250,13 @@ terminalProcedure (
                     gws_refresh_window(fd,window);
 
                     // update cursor positions
+                    // #todo: Create a helper for that this.
                     cursor_x++;
-                    if( cursor_x > 20){cursor_x=0;}
+                    if( cursor_x >= Terminal.width_in_chars)
+                    {
+                        cursor_x = Terminal.left;
+                        cursor_y++;
+                    }
 
                     return 0;
 
@@ -1277,16 +1279,18 @@ terminalProcedure (
 
 int main ( int argc, char *argv[] )
 {
-    int client_fd = -1;
 
+// ====
     //porta para o Window Server 'ws' em gramado_ports[]
     struct sockaddr_in addr_in;
     addr_in.sin_family = AF_INET;
     
     // Connecting to the window server in this machine.
-    addr_in.sin_port   = PORTS_WS;   
+    addr_in.sin_port = PORTS_WS;
     addr_in.sin_addr.s_addr = IP(127,0,0,1); 
+// ====
 
+    int client_fd = -1;
 
     debug_print ("--------------------------\n");
     debug_print ("terminal: Initializing ...\n");
@@ -1296,6 +1300,8 @@ int main ( int argc, char *argv[] )
 
     unsigned long w = gws_get_system_metrics(1);
     unsigned long h = gws_get_system_metrics(2);
+
+    Terminal.initialized = FALSE;
 
 // Cursor
     cursor_x = 0;
@@ -1316,7 +1322,7 @@ int main ( int argc, char *argv[] )
 // 
 
     // #debug
-    printf ("terminal: Creating socket\n");
+    //printf ("terminal: Creating socket\n");
 
     client_fd = socket ( AF_INET, SOCK_STREAM, 0 );
     if ( client_fd < 0 ){
@@ -1337,7 +1343,7 @@ int main ( int argc, char *argv[] )
 // Nessa hora colocamos no accept um fd.
 // então o servidor escreverá em nosso arquivo.
 
-    printf ("terminal: Connecting to ws via inet ...\n");
+    //printf ("terminal: Connecting to ws via inet ...\n");
 
     while (1){
         if (connect (client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
@@ -1352,7 +1358,6 @@ int main ( int argc, char *argv[] )
     int main_window = 0;
     int terminal_window = 0;
 
-
 //
 // main window
 //
@@ -1361,7 +1366,7 @@ int main ( int argc, char *argv[] )
     unsigned long mwHeight = (h >> 1);
     unsigned long mwLeft   = ( ( w - mwWidth ) >> 1 );
     unsigned long mwTop    = ( ( h - mwHeight) >> 1 ); 
-    unsigned int mwColor   = COLOR_WINDOW; //COLOR_RED;
+    unsigned int mwColor   = COLOR_WINDOW;
 
 //
 // Client area window
@@ -1371,8 +1376,7 @@ int main ( int argc, char *argv[] )
     unsigned long wTop    = 34;  // por causa da title bar
     unsigned long wWidth  =  mwWidth  -2 -2;
     unsigned long wHeight =  mwHeight -2 -34;
-    unsigned int wColor   = bg_color; //COLOR_BLACK;
-
+    unsigned int wColor   = bg_color;
 
 // The surface of this thread.
     setup_surface_retangle ( 
@@ -1380,7 +1384,6 @@ int main ( int argc, char *argv[] )
         (unsigned long) mwTop, 
         (unsigned long) mwWidth, 
         (unsigned long) mwHeight );
-
 
 // ===================================================
 
@@ -1402,6 +1405,7 @@ int main ( int argc, char *argv[] )
 
     Terminal.main_window_id = main_window;
 
+
 // ===================================================
 
 //
@@ -1413,13 +1417,29 @@ int main ( int argc, char *argv[] )
                           wLeft, wTop, wWidth, wHeight,
                           main_window,0,wColor,wColor);
       
-    // Saving the window id.
+// Saving the window id.
+
     Terminal.client_window_id = terminal_window;
-    
+
     if (Terminal.client_window_id<0){
         gws_debug_print ("terminal: [FAIL] create main window return fail\n");
     }
 
+
+    Terminal.left = 0;
+    Terminal.top = 0;
+
+// Width and height
+
+    // In pixels.
+    Terminal.width = wWidth;
+    Terminal.height = wHeight;
+
+    // In chars.
+    Terminal.width_in_chars  = (unsigned long)((wWidth/8)  & 0xFFFF);
+    Terminal.height_in_chars = (unsigned long)((wHeight/8) & 0xFFFF);
+
+    Terminal.initialized = TRUE;
 
 // Set window with focus
     //gws_async_command(client_fd,9,0,terminal_window);
@@ -1463,6 +1483,10 @@ int main ( int argc, char *argv[] )
 
 
 // Initializations
+// #important:
+// We will call this function
+// only after having the Terminal structure initialized.
+
     terminalTerminal();
 
 
@@ -1581,36 +1605,33 @@ void terminalTerminal (void)
     fg_color=COLOR_WHITE;
     prompt_color = COLOR_GREEN;
 
-//
-// # Inicializando as estruturas de linha ##
-//
-	
-	//inicializamos com espaços.
-	for ( i=0; i<32; i++ )
-	{
-		for ( j=0; j<80; j++ )
-		{
-		    LINES[i].CHARS[j] = (char) ' ';
-		    LINES[i].ATTRIBUTES[j] = (char) 7;
-	    }
-		
-		LINES[i].left = 0;
-		LINES[i].right = 0;
-		LINES[i].pos = 0;
-	};
-	
-	
-	
-	// Deve ser pequena, clara e centralizada.
-	// Para ficar mais rápido.
-	
-	// #importante:
-	// O aplicativo tem que confiar nas informações 
-	// retornadas pelo sistema.
-		
-	// Usar o get system metrics para pegar o 
-	// tamanho da tela.
-	
+
+// Inicializando as estruturas de linha.
+// Inicializamos com espaços.
+
+    for ( i=0; i<32; i++ )
+    {
+        for ( j=0; j<80; j++ )
+        {
+            LINES[i].CHARS[j]      = (char) ' ';
+            LINES[i].ATTRIBUTES[j] = (char) 7;
+        };
+
+        LINES[i].left = 0;
+        LINES[i].right = 0;
+        LINES[i].pos = 0;
+    };
+
+
+// Deve ser pequena, clara e centralizada.
+// Para ficar mais rápido.
+// #importante:
+// O aplicativo tem que confiar nas informações 
+// retornadas pelo sistema.
+// Usar o get system metrics para pegar o 
+// tamanho da tela.
+
+
 //inicializa as metricas do sistema.
     terminalInitSystemMetrics();
 
@@ -1768,6 +1789,11 @@ void terminalInitWindowLimits (void){
 void terminalInitWindowSizes(void)
 {
 
+    if (Terminal.initialized != TRUE ){
+        printf("terminalInitWindowSizes: Terminal.initialized\n");
+        exit(1);
+    }
+
 //
 //  ## Window size ##
 //
@@ -1778,10 +1804,9 @@ void terminalInitWindowSizes(void)
 	//Tamanho da janela do shell com base nos limites 
     //que ja foram configurados.	
 	
-	wsWindowWidth =  WINDOW_WIDTH;
-	wsWindowHeight = WINDOW_HEIGHT;
-	
-	
+	wsWindowWidth  = Terminal.width;
+	wsWindowHeight = Terminal.height;
+
 	if ( wsWindowWidth < wlMinWindowWidth ){
 		wsWindowWidth = wlMinWindowWidth;
 	}
@@ -1794,11 +1819,16 @@ void terminalInitWindowSizes(void)
 
 void terminalInitWindowPosition(void)
 {
-	
+
+    if (Terminal.initialized != TRUE ){
+        printf("terminalInitWindowPosition: Terminal.initialized\n");
+        exit(1);
+    }
+
 	//window position
-	wpWindowLeft = WINDOW_LEFT;
-	wpWindowTop  = WINDOW_TOP;
-	
+	wpWindowLeft = Terminal.left;
+	wpWindowTop  = Terminal.top;
+
 	//wpWindowLeft = (unsigned long) ( (smScreenWidth - wsWindowWidth)/2 );
 	//wpWindowTop = (unsigned long) ( (smScreenHeight - wsWindowHeight)/2 );  	
 }

@@ -1,4 +1,5 @@
 
+// ata.h
 
 #ifndef __ATA_H
 #define __ATA_H    1
@@ -51,11 +52,11 @@
 
 
 // IO Space Legacy BARs IDE. 
-#define ATA_IDE_BAR0  0x1F0  // Primary Command Block Base Address.
-#define ATA_IDE_BAR1  0x3F6  // Primary Control Block Base Address.
-#define ATA_IDE_BAR2  0x170  // Secondary Command Block Base Address.
-#define ATA_IDE_BAR3  0x376  // Secondary Control Block Base Address.
-#define ATA_IDE_BAR4  0      // Bus Master Base Address.
+#define ATA_IDE_BAR0_PRIMARY_COMMAND    0x1F0  // Primary Command Block Base Address.
+#define ATA_IDE_BAR1_PRIMARY_CONTROL    0x3F6  // Primary Control Block Base Address.
+#define ATA_IDE_BAR2_SECONDARY_COMMAND  0x170  // Secondary Command Block Base Address.
+#define ATA_IDE_BAR3_SECONDARY_CONTROL  0x376  // Secondary Control Block Base Address.
+#define ATA_IDE_BAR4_BUS_MASTER  0      // Bus Master Base Address.
 #define ATA_IDE_BAR5  0      // Usado pelo AHCI.
 
 
@@ -348,14 +349,21 @@ typedef struct st_dev st_dev_t;
 #define DISK4 4
 
 
-// gcc -Wall Defined but not used!
+
 // base address 
-static unsigned long ATA_BAR0;    // Primary Command Block Base Address
-static unsigned long ATA_BAR1;    // Primary Control Block Base Address
-static unsigned long ATA_BAR2;    // Secondary Command Block Base Address
-static unsigned long ATA_BAR3;    // Secondary Control Block Base Address
-static unsigned long ATA_BAR4;    // Legacy Bus Master Base Address
-static unsigned long ATA_BAR5;    // AHCI Base Address / SATA Index Data Pair Base Address
+// BAR0 is the start of the I/O ports used by the primary channel.
+// BAR1 is the start of the I/O ports which control the primary channel.
+// BAR2 is the start of the I/O ports used by secondary channel.
+// BAR3 is the start of the I/O ports which control secondary channel.
+// BAR4 is the start of 8 I/O ports controls the primary channel's Bus Master IDE.
+// BAR4 + 8 is the Base of 8 I/O ports controls secondary channel's Bus Master IDE.
+
+static unsigned long ATA_BAR0_PRIMARY_COMMAND_PORT;    // Primary Command Block Base Address
+static unsigned long ATA_BAR1_PRIMARY_CONTROL_PORT;    // Primary Control Block Base Address
+static unsigned long ATA_BAR2_SECONDARY_COMMAND_PORT;  // Secondary Command Block Base Address
+static unsigned long ATA_BAR3_SECONDARY_CONTROL_PORT;  // Secondary Control Block Base Address
+static unsigned long ATA_BAR4;  // Legacy Bus Master Base Address
+static unsigned long ATA_BAR5;  // AHCI Base Address / SATA Index Data Pair Base Address
 
 
 

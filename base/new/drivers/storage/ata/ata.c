@@ -1,4 +1,5 @@
 
+// ata.c
 // ata handshake.
 // write command and read status.
 
@@ -161,26 +162,29 @@ extern st_dev_t *current_dev;
 void set_ata_addr (int channel)
 {
 
-    // #todo
-    // filtrar limites.
-    
+// #todo
+// filtrar limites.
+
+    //if( channel<0 )
+        //panic()
+
     switch (channel){
 
-        case ATA_PRIMARY:
-            ata.cmd_block_base_address  = ATA_BAR0;
-            ata.ctrl_block_base_address = ATA_BAR1;
-            ata.bus_master_base_address = ATA_BAR4;
-            break;
+    case ATA_PRIMARY:
+        ata.cmd_block_base_address  = ATA_BAR0_PRIMARY_COMMAND_PORT;
+        ata.ctrl_block_base_address = ATA_BAR1_PRIMARY_CONTROL_PORT;
+        ata.bus_master_base_address = ATA_BAR4;
+        break;
 
-        case ATA_SECONDARY:
-            ata.cmd_block_base_address  = ATA_BAR2;
-            ata.ctrl_block_base_address = ATA_BAR3;
-            ata.bus_master_base_address = ATA_BAR4 + 8;
-            break;
+    case ATA_SECONDARY:
+        ata.cmd_block_base_address  = ATA_BAR2_SECONDARY_COMMAND_PORT;
+        ata.ctrl_block_base_address = ATA_BAR3_SECONDARY_CONTROL_PORT;
+        ata.bus_master_base_address = ATA_BAR4 + 8;
+        break;
 
-        //default:
-            //PANIC
-            //break;
+    //default:
+        //PANIC
+        //break;
     };
 }
 
@@ -196,8 +200,8 @@ void set_ata_addr (int channel)
 unsigned char ata_assert_dever (char nport)
 {
 
-    // todo
-    // filtrar limits.
+// todo
+// filtrar limits.
 
     switch (nport){
 
@@ -352,15 +356,18 @@ ata_ioctl (
 
 
 
-/*
- *******************************************
- * ata_initialize:
- *     Inicializa o IDE e mostra informações sobre o disco.
- */
+// ata_initialize:
+// Inicializa o IDE e mostra informações sobre o disco.
+// Called by ataDialog in atainit.c
+// Sondando na lista de dispositivos encontrados 
+// pra ver se tem algum controlador de disco IDE.
+// IN: ?
+// Configurando flags do driver.
+// FORCEPIO = 1234
 
 int ata_initialize ( int ataflag )
 {
-    int Status = 1;  
+    int Status = 1;
 
     // iterator.
     int iPortNumber=0;
@@ -383,39 +390,39 @@ int ata_initialize ( int ataflag )
     __breaker_ata2_initialized = FALSE;
 
 
-    //
-    // ===============================================================
-    //
+//
+// ===============================================================
+//
 
-    // #importante 
-    // HACK HACK
-    // usando as definições feitas em config.h
-    // até que possamos encontrar o canal e o dispositivo certos.
-    // __IDE_PORT indica qual é o canal.
-    // __IDE_SLAVE indica se é master ou slave.
-    // ex: primary/master.
-    // See: config.h
+// #importante 
+// HACK HACK
+// Usando as definições feitas em config.h
+// até que possamos encontrar dinamicamente 
+// o canal e o dispositivo certos.
+// __IDE_PORT indica qual é o canal.
+// __IDE_SLAVE indica se é master ou slave.
+// ex: primary/master.
+// See: config.h
 
-
-    g_boottime_ide_channel =  __IDE_PORT;   // primary
-    g_boottime_ide_device  =  __IDE_SLAVE;  // master
+    g_boottime_ide_channel = __IDE_PORT;   // primary
+    g_boottime_ide_device  = __IDE_SLAVE;  // master
 
     // Configumos o atual como sendo o mesmo
     // usado durante o boot.
     // #todo
     // Poderemos mudar o atual conforme nossa intenção
     // de acessarmos outros discos.
-    
+
     g_current_ide_channel =  g_boottime_ide_channel;
     g_current_ide_device  =  g_boottime_ide_device;
 
-    //
-    // ===============================================================
-    //
+//
+// ===============================================================
+//
 
 
-	// Configurando flags do driver.
-	// FORCEPIO = 1234
+// Configurando flags do driver.
+// FORCEPIO = 1234
 
     ATAFlag = (int) ataflag;
 
@@ -430,104 +437,123 @@ int ata_initialize ( int ataflag )
 #endif
 
 
-	// #test
-	// Sondando na lista de dispositivos encontrados pra ver se tem algum
-	// controlador de disco IDE.
-	// #importante:
-	// Estamos sondando uma lista que contruimos quando fizemos
-	// uma sondagem no começo da inicializaçao do kernel.
-	// #todo: podemos salvar essa lista.
-	
-	// #todo
-	// O que eh PCIDeviceATA?
-	// Eh uma estrutura para dispositivos pci. (pci_device_d)
-	// Vamos mudar de nome.
+// #test
+// Sondando na lista de dispositivos encontrados 
+// pra ver se tem algum controlador de disco IDE.
+// #importante:
+// Estamos sondando uma lista que contruimos quando fizemos
+// uma sondagem no começo da inicializaçao do kernel.
+// #todo: 
+// Podemos salvar essa lista.
+// #todo
+// O que é PCIDeviceATA?
+// É uma estrutura para dispositivos pci. (pci_device_d)
+// Vamos mudar de nome.
 
-    PCIDeviceATA = (struct pci_device_d *) scan_pci_device_list2 ( 
-                                        (unsigned char) PCI_CLASSCODE_MASS, 
-                                        (unsigned char) PCI_SUBCLASS_IDE );
+    PCIDeviceATA = 
+        (struct pci_device_d *) scan_pci_device_list2 ( 
+                                    (unsigned char) PCI_CLASSCODE_MASS, 
+                                    (unsigned char) PCI_SUBCLASS_IDE );
+
+
+// Structure validation.
 
     if ( (void *) PCIDeviceATA == NULL ){
-        panic ("ata_initialize: PCIDeviceATA\n");
-    }else{
-        if ( PCIDeviceATA->used != TRUE || PCIDeviceATA->magic != 1234 )
-        {
-            panic ("ata_initialize: Validation\n");
-        }
+        panic("ata_initialize: PCIDeviceATA\n");
+    }
 
-		//#debug
-		//kprintf ("ata-diskATAInitialize: IDE device found\n");
-		//kprintf ("[ Vendor=%x Device=%x ]\n", PCIDeviceATA->Vendor, PCIDeviceATA->Device );
+    if ( PCIDeviceATA->used != TRUE || 
+         PCIDeviceATA->magic != 1234 )
+    {
+        panic("ata_initialize: PCIDeviceATA validation\n");
+    }
 
-    };
+    //#debug
+    // printf (": IDE device found\n");
+    // printf ("[ Vendor=%x Device=%x ]\n", PCIDeviceATA->Vendor, PCIDeviceATA->Device );
 
-	//
-	// Vamos saber mais sobre o dispositivo encontrado. 
-	//
+//
+// Vamos saber mais sobre o dispositivo encontrado. 
+//
 
-	// #bugbug: 
-	// Esse data é só um código de erro.
+    // #bugbug: 
+    // Esse retorno é só um código de erro.
 
     Ret = (unsigned long) diskATAPCIConfigurationSpace(PCIDeviceATA);
 
+// Fail
     if ( Ret == PCI_MSG_ERROR )
     {
         printk ("ata_initialize: Error Driver [%x]\n", Ret );
         Status = (int) 1;
-        goto fail;  
+        panic("ata_initialize: Error Driver");
+        //goto fail;  
     }
 
-	//
-	// Salvando informações.
-	//
 
-	// Aqui estamos pegando informações na estrutura PCIDeviceATA sobre as BARs 
-	// e manipulando essas informações.
-	// ?? Não sei o que está fazendo aqui, talvez procurando endereço de porta.
+// Explicando:
+// Aqui estamos pegando nas BARs o número das portas.
+// Logo em seguida salvaremos esses números e usaremos
+// eles para fazer uma rotina de soft reset.
+// See:
+// https://wiki.osdev.org/PCI_IDE_Controller
 
-
-    // Initialize base address
-    // AHCI/IDE Compativel com portas IO IDE legado
-
-    ATA_BAR0 = ( PCIDeviceATA->BAR0 & ~7 ) + ATA_IDE_BAR0 * ( !PCIDeviceATA->BAR0 );
-    ATA_BAR1 = ( PCIDeviceATA->BAR1 & ~3 ) + ATA_IDE_BAR1 * ( !PCIDeviceATA->BAR1 );       
-    ATA_BAR2 = ( PCIDeviceATA->BAR2 & ~7 ) + ATA_IDE_BAR2 * ( !PCIDeviceATA->BAR2 );
-    ATA_BAR3 = ( PCIDeviceATA->BAR3 & ~3 ) + ATA_IDE_BAR3 * ( !PCIDeviceATA->BAR3 );
-
-    ATA_BAR4 = ( PCIDeviceATA->BAR4 & ~0x7 ) + ATA_IDE_BAR4 * ( !PCIDeviceATA->BAR4 );
-    ATA_BAR5 = ( PCIDeviceATA->BAR5 & ~0xf ) + ATA_IDE_BAR5 * ( !PCIDeviceATA->BAR5 );
+// base address 
+// BAR0 is the start of the I/O ports used by the primary channel.
+// BAR1 is the start of the I/O ports which control the primary channel.
+// BAR2 is the start of the I/O ports used by secondary channel.
+// BAR3 is the start of the I/O ports which control secondary channel.
+// BAR4 is the start of 8 I/O ports controls the primary channel's Bus Master IDE.
+// BAR4 + 8 is the Base of 8 I/O ports controls secondary channel's Bus Master IDE.
 
 
-	//
-	// Colocando nas estruturas.
-	//
+    ATA_BAR0_PRIMARY_COMMAND_PORT   = ( PCIDeviceATA->BAR0 & ~7 ) + ATA_IDE_BAR0_PRIMARY_COMMAND   * ( !PCIDeviceATA->BAR0 );
+    ATA_BAR1_PRIMARY_CONTROL_PORT   = ( PCIDeviceATA->BAR1 & ~3 ) + ATA_IDE_BAR1_PRIMARY_CONTROL   * ( !PCIDeviceATA->BAR1 );       
+    ATA_BAR2_SECONDARY_COMMAND_PORT = ( PCIDeviceATA->BAR2 & ~7 ) + ATA_IDE_BAR2_SECONDARY_COMMAND * ( !PCIDeviceATA->BAR2 );
+    ATA_BAR3_SECONDARY_CONTROL_PORT = ( PCIDeviceATA->BAR3 & ~3 ) + ATA_IDE_BAR3_SECONDARY_CONTROL * ( !PCIDeviceATA->BAR3 );
 
-    ide_ports[0].base_port = (unsigned short) ATA_BAR0;
-    ide_ports[1].base_port = (unsigned short) ATA_BAR1;
-    ide_ports[2].base_port = (unsigned short) ATA_BAR2;
-    ide_ports[3].base_port = (unsigned short) ATA_BAR3;
+    ATA_BAR4 = ( PCIDeviceATA->BAR4 & ~0x7 ) + ATA_IDE_BAR4_BUS_MASTER * ( !PCIDeviceATA->BAR4 );
+    ATA_BAR5 = ( PCIDeviceATA->BAR5 & ~0xf ) + ATA_IDE_BAR5            * ( !PCIDeviceATA->BAR5 );
+
+//
+// Colocando nas estruturas.
+//
+    ide_ports[0].base_port = (unsigned short) (ATA_BAR0_PRIMARY_COMMAND_PORT   & 0xFFFF);
+    ide_ports[1].base_port = (unsigned short) (ATA_BAR1_PRIMARY_CONTROL_PORT   & 0xFFFF);
+    ide_ports[2].base_port = (unsigned short) (ATA_BAR2_SECONDARY_COMMAND_PORT & 0xFFFF);
+    ide_ports[3].base_port = (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF);
 	//tem ainda a porta do dma na bar4
 
 
-	//
-	// De acordo com o tipo.
-	//
+//
+// De acordo com o tipo.
+//
 
 
-	//
-	// Se for IDE.
-	//
+// ==============================================
+// Se for IDE.
+//
 
-
-	// Type
+    // Type
     if ( ata.chip_control_type == ATA_IDE_CONTROLLER )
     {
+
         //Soft Reset, defina IRQ
+        out8(
+            (unsigned short) (ATA_BAR1_PRIMARY_CONTROL_PORT & 0xFFFF),
+            0xff );
         
-        out8 ( ATA_BAR1, 0xff );
-        out8 ( ATA_BAR3, 0xff );
-        out8 ( ATA_BAR1, 0x00 );
-        out8 ( ATA_BAR3, 0x00 );
+        out8( 
+            (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF), 
+            0xff );
+        
+        out8( 
+            (unsigned short) (ATA_BAR1_PRIMARY_CONTROL_PORT & 0xFFFF), 
+            0x00 );
+        
+        out8( 
+            (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF), 
+            0x00 );
 
         ata_record_dev     = 0xff;
         ata_record_channel = 0xff;
@@ -561,8 +587,8 @@ int ata_initialize ( int ataflag )
 
         current_dev = ( struct st_dev * ) ready_queue_dev;
 
-        current_dev->dev_id      = dev_next_pid++;
-        current_dev->dev_type    = -1;
+        current_dev->dev_id   = dev_next_pid++;
+        current_dev->dev_type = -1;
         
         // Channel and device.
         // ex: primary/master.
@@ -577,7 +603,7 @@ int ata_initialize ( int ataflag )
         // Is this a buffer ? For what ?
         // Is this bugger enough ?
 
-        ata_identify_dev_buf = (unsigned short *) kmalloc (4096);
+        ata_identify_dev_buf = (unsigned short *) kmalloc(4096);
 
         if ( (void *) ata_identify_dev_buf == NULL ){
             panic ("ata_initialize: ata_identify_dev_buf\n");
@@ -591,51 +617,26 @@ int ata_initialize ( int ataflag )
 
         for ( iPortNumber=0; iPortNumber < 4; iPortNumber++ )
         {
-            ide_dev_init (iPortNumber);
+            ide_dev_init(iPortNumber);
         };
 
+        // Ok
+        Status = 0;
+        goto done;
+    }
 
-		//
-		// Agora se for AHCI.
-		//
+// ==============================================
+// Agora se for AHCI.
 
-    }else if( ata.chip_control_type == ATA_AHCI_CONTROLLER )
-          {
+    if ( ata.chip_control_type == ATA_AHCI_CONTROLLER )
+    {
+        panic("ata_initialize: AHCI not supported yet\n");
+    }
 
-              // Nothing for now !!!
-              
-              panic ("ata_initialize: AHCI not supported yet\n");
+// ==============================================
+// Nem IDE nem AHCI.
 
-              // Aqui, vamos mapear o BAR5
-              // Estou colocando na marca 28MB
-    
-    
-//#ifdef KERNEL_VERBOSE
-              // printf("ata_initialize: mem_map para ahci\n");
-              // refresh_screen();
-//#endif
-
-
-              //mem_map( (uint32_t*)0x01C00000, (uint32_t*) ATA_BAR5, 0x13, 2);
-
-              //kputs("[ AHCI Mass Storage initialize ]\n");
-              //ahci_mass_storage_init();
-
-
-          }else{
-              panic ("ata_initialize: IDE and AHCI not found\n");
-          };
-
-
-    // Ok
-    
-    Status = 0;
-    
-    goto done;
-
-
-fail:
-    printk ("ata_initialize: fail\n"); 
+    panic("ata_initialize: IDE and AHCI not found\n");
 
 done:
 
@@ -651,6 +652,7 @@ done:
     return (int) Status;
 }
 
+
 /*
  ********************************************
  * ide_identify_device:
@@ -662,16 +664,14 @@ done:
 
 int ide_identify_device ( uint8_t nport )
 {
+    // Signature bytes.
+    unsigned char sig_byte_1=0;
+    unsigned char sig_byte_2=0;
 
     struct disk_d  *disk;
-
-    // Signature bytes.
-    unsigned char lba1 = 0; 
-    unsigned char lba2 = 0;
-
     char name_buffer[32];
-    unsigned char status=0;
 
+    unsigned char status=0;
 
     // #todo:
     // Rever esse assert. 
@@ -693,27 +693,23 @@ int ide_identify_device ( uint8_t nport )
     }
 
 
-
-    // #bugbug
-    // O que é isso?
-    // Se estamos escrevendo em uma porta de input/output
-    // então temos que nos certificar que esses valores 
-    // são válidos.
+// #bugbug
+// O que é isso?
+// Se estamos escrevendo em uma porta de input/output
+// então temos que nos certificar que esses valores 
+// são válidos.
 
     out8 ( ata.cmd_block_base_address + ATA_REG_SECCOUNT, 0 );  // Sector Count 7:0
     out8 ( ata.cmd_block_base_address + ATA_REG_LBA0,     0 );  // LBA  7-0
     out8 ( ata.cmd_block_base_address + ATA_REG_LBA1,     0 );  // LBA 15-8
     out8 ( ata.cmd_block_base_address + ATA_REG_LBA2,     0 );  // LBA 23-16
 
-    // Select device
+// Select device
     out8 ( 
         ( ata.cmd_block_base_address + ATA_REG_DEVSEL), 
         0xE0 | ata.dev_num << 4 );
 
-
-    //
-    // Solicitando informações sobre o disco.
-    //
+// Solicitando informações sobre o disco.
 
     // cmd
     ata_wait (400);
@@ -765,11 +761,10 @@ int ide_identify_device ( uint8_t nport )
     // REG_CYL_LO = 4
     // REG_CYL_HI = 5
 
-    // Getting signature bytes.
-    lba1 = in8( ata.cmd_block_base_address + 4 );
-    lba2 = in8( ata.cmd_block_base_address + 5 );
+// Getting signature bytes.
 
-
+    sig_byte_1 = in8( ata.cmd_block_base_address + 4 );
+    sig_byte_2 = in8( ata.cmd_block_base_address + 5 );
 
 
     /*
@@ -787,19 +782,17 @@ int ide_identify_device ( uint8_t nport )
     */
     //===============
 
-    
-    // #test
-    // vamos pegar mais informações. 
-    
-    
+// #test
+// vamos pegar mais informações. 
 
-    //
-    // # Type
-    //
+//
+// # Type
+//
 
-    // ==========================
-    // # PATA
-    if ( lba1 == 0 && lba2 == 0 )
+// ==========================
+// # PATA
+    if ( sig_byte_1 == 0 && 
+         sig_byte_2 == 0 )
     {
         // kputs("Unidade PATA\n");
         // aqui esperamos pelo DRQ
@@ -873,13 +866,13 @@ int ide_identify_device ( uint8_t nport )
         }
 
         return (int) 0;
-
-
-    // ==========================
-    // #SATA
     }
-    else if ( lba1 == 0x3C && lba2 == 0xC3 ){
 
+// ==========================
+// #SATA
+    if ( sig_byte_1 == 0x3C && 
+         sig_byte_2 == 0xC3 )
+    {
         //kputs("Unidade SATA\n");   
         // O dispositivo responde imediatamente um erro ao cmd Identify device
         // entao devemos esperar pelo DRQ ao invez de um BUSY
@@ -948,13 +941,13 @@ int ide_identify_device ( uint8_t nport )
         }
 
         return (int) 0;
-
-
-    // ==========================
-    // # PATAPI
     }
-    else if ( lba1 == 0x14 && lba2 == 0xEB ){
 
+// ==========================
+// # PATAPI
+    if ( sig_byte_1 == 0x14 && 
+         sig_byte_2 == 0xEB )
+    {
         //kputs("Unidade PATAPI\n");   
         ata_cmd_write(ATA_CMD_IDENTIFY_PACKET_DEVICE);
         ata_wait(400);
@@ -1008,13 +1001,13 @@ int ide_identify_device ( uint8_t nport )
         }
 
         return (int) 0x80;
-
-
-    // ==========================
-    // # SATAPI
     }
-    else if (lba1 == 0x69  && lba2 == 0x96){
 
+// ==========================
+// # SATAPI
+    if (sig_byte_1 == 0x69  && 
+        sig_byte_2 == 0x96)
+    {
         //kputs("Unidade SATAPI\n");   
         ata_cmd_write(ATA_CMD_IDENTIFY_PACKET_DEVICE);
         ata_wait(400);
@@ -1066,13 +1059,17 @@ int ide_identify_device ( uint8_t nport )
         }
 
         return (int) 0x80;
-    };
+    }
 
-    // fail ??
-    // Is something wrong here?
+// fail ??
+// Is something wrong here?
+
+    // #debug
+    //panic("ide_identify_device: type not defined");
 
     return 0; 
 }
+
 
 /*
  ***********************************
