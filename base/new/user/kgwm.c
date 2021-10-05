@@ -1045,31 +1045,37 @@ done:
 
 
 // #test
-// Coloque sempre no arquivo
+// Colocando no arquivo.
+// Não colocamos quando estivermos no modo 'console',
+// pois nesse caso o aplicativo em ring3 receberia input de teclado
+// e reagiria a esse input.
+// Write:
+// Estamos dentro do kernel.
+// Vamos escrever diretamente no buffer do arquivo,
+// dado seu ponteiro de estrutura.
+// O fd do processo atual não serveria nesse momento.
+// See: sys.c
 
-    // Mensagens de digitação.
-    if ( Event_Message == MSG_KEYDOWN )
+    char ch_buffer[2];
+
+    // Colocamos no arquivo somente se não estivermos
+    // no modo console.
+    if ( ShellFlag != TRUE )
     {
-        stdin->sync.can_write = TRUE;
-        stdin->_flags = __SWR;
-        char ch_buffer[2]; 
-        ch_buffer[0] = (char) (Event_LongASCIICode & 0xFF);
-        
-        // Write
-        // #bugbug: 
-        // Estamos dentro do kernel.
-        // Vamos escrever diretamente no buffer do arquivo,
-        // dado seu ponteiro de estrutura.
-        // O fd do processo atual não serveria nesse momento.
-        // See: sys.c
+        if ( Event_Message == MSG_KEYDOWN )
+        {
+            stdin->sync.can_write = TRUE;
+            stdin->_flags = __SWR;
+            ch_buffer[0] = (char) (Event_LongASCIICode & 0xFF);
 
-        file_write_buffer ( 
-            (file *) stdin, 
-            (char *) ch_buffer, 
-            (int) 1 );
+            file_write_buffer ( 
+                (file *) stdin, 
+                (char *) ch_buffer, 
+                (int) 1 );
 
-        stdin->sync.can_read = TRUE;  // O aplicativo precisa disso.
-        stdin->_flags = __SRD;       // O worker no kernel precisa disso.
+            stdin->sync.can_read = TRUE;  // O aplicativo precisa disso.
+            stdin->_flags = __SRD;        // O worker no kernel precisa disso.
+        }
     }
 
 

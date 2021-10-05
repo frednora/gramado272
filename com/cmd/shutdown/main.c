@@ -37,6 +37,11 @@
 #define Device_Control  2
 
 
+// #
+// Essa rotina funcionou no qemu, mas não em minha máquina real.
+// Devemos mover ela para dentro do driver em ring0
+// e testar novamente.
+
 void test_disk_size(void)
 {
     unsigned int d=0x1F0;   //for example
@@ -51,9 +56,8 @@ void test_disk_size(void)
 // Select Device and set LBA.
 
     libio_outport8(
-        d+6, 
-        (Dev << 4) + (1 << 6) ); 
-
+        (unsigned short) (d+6), 
+        (unsigned char) (Dev << 4) + (1 << 6) ); 
 
 // Test device is ready to do comand.
     while (libio_inport8(d+Status) &  DRDY == 0);
@@ -63,8 +67,8 @@ void test_disk_size(void)
     {
         // READ NATIVE MAX ADDRESS EXT.
         libio_outport8(
-            d+Command, 
-            0x27 ); 
+            (unsigned short) d+Command, 
+            (unsigned char) 0x27 ); 
 
         // wait command completed
         while (libio_inport8(d+Status) &  BSY != 0)
@@ -130,16 +134,19 @@ void __serial_write_char (unsigned char data)
 
 int main ( int argc, char *argv[] )
 {
+
+/*
+ // #test: disk size.
     printf("shutdown:\n");
     test_disk_size();
     printf("done\n");
     while(1){}
+*/
 
-
-    // Na verdade essa rotina precisa ser em ring0.
-    // Pois tem que checar a permissão de superuser,
-    // acionar os locks, sincronizar os sistemas de arquivo
-    // montados, etc ...
+// Na verdade essa rotina precisa ser em ring0.
+// Pois tem que checar a permissão de superuser,
+// acionar os locks, sincronizar os sistemas de arquivo
+// montados, etc ...
 
 
     int isQEMU       = FALSE;
@@ -159,9 +166,10 @@ int main ( int argc, char *argv[] )
         //__serial_write_char('3');
         //__serial_write_char(' ');
         debug_print ("SHUTDOWN.BIN: [QEMU] Shutting down \n");
-        libio_outport16 (0x604, 0x2000);
+        libio_outport16(
+            (unsigned short) 0x604, 
+            (unsigned short) 0x2000 );
     }
-
 
     // virtualbox
     // In Virtualbox, you can do shutdown with:
