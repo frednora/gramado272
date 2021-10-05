@@ -25,7 +25,7 @@ void *sys_get_message ( unsigned long buffer )
     unsigned long *message_address = (unsigned long *) buffer;
     int head_pos=0;
 
-    debug_print ("sys_get_message:\n");
+    //debug_print ("sys_get_message:\n");
 
 // buffer
 // #todo: Check some other invalid address.
@@ -117,12 +117,11 @@ void *sys_get_message ( unsigned long buffer )
             if ( t->MsgQueueHead >= 31 ){  t->MsgQueueHead = 0;  }
         }
     }
-// ===========================================================
-
-
+// ==================================
 
 //done:
-    debug_print ("sys_get_message: done\n");
+    //debug_print ("sys_get_message: done\n");
+
 // Yes, We have a message.
     return (void *) 1;
 

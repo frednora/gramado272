@@ -559,7 +559,7 @@ int kernel_main(int arch_type)
     case GRAMADO_P2:
     case GRAMADO_CASTLE:
     case GRAMADO_CALIFORNIA:
-        printf (">> [TODO] current_mode\n");
+        //printf (">> [TODO] current_mode\n");
         break;
 
     // #panic
@@ -584,6 +584,11 @@ int kernel_main(int arch_type)
     unsigned long KernelImage_RODATA_Size=0;
     unsigned long KernelImage_CODE_Size=0;
     unsigned long KernelImage_Size=0;
+
+
+// #todo
+// Isso deve ter uma flag no aquivo de configuração.
+// config.h i guess.
 
     if ( ImportDataFromLinker == TRUE )
     {
@@ -678,11 +683,11 @@ int kernel_main(int arch_type)
     printf ("memorysizeUsed %d\n",memorysizeUsed);
     printf ("memorysizeFree %d\n",memorysizeFree);
     
-    
     // #debug
     refresh_screen();
     //while(1){}
 
+// =====================================
 
 // Display device
 // See:
@@ -690,7 +695,8 @@ int kernel_main(int arch_type)
 // gva.h
 // Todas essas informações devem ser passadas pelo Gramado Boot Loader.
 
-    GramadoDisplayDevice = (struct display_device_d *) kmalloc ( sizeof(struct display_device_d) ); 
+    GramadoDisplayDevice = 
+        (struct display_device_d *) kmalloc ( sizeof(struct display_device_d) ); 
 
     // Memory allocation for Display device structure.
     if ( (void*) GramadoDisplayDevice == NULL ){

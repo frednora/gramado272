@@ -2086,6 +2086,8 @@ int VirtualConsole_initialize(void)
     return 0;
 }
 
+// This will be the firt message
+// at the top/left corner of the screen.
 void console_banner(unsigned long banner_flags)
 {
 
@@ -2096,8 +2098,12 @@ void console_banner(unsigned long banner_flags)
 // Virtual console
     if( Initialization.console_log == TRUE )
     {
-        set_up_cursor (0,1);
-        printf      ("Welcome to Gramado OS!\n");
+        set_up_cursor (0,0);
+        printf ("Welcome to Gramado OS!\n");
+    
+        // #todo
+        // Print some more basic info
+        // just like the processor brand and the size of the ram.
     }
 }
 

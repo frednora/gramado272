@@ -62,7 +62,7 @@ int __scheduler_rr (unsigned long sched_flags)
     //debug_print ("scheduler: [not tested] \n");
 
 //#ifdef SERIAL_DEBUG_VERBOSE
-    debug_print(" SCHEDULER \n");
+    //debug_print(" SCHEDULER \n");
     //printf     (" SCHEDULER \n"); refresh_screen();
 //#endif
 

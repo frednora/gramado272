@@ -311,8 +311,8 @@ int sys_read (unsigned int fd, char *ubuf, int count)
     int nbytes=0; 
     int ubuf_len=0;
 
-    debug_print("------------------------------------ R --\n");
-    debug_print("sys_read:\n");
+    //debug_print("------------------------------------ R --\n");
+    //debug_print("sys_read:\n");
 
     // #bugbug
     // O argumento é 'unsigned int'
@@ -469,8 +469,8 @@ int sys_read (unsigned int fd, char *ubuf, int count)
         // not reading yet
         if ((__file->_flags & __SRD) == 0) 
         {
-            debug_print("sys_read: [FAIL] flag __SRD \n");
-            yield (current_thread);
+            //debug_print("sys_read: [FAIL] flag __SRD \n");
+            //yield (current_thread);
             goto fail;
         }
 
@@ -514,8 +514,7 @@ int sys_read (unsigned int fd, char *ubuf, int count)
         {
             if( __file->_flags & __SRD )
             {
-                debug_print ("sys_read: >>>> READ\n");
-            
+                //debug_print ("sys_read: >>>> READ\n");
             
                 // read!
                 nbytes = (int) file_read_buffer ( 
@@ -577,7 +576,7 @@ RegularFile:
         //Se não pode ler.
         if ( (__file->_flags & __SRD) == 0 )
         {
-            debug_print("sys_read: [FLAGS] Can't read!\n");
+            //debug_print("sys_read: [FLAGS] Can't read!\n");
         
             //Não conseguimos ler.
             //nada de errado, apenas espera.
@@ -733,19 +732,19 @@ fail:
 
 int sys_write (unsigned int fd, char *ubuf, int count)
 {
-    // #todo
-    // Copiar deve ser uma opcao e nao uma regra!
-    // Precisamos de uma flag para copyonwrite.
-    
-    // atençao
-    // Podemos escrever num socket que nao eh o privado!!!
-    // existe a possibilidade de o processo atual estar 
-    // escrevendo em um socket que pertence a outro processo.
-    // mas que por causa da conexao possui o fd dele registrado
-    // em sua estrutura.
-    // Entao o fd passado por argumento nao precisa ser o mesmo
-    // do socket privado do processo. Pois poderemos estar
-    // escrevendo em outro socket que nao o privado.
+
+// #todo
+// Copiar deve ser uma opcao e nao uma regra!
+// Precisamos de uma flag para copyonwrite.
+// atençao
+// Podemos escrever num socket que nao eh o privado!!!
+// existe a possibilidade de o processo atual estar 
+// escrevendo em um socket que pertence a outro processo.
+// mas que por causa da conexao possui o fd dele registrado
+// em sua estrutura.
+// Entao o fd passado por argumento nao precisa ser o mesmo
+// do socket privado do processo. Pois poderemos estar
+// escrevendo em outro socket que nao o privado.
 
     struct process_d  *__P;
     file *__file;
@@ -755,8 +754,8 @@ int sys_write (unsigned int fd, char *ubuf, int count)
     int ubuf_len=0;
     size_t ncopy=0;
 
-    debug_print("------------------------------------ W --\n");
-    debug_print("sys_write: :)\n");
+    //debug_print("------------------------------------ W --\n");
+    //debug_print("sys_write: :)\n");
 
 
 // fd
@@ -951,8 +950,8 @@ int sys_write (unsigned int fd, char *ubuf, int count)
         // not writing yet
         if ((__file->_flags & __SWR) == 0) 
         {
-            debug_print("sys_write: [FAIL] flag __SWR \n");
-            yield (current_thread);
+            //debug_print("sys_write: [FAIL] flag __SWR \n");
+            //yield (current_thread);
             goto fail;
         }
 
@@ -988,7 +987,7 @@ int sys_write (unsigned int fd, char *ubuf, int count)
             
             if( __file->_flags & __SWR )
             {
-                debug_print ("sys_write: >>>> WRITE\n");
+                //debug_print ("sys_write: >>>> WRITE\n");
                 __file->_flags = 0;
             
                 // Write in the socket buffer.
@@ -1006,9 +1005,7 @@ int sys_write (unsigned int fd, char *ubuf, int count)
 
                 // ok, write funcionou.
                 if (nbytes>0)
-                { 
-                    
-                    
+                {
                     debug_print("sys_write: WAKEUP READER\n");
                     __file->socket_buffer_full = TRUE;       // buffer cheio
                     __file->_flags &= ~__SWR;                // nao posso mais ESCREVER.            
@@ -1029,7 +1026,7 @@ int sys_write (unsigned int fd, char *ubuf, int count)
                     
                     // #bugbug: test ...
                     //  impedir que eu mesmo me leia.
-                    yield (current_thread);
+                    //yield (current_thread);
                     //yield (current_thread);
                     //yield (current_thread);
                     //yield (current_thread);

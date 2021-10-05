@@ -5,7 +5,6 @@
 
 
 /*
- *************************************************
  * KiScheduler:
  *    Interface para chamar a rotina de scheduler.
  *    Troca as threads que estão em user mode, 
@@ -901,10 +900,10 @@ void check_for_standby (void)
     struct thread_d  *New;
 
 
-#ifdef SERIAL_DEBUG_VERBOSE
+//#ifdef SERIAL_DEBUG_VERBOSE
     //debug_print (" check_for_standby ");
-    debug_print (" Check ");
-#endif
+    //debug_print (" Check ");
+//#endif
 
     do {
 
@@ -936,9 +935,9 @@ void check_for_standby (void)
 // Nenhuma tarefa precisa ser inicializada.
 // Podemos apenas retornar para o taskswitch.
 
-#ifdef SERIAL_DEBUG_VERBOSE
-    debug_print (" Nothing ");
-#endif
+//#ifdef SERIAL_DEBUG_VERBOSE
+    //debug_print (" Nothing ");
+//#endif
 
     return;
 
@@ -949,9 +948,9 @@ void check_for_standby (void)
 
 do_spawn:
 
-#ifdef SERIAL_DEBUG_VERBOSE
-    debug_print(" Spawn $ \n");
-#endif
+//#ifdef SERIAL_DEBUG_VERBOSE
+    //debug_print(" Spawn $ \n");
+//#endif
 
     // #todo
     // if ( current_thread < 0 ...

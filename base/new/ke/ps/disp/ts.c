@@ -1,13 +1,16 @@
 
-
-
+// ts.c
+// Task switching.
+// Actually it is thread scwitching.
 
 #include <kernel.h>    
 
+
+//#define TS_DEBUG
+
+
 /*
- **********************************************************
  * task_switch:
- *
  * Switch the thread.
  * Save and restore context.
  * Select the next thread and dispatch.
@@ -213,7 +216,8 @@ The remainder ??
 
             if ( CurrentThread->state == RUNNING )
             {
-                debug_print (" P ");
+                //#debug
+                //debug_print (" P ");
                 
                 CurrentThread->state = READY;
 
@@ -250,7 +254,9 @@ The remainder ??
             extra = FALSE;
             if (extra == TRUE)
             {
-                debug_print (" X "); 
+                //#debug
+                //debug_print (" X "); 
+                
                 tsCallExtraRoutines();
                 extra = FALSE;
             }
@@ -276,7 +282,8 @@ The remainder ??
 
             if (dead_thread_collector_status == TRUE)
             {
-                debug_print (" C "); 
+                //#debug
+                //debug_print (" C "); 
                 check_for_dead_thread_collector();
             }
 
@@ -313,7 +320,7 @@ The remainder ??
 
 try_next: 
 
-#ifdef SERIAL_DEBUG_VERBOSE
+#ifdef TS_DEBUG
     debug_print(" N ");
 #endif
 
@@ -357,7 +364,7 @@ try_next:
     if ( (void *) Conductor->next == NULL )
     {
 
-#ifdef SERIAL_DEBUG_VERBOSE
+#ifdef TS_DEBUG
         debug_print(" LAST ");
 #endif
 
@@ -379,7 +386,7 @@ try_next:
     if ( (void *) Conductor->next != NULL )
     {
 
-#ifdef SERIAL_DEBUG_VERBOSE
+#ifdef TS_DEBUG
         debug_print(" Q ");
 #endif
 
@@ -463,7 +470,7 @@ go_ahead:
 
 dispatch_current:
 
-#ifdef SERIAL_DEBUG_VERBOSE
+#ifdef TS_DEBUG
     debug_print (" ts-dispatch_current: ");
 #endif
 
@@ -579,7 +586,9 @@ dispatch_current:
     // current_process_pagedirectory_address = (unsigned long) P->DirectoryPA;
     // ?? = (unsigned long) P->pml4_PA;
 
+#ifdef TS_DEBUG
     debug_print ("ts: done $\n");
+#endif 
 
     return;
 
@@ -589,9 +598,7 @@ fail:
 
 
 /*
- ****************************************************
  * psTaskSwitch:
- * 
  *     Interface para chamar a rotina de Task Switch.
  *     Essa rotina somente é chamada por hw.inc.
  *     KiTaskSwitch em ts.c gerencia a rotina de 

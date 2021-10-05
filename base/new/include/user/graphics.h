@@ -224,7 +224,7 @@ int KGWS_initialize(void);
 void kgws_enable(void);
 void kgws_disable(void);
 
-int kgwsRegisterWindowServer (int pid);
+int kgwsRegisterWindowServer (pid_t pid);
 
 #endif   
 

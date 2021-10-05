@@ -130,7 +130,10 @@ void rtl_set_input_mode(int mode)
 
 void rtl_set_file_sync(int fd, int request, int data)
 {
-    debug_print ("rtl_set_file_sync:\n");
+    if (fd<0)
+        return;
+
+    //debug_print ("rtl_set_file_sync:\n");
     sc82 (10000,fd,request,data);
 }
 
@@ -142,7 +145,7 @@ void rtl_set_file_sync(int fd, int request, int data)
 
 int rtl_get_file_sync(int fd, int request)
 {
-    debug_print ("rtl_get_file_sync:\n");
+    //debug_print ("rtl_get_file_sync:\n");
     return (int) sc82 (10001,fd,request,0);
 }
 

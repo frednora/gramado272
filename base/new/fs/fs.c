@@ -1,10 +1,11 @@
 
+// fs.c
 
 #include <kernel.h>
 
 
 //
-// == Cluster list =================================================
+// == Cluster list ===============================
 //
 
 // Lista de clusters.
@@ -19,13 +20,12 @@
 // entradas que podemos acessar na fat.
 // Ou e' apenas o limite da lista.
 
-//#define  CLUSTERS_TO_SAVE_MAX    (8*1024) //#bugbug
-#define  CLUSTERS_TO_SAVE_MAX    (32*1024)
+//#define CLUSTERS_TO_SAVE_MAX  (8*1024) //#bugbug
+#define CLUSTERS_TO_SAVE_MAX  (32*1024)
 
 unsigned short fat16ClustersToSave[CLUSTERS_TO_SAVE_MAX];
 
 // ========================================
-
 
 
 
@@ -41,7 +41,7 @@ int get_free_slots_in_the_file_table(void)
         tmp = (void*) file_table[i];
         
         // Nenhum file descritor está usando essa estrutura.
-        if (tmp->used  == TRUE && 
+        if (tmp->used == TRUE && 
             tmp->magic == 1234 && 
             tmp->fd_counter == 0)
         { 
@@ -66,7 +66,7 @@ int get_free_slots_in_the_inode_table(void)
         
         // Se nenhum descritor de estrutura de arquivo 
         // está usando essa estrutura inode.
-        if (tmp->used  == TRUE && 
+        if (tmp->used == TRUE && 
             tmp->magic == 1234 && 
             tmp->filestruct_counter == 0)
         { 
@@ -651,42 +651,45 @@ void fs_init_structures (void)
         root->type = (int) Type;
     };
 
+
+// Type:
+
     switch (Type){
 
-        case FS_TYPE_FAT16:
+    case FS_TYPE_FAT16:
 
-            // Disk stuff.
-            // spc - Sectors per cluster.
-            root->spc = (int) VOLUME1_SPC;
-            //root->spc = (int) get_spc(); 
+        // Disk stuff.
+        // spc - Sectors per cluster.
+        root->spc = (int) VOLUME1_SPC;
+        //root->spc = (int) get_spc(); 
             
 
-            // Rootdir, Fat and data area.
-            // #bugbug: Specific for fat16.
-            root->rootdir_address = VOLUME1_ROOTDIR_ADDRESS;
-            root->rootdir_lba     = VOLUME1_ROOTDIR_LBA;
-            root->fat_address     = VOLUME1_FAT_ADDRESS;
-            root->fat_lba         = VOLUME1_FAT_LBA;
-            root->dataarea_lba    = VOLUME1_DATAAREA_LBA;
-            //filesystem->dataarea_address = ??;
+        // Rootdir, Fat and data area.
+        // #bugbug: Specific for fat16.
+        root->rootdir_address = VOLUME1_ROOTDIR_ADDRESS;
+        root->rootdir_lba     = VOLUME1_ROOTDIR_LBA;
+        root->fat_address     = VOLUME1_FAT_ADDRESS;
+        root->fat_lba         = VOLUME1_FAT_LBA;
+        root->dataarea_lba    = VOLUME1_DATAAREA_LBA;
+        //filesystem->dataarea_address = ??;
  
-            // Root dir.
+        // Root dir.
             
-            // Number of entries in the root dir.
-            // #bugbug: Specific for fat16.
-            root->dir_entries = FAT16_ROOT_ENTRIES;
+        // Number of entries in the root dir.
+        // #bugbug: Specific for fat16.
+        root->dir_entries = FAT16_ROOT_ENTRIES;
             
-            // Size of the entry in bytes.
-            // #bugbug: Specific for fat16.
-            root->entry_size = FAT16_ENTRY_SIZE;
+        // Size of the entry in bytes.
+        // #bugbug: Specific for fat16.
+        root->entry_size = FAT16_ENTRY_SIZE;
        
-            // ...
-            break;
+        // ...
+        break;
 
-        case FS_TYPE_EXT2:
-        default:
-            panic ("fs_init_structures: [PANIC] default Type");
-            break;
+    case FS_TYPE_EXT2:
+    default:
+        panic ("fs_init_structures: [PANIC] default Type");
+        break;
     };
 }
 
@@ -835,7 +838,8 @@ fsFAT16ListFiles (
     // Max number of entries.
     int max = number_of_entries;
 
-    char NameString[ 12 ];  //8.3
+    //8.3
+    char NameString[12];
 
     // Buffer.
     unsigned short *shortBuffer = (unsigned short *) dir_address;
@@ -847,16 +851,14 @@ fsFAT16ListFiles (
         goto fail;
     }
 
-    if ( *dir_name == 0 )
-    {
+    if ( *dir_name == 0 ){
         printf ("fsFAT16ListFiles: [FAIL] *dir_name\n");
         goto fail;
     }
 
-    // banner message.
-
-    // #bugbug
-    // Missing string finalization.
+// banner message.
+// #bugbug
+// Missing string finalization.
         
     // printf ("fsFAT16ListFiles: Listing names in [%s]\n\n", 
     //        dir_name );
@@ -877,8 +879,7 @@ fsFAT16ListFiles (
         goto fail;
     }
 
-
-    // Show 'max' entries in the directory.
+// Show 'max' entries in the directory.
 
     i=0; 
     j=0;
@@ -922,10 +923,9 @@ done:
 
 
 /*
- *****************************************
  * fsInitializeWorkingDiretoryString:
- *     Atualiza a string do diret�rio de trabalho.
- * Essa eh a string que ser� mostrada antes do prompt.
+ *     Atualiza a string do diretorio de trabalho.
+ * Essa eh a string que sera mostrada antes do prompt.
  * 'pwd'> 
  */
 
@@ -1088,13 +1088,11 @@ void fsInitializeWorkingDiretoryString (void)
 
 
 /*
- ***************************
  * fsInitTargetDir:
  *     Para inicializarmos o sistema já com um alvo.
  */
 
 // using the structure 'current_target_dir'.
-
 // IN:
 // directory address, directory name.
 
@@ -1145,7 +1143,6 @@ int fsInitTargetDir (unsigned long dir_address, char *dir_name)
 
 
 /*
- **********************
  * fsList
  *     Ring 0 routine to list files.
  */
@@ -1302,9 +1299,7 @@ done:
 }
 
 
-
 /*
- ***************************** 
  * fsGetFileSize: 
  * 
  */
@@ -1322,6 +1317,9 @@ done:
 
 // #bugbug
 // Estamos com problemas na string do nome.
+
+// #bugbug
+// Loading the root dir everytime.
 
 unsigned long 
 fsGetFileSize ( 
@@ -1419,6 +1417,11 @@ fsGetFileSize (
 
     if(dir_address == VOLUME1_ROOTDIR_ADDRESS)
     {
+
+        // #bugbug
+        // We can not do this everytime this function
+        // is called.
+
         fs_load_rootdir ( 
             VOLUME1_ROOTDIR_ADDRESS, 
             VOLUME1_ROOTDIR_LBA, 
@@ -2094,9 +2097,9 @@ __loop_next_entry:
 // We can not load a file in the same core addresses.
 
     is_valid = (int) __check_address_validation( (unsigned long) Buffer );
-    if( is_valid != TRUE )
+    if( is_valid != TRUE ){
         panic ("fsLoadFile: is_valid");
-
+    }
 
 //
 // Read LBA
@@ -2125,7 +2128,9 @@ __loop_next_entry:
 // We already did that a single time before.
 
     if ( cluster <= 0 || cluster > 0xFFF0 )
+    {
         panic("fsLoadFile: fat[] vector overflow.");
+    }
 
     next = (unsigned short) fat[cluster];
 
@@ -2139,7 +2144,10 @@ __loop_next_entry:
 // #bugbug: tem arquivo carregado pelo kernel
 // sem ter sido registrado na estrutura do processo kernel.
 
-    if ( cluster == 0xFFFF || cluster == 0xFFF8 ){ return (unsigned long) 0; }
+    if ( cluster == 0xFFFF || cluster == 0xFFF8 )
+    { 
+        return (unsigned long) 0; 
+    }
 
     goto __loop_next_entry;
 
@@ -2202,14 +2210,14 @@ fsLoadFile2 (
 
 int fsLoadFileFromCurrentTargetDir (void)
 {
-
     int Ret = -1;
     int i=0;
     unsigned long new_address = 0;
 
-
 // #bugbug
-    unsigned long xxxTempFileSize = 4096;   //4KB
+// 4KB
+
+    unsigned long xxxTempFileSize = 4096;
 
     debug_print ("fsLoadFileFromCurrentTargetDir: [FIXME] Loading dir \n");
 
@@ -3094,7 +3102,7 @@ void fs_show_file_info (file *f)
         return;
     }
 
-    if (f->used==1)
+    if (f->used == TRUE)
     {
         if ( (void*) f->_tmpfname != NULL )
         {
@@ -3132,7 +3140,7 @@ void fs_show_inode_info (struct inode_d *i)
         return;
     }
 
-    if (i->used == 1)
+    if (i->used == TRUE)
     {
         if ( (void*)i->path != NULL )
         {
@@ -4255,25 +4263,16 @@ __OK:
 // See: fs_create_empty_file()
 int sys_create_empty_file ( char *file_name )
 {
-
-    // file *f;
-
     int __ret = -1;
 
-    // #bugbug: 
-    // We need a buffer in another place.
+// #bugbug: 
+// We need a buffer in another place.
 
     char buffer[512];
-    int size_in_bytes     = 512;
+    int size_in_bytes = 512;
     int number_of_sectors = 1;
 
-
-    //#todo
-    //the file structure.
-    // file *f;
-
     debug_print ("sys_create_empty_file:\n");
-
 
     if ( (void*) file_name == NULL ){
         debug_print ("sys_create_empty_file: file_name\n");
@@ -4318,11 +4317,11 @@ int sys_create_empty_directory ( char *dir_name )
 {
     int __ret=0;
 
-    // #bugbug: 
-    // We need a buffer in another place.
+// #bugbug: 
+// We need a buffer in another place.
 
     char buffer[512];
-    int size_in_bytes     = 512; 
+    int size_in_bytes = 512; 
     int number_of_sectors = 1;
 
 

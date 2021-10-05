@@ -13,6 +13,104 @@
 #include <libio.h>
 
 
+//
+// =============================================================
+//
+
+// #test
+// Finding the size of a disk.
+
+#define DRDY  0x40
+#define BSY   0x80
+#define HOB   0x80
+
+#define Sector_Count    2
+
+#define LBA_Low         3
+#define LBA_Mid         4
+#define LBA_High        5
+#define Device          6
+
+#define Status          7
+#define Command         7
+
+#define Device_Control  2
+
+
+void test_disk_size(void)
+{
+    unsigned int d=0x1F0;   //for example
+    unsigned int dd=0x3F4;
+    // 0-Master 1-Slave
+    char Dev=0; 
+    char LBA48=0;
+    unsigned long Max_LBA=0;
+
+// ====================================
+
+// Select Device and set LBA.
+
+    libio_outport8(
+        d+6, 
+        (Dev << 4) + (1 << 6) ); 
+
+
+// Test device is ready to do comand.
+    while (libio_inport8(d+Status) &  DRDY == 0);
+
+
+    if (LBA48 != 0)
+    {
+        // READ NATIVE MAX ADDRESS EXT.
+        libio_outport8(
+            d+Command, 
+            0x27 ); 
+
+        // wait command completed
+        while (libio_inport8(d+Status) &  BSY != 0)
+        {
+        };
+
+        Max_LBA =  (unsigned long )libio_inport8(d+LBA_Low);
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_Mid)  << 8;
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_High) << 16;
+
+        // Set HOB to 1
+        libio_outport8(
+            dd+Device_Control, 
+            HOB ); 
+
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_Low)  << 24;
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_Mid)  << 32;
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_High) << 40;
+
+    }
+    else
+    {
+        // READ NATIVE MAX ADDRESS
+        libio_outport8(
+            d+Command, 
+            0xF8 ); 
+        
+        // wait command completed
+        while (libio_inport8 (d+Status) &  BSY != 0);
+
+        Max_LBA  = (unsigned long )libio_inport8(d+LBA_Low);
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_Mid)  << 8;
+        Max_LBA += (unsigned long )libio_inport8(d+LBA_High) << 16;
+
+        Max_LBA += ((unsigned long )libio_inport8(d+Device) & 0xF) <<24;
+    }
+    
+    
+    printf ("Size {%d}\n",Max_LBA);
+}
+
+
+//
+// =============================================================
+//
+
 // local worker
 // Vai escrever em uma porta ja inicializada pelo kernel.
 void __serial_write_char (unsigned char data) 
@@ -32,6 +130,11 @@ void __serial_write_char (unsigned char data)
 
 int main ( int argc, char *argv[] )
 {
+    printf("shutdown:\n");
+    test_disk_size();
+    printf("done\n");
+    while(1){}
+
 
     // Na verdade essa rotina precisa ser em ring0.
     // Pois tem que checar a permissão de superuser,
@@ -46,9 +149,6 @@ int main ( int argc, char *argv[] )
     isQEMU       = rtl_get_system_metrics(300);
     //isVirtualBox = rtl_get_system_metrics(?);
     //isBochs      = rtl_get_system_metrics(?);
-
-
-
 
 
     // qemu

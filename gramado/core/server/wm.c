@@ -99,14 +99,13 @@ int __has_wallpaper(void)
 }
 
 
-
 // Internal
 // Called by wm_process_windows().
 
 void __update_fps(void)
 {
 
-    debug_print ("__update_fps:\n");
+    //debug_print ("__update_fps:\n");
 
     // counter
     frames_count++;

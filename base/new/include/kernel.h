@@ -427,8 +427,7 @@ int current_group;
 // #todo
 // But we need to use the control thread of the foreground process
 // associated with the console TTY.
-int foreground_process;
-
+pid_t foreground_process;
 int foreground_thread;
 
 
@@ -436,13 +435,13 @@ int foreground_thread;
 // Only these can read the keyboard input.
 // Sometime it's the terminal.
 // It's child will read into a file.
-int current_process;   // Currently having the processing time.
+pid_t current_process;   // Currently having the processing time.
 int current_thread;    // Currently having the processing time.
 
 int criticalsection_pid;
 
 // [Focus]
-int active_process;    // This is the process with the active thread.
+pid_t active_process;    // This is the process with the active thread.
 int active_thread;     // This thread will receive the input.
 
 //[Scheduler]
@@ -460,7 +459,7 @@ int current_volume;
 // Organização dos arquivos.
 int current_directory;
 int current_file;
-int current_dead_process;
+pid_t current_dead_process;
 int current_dead_thread;
 
 // Organização dos terminais
@@ -639,7 +638,7 @@ struct kernel_classes_d
     struct system_classes_d *System;
     //..
 };
-struct kernel_classes_d KernelClasses;
+struct kernel_classes_d  KernelClasses;
 //...
 
 #define CURRENT_ARCH_X86      1000
@@ -677,8 +676,7 @@ struct kernel_module_d
 
     int initialized;
 
-
-    struct thread_d *thread;
+    struct thread_d  *thread;
 };
 
 
@@ -729,8 +727,7 @@ void I_x64ExecuteInitialProcess (void);
 // Finalizations support.
 //
 
-void faults (unsigned long number);
-
+void faults(unsigned long number);
 
 
 // #debug
@@ -740,8 +737,6 @@ void xxxxIRQ0_DEBUG_MESSAGE(void);
 void xxxxIRQ1_DEBUG_MESSAGE(void);
 // See: main.c Sw.asm headlib.asm
 void xxxxINT128_DEBUG_MESSAGE(void);
-
-
 
 
 void panic ( const char *format, ... );

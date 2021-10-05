@@ -1,5 +1,5 @@
 
-// kgws.c
+// graphics.c
 
 #include <kernel.h>  
 
@@ -8,25 +8,17 @@
 static unsigned long HotSpotX=0;
 static unsigned long HotSpotY=0;
 
-
 static int EnableKGWS = TRUE;
 
 int kgws_status;
-int kgws_ws_PID;
+pid_t kgws_ws_PID;
 int kgws_ws_status;
-
-
-
 
 
 //=================================
 
-/*
- ******************* 
- * sendto_tty:
- * 
- *     Colocamos na tty PS2KeyboardDeviceTTY ou imprimimos na tela.
- */
+// sendto_tty:
+// Colocamos na tty PS2KeyboardDeviceTTY ou imprimimos na tela.
 
 int 
 write_in_tty ( 
@@ -37,11 +29,9 @@ write_in_tty (
     unsigned long raw_byte )
 {
 
-
 //
 // tty
 //
-
 
     //struct tty_d *tty;
     //tty = (struct tty_d *) PS2KeyboardDeviceTTY;
@@ -1026,147 +1016,126 @@ int KGWS_initialize(void)
 {
     debug_print("KGWS_initialize:[TODO]\n");
 
-
-
-//
-// == Display ===============================================
-//
+// =================
+// Display
 
     CurrentDisplay = (void *) kmalloc (sizeof(struct gws_display_d));
     
-    if ( (void*) CurrentDisplay == NULL ){
+    if ( (void*) CurrentDisplay == NULL )
+    {
+        debug_print("KGWS_initialize: [FAIL] CurrentDisplay\n");
+        printf     ("KGWS_initialize: [FAIL] CurrentDisplay\n");
+        die(); 
+    }
 
-        debug_print("gwsInit: [FAIL] CurrentDisplay\n");
-        printf     ("gwsInit: [FAIL] CurrentDisplay\n");
-        while(1){}
-        //exit(1);
-        
-        // #todo: fail and exit.
-        //debug_print("gwsInit: [FAIL] CurrentDisplay\n");
-        //return -1;
-        //while(1);
- 
-    }else{
-        CurrentDisplay->used  = TRUE; 
-        CurrentDisplay->magic = 1234; 
+    CurrentDisplay->id = 0;  // ??
+    CurrentDisplay->fd = 0;  // ??
 
-        CurrentDisplay->id = 0; //
+// Validation
+    CurrentDisplay->used = TRUE; 
+    CurrentDisplay->magic = 1234; 
 
-        // ??
-        CurrentDisplay->fd = 0;
-        
-        //...
-    };
-
-//
-// == Screen ===============================================
-//
+// =================
+// Screen
     
     DeviceScreen  = (void *) kmalloc (sizeof(struct gws_screen_d));
 
-    if ( (void*) DeviceScreen == NULL ){
+    if ( (void*) DeviceScreen == NULL )
+    {
+        debug_print("KGWS_initialize: [FAIL] DeviceScreen\n");
+        printf     ("KGWS_initialize: [FAIL] DeviceScreen\n");
+        die();
+    }
 
-        debug_print("gwsInit: [FAIL] DeviceScreen\n");
-        printf     ("gwsInit: [FAIL] DeviceScreen\n");
-        while(1){}
-        //exit(1);
-        
-        // #todo: fail and exit.
-        //debug_print("gwsInit: [FAIL] DeviceScreen\n");
-        //return -1;
-        //while(1);
+    DeviceScreen->id = 0; 
+    DeviceScreen->flags = 0;
 
-    }else{
-        DeviceScreen->used  = TRUE;
-        DeviceScreen->magic = 1234;
+// #test
+// Configuramos algumas variaveis globais quando
+// chamamos a rotina de inicializaçao de globais.
+// See: gwssrv_init_globals().
 
-        DeviceScreen->id = 0; 
-        
-        //#todo:
-        DeviceScreen->flags = 0;
+    DeviceScreen->width  = SavedX;
+    DeviceScreen->height = SavedY;
+    DeviceScreen->bpp    = SavedBPP;  // bits per pixel
 
-        // #test
-        // Configuramos algumas variaveis globais quando
-        // chamamos a rotina de inicializaçao de globais.
-        // See: gwssrv_init_globals().
-        
-        DeviceScreen->width  = SavedX;
-        DeviceScreen->height = SavedY;
-        DeviceScreen->bpp    = SavedBPP;  // bits per pixel
-        
-        // #todo
-        // Maybe we can check the validation of w h bpp.
-        
-        DeviceScreen->pitch = ( SavedX * (SavedBPP/8) );
+// #todo
+// Maybe we can check the validation of w h bpp.
 
-        // #todo: Cuidado, não queremos divisão por zero.
-        DeviceScreen->font_size   = 0;    //todo
-        DeviceScreen->char_width  = 0;    //todo
-        DeviceScreen->char_height = 0;    //todo
-        
-        // # ??
-        // We simply used gwssrv_get_system_metrics() to get these addresses.
-        // See: gwssrv_init_globals()
-        // We need to find a better way to get these addresses,
-        // maybe a library. (direct framebuffer library thing)
-        
-        DeviceScreen->backbuffer  = (void *) BACKBUFFER_VA;
-        DeviceScreen->frontbuffer = (void *) FRONTBUFFER_VA;
-        
-        // #todo
-        // Maybe we can check the validation of the buffers.
-        
-        
-        //DeviceScreen->hotspot_x = ( DeviceScreen->width  / 2 );
-        //DeviceScreen->hotspot_y = ( DeviceScreen->height / 2 );
-        DeviceScreen->hotspot_x = ( DeviceScreen->width  >> 1 );
-        DeviceScreen->hotspot_y = ( DeviceScreen->height >> 1 );
+    DeviceScreen->pitch = ( SavedX * (SavedBPP/8) );
 
-        
-        // Limites para a tela em cruz. '+'
-        DeviceScreen->min_x = 0;
-        DeviceScreen->min_y = 0;
-        //DeviceScreen->max_x = ( DeviceScreen->width  / 2 );
-        //DeviceScreen->max_y = ( DeviceScreen->height / 2 );
-        DeviceScreen->max_x = ( DeviceScreen->width  >> 1 );
-        DeviceScreen->max_y = ( DeviceScreen->height >> 1 );
+// #todo: 
+// Cuidado, não queremos divisão por zero.
 
-        //...
+    DeviceScreen->font_size = 0;    //todo
+    DeviceScreen->char_width = 0;   //todo
+    DeviceScreen->char_height = 0;  //todo
 
-        // The device screen will be the valid screen for now.
-        // Save the device screen in the diplay structure.
+// # ??
+// We simply used gwssrv_get_system_metrics() to get these addresses.
+// See: gwssrv_init_globals()
+// We need to find a better way to get these addresses,
+// maybe a library. (direct framebuffer library thing)
 
-        if ( (void *) CurrentDisplay != NULL )
-        {
-            CurrentDisplay->device_screen = DeviceScreen;
-            CurrentDisplay->valid_screen  = DeviceScreen;
-        }
-    };
+    DeviceScreen->backbuffer  = (void *) BACKBUFFER_VA;
+    DeviceScreen->frontbuffer = (void *) FRONTBUFFER_VA;
 
+// #todo
+// Maybe we can check the validation of the buffers.
+
+    //DeviceScreen->hotspot_x = ( DeviceScreen->width  / 2 );
+    //DeviceScreen->hotspot_y = ( DeviceScreen->height / 2 );
+    DeviceScreen->hotspot_x = ( DeviceScreen->width  >> 1 );
+    DeviceScreen->hotspot_y = ( DeviceScreen->height >> 1 );
+
+// Limites para a tela em cruz. '+'
+    DeviceScreen->min_x = 0;
+    DeviceScreen->min_y = 0;
+    //DeviceScreen->max_x = ( DeviceScreen->width  / 2 );
+    //DeviceScreen->max_y = ( DeviceScreen->height / 2 );
+    DeviceScreen->max_x = ( DeviceScreen->width  >> 1 );
+    DeviceScreen->max_y = ( DeviceScreen->height >> 1 );
+
+// The device screen will be the valid screen for now.
+// Save the device screen in the diplay structure.
+
+    if ( (void *) CurrentDisplay != NULL )
+    {
+        CurrentDisplay->device_screen = DeviceScreen;
+        CurrentDisplay->valid_screen  = DeviceScreen;
+    }
+
+// Validation
+    DeviceScreen->used = TRUE;
+    DeviceScreen->magic = 1234;
+
+// =============
+// Graphics.
 
     grInit();
 
-    
-//
 // Breakpoint
-//
+// #debug
 
-    // #debug
     //asm("int $3");
 
-
-
-    //#todo
+//#todo
     init_logon_manager();
     
     return 0;
 }
 
+
 // ?? Not used yet ??
 // Registrar um window server.
-int kgwsRegisterWindowServer (int pid)
+// See: register_ws_process
+int kgwsRegisterWindowServer (pid_t pid)
 {
     int Status = 0;
+
+//#todo
+    //if (pid<0 || pid >= PROCESS_COUNT_MAX)
+        //panic();
 
     // ?? Where ??
     if ( kgws_status != 1 )
@@ -1174,7 +1143,7 @@ int kgwsRegisterWindowServer (int pid)
         Status = 1;
         goto fail;
     }else{
-        kgws_ws_PID = (int) pid;
+        kgws_ws_PID = (pid_t) pid;
         kgws_ws_status = 1;
         goto done;
     };
@@ -1202,7 +1171,6 @@ int register_ws_process ( pid_t pid )
     }
 
     __gpidWindowServer = (pid_t) pid;
-
     return 0;
 }
 

@@ -290,6 +290,7 @@ int I_x64CreateInitialProcess (void)
 
 // Passa o comando para o primeiro processo em user mode.
 // Esse processo ja foi previamente configurado.
+// Called by kernel_main() in init.c
 
 void I_x64ExecuteInitialProcess (void)
 {
@@ -298,34 +299,30 @@ void I_x64ExecuteInitialProcess (void)
 
     //#todo
     debug_print ("I_x64ExecuteInitialProcess: [TODO]\n");
-    printf      ("I_x64ExecuteInitialProcess: [TODO]\n");
-    refresh_screen();
+    //printf      ("I_x64ExecuteInitialProcess: [TODO]\n");
+    //refresh_screen();
    
-    if ( system_state != SYSTEM_BOOTING )
+    if ( system_state != SYSTEM_BOOTING ){
         panic ("I_x64ExecuteInitialProcess: system_state\n");    
-
+    }
 
     if ( InitialProcessInitialized != TRUE ){
         debug_print ("I_x64ExecuteInitialProcess: InitialProcessInitialized\n");
         panic       ("I_x64ExecuteInitialProcess: InitialProcessInitialized\n");
     }
 
-
-
-
-    // Se essa rotina foi chamada antes mesmo
-    // do processo ter sido devidamente configurado.
+// Se essa rotina foi chamada antes mesmo
+// do processo ter sido devidamente configurado.
 
     if ( InitialProcessInitialized != TRUE ){
         debug_print ("I_x64ExecuteInitialProcess: InitialProcessInitialized\n");
         panic       ("I_x64ExecuteInitialProcess: InitialProcessInitialized\n");
     }
 
-    // The first thread to run will the control thread 
-    // of the init process. It is called InitThread.
+// The first thread to run will the control thread 
+// of the init process. It is called InitThread.
 
-    Thread = InitThread; 
-
+    Thread = (struct thread_d *) InitThread; 
 
     if ( (void *) Thread == NULL ){
         debug_print ("I_x64ExecuteInitialProcess: Thread\n");
@@ -337,10 +334,11 @@ void I_x64ExecuteInitialProcess (void)
         debug_print ("I_x64ExecuteInitialProcess: Thread validation\n");
         //printf ("I_x64ExecuteInitialProcess: tid={%d} magic \n", 
         //    Thread->tid);
+        printf ("I_x64ExecuteInitialProcess: Thread validation\n");
         die();
     }
 
-    // It its context is already saved, so this is not the fist time.
+// It its context is already saved, so this is not the fist time.
     
     if ( Thread->saved != FALSE ){
         panic("I_x64ExecuteInitialProcess: saved\n");
@@ -351,13 +349,10 @@ void I_x64ExecuteInitialProcess (void)
     }
 
 // Set the current thread.
+    set_current_thread(Thread->tid);
 
-    set_current_thread( Thread->tid );
-
-    // ...
-
-    // State
-    // The thread needs to be in Standby state.
+// State
+// The thread needs to be in Standby state.
 
     if ( Thread->state != STANDBY )
     {
@@ -368,85 +363,81 @@ void I_x64ExecuteInitialProcess (void)
 
 // :: MOVEMENT 2 ( Standby --> Running )
 
-    if ( Thread->state == STANDBY )
-    {
+    if ( Thread->state == STANDBY ){
+        debug_print("I_x64ExecuteInitialProcess: Thread->state = RUNNING\n");
         Thread->state = RUNNING;
-        
-        //
-        // #bugbug
-        //
-        
-        debug_print("I_x64ExecuteInitialProcess: [FIXME] Overflow\n");
-        
-        //queue_insert_data( 
-        //    queue, 
-        //    (unsigned long) Thread, 
-        //    QUEUE_RUNNING );
     }
 
-    // Current process.
+// Current process.
 
-    current_process = Thread->process->pid;
+    current_process = (pid_t) Thread->process->pid;
 
-//
 // List
-//
+// Dispatcher ready list.
+// Maybe it is not used.
+
     for ( i=0; i < PRIORITY_MAX; i++ ){
         dispatcherReadyList[i] = (unsigned long) Thread;
     };
-    IncrementDispatcherCount (SELECT_IDLE_COUNT);
+
+// Counting the type of the dispatching criteria.
+    IncrementDispatcherCount(SELECT_IDLE_COUNT);
 
 
-//
-// # check this
-//
-
-    // turn_task_switch_on:
-    //  + Creates a vector for timer irq, IRQ0.
-    //  + Enable taskswitch. 
+// #todo 
+// check this
+// turn_task_switch_on:
+//  + Creates a vector for timer irq, IRQ0.
+//  + Enable taskswitch. 
 
     turn_task_switch_on();
 
-
-    // #todo
-    // Isso deve ser liberado pelo processo init
-    // depois que ele habilitar as interrupções.
+// #todo
+// Isso deve ser liberado pelo processo init
+// depois que ele habilitar as interrupções.
     
     taskswitch_lock();
     scheduler_lock();
 
+// timer.
 
     // timerInit8253 ( HZ );
     // timerInit8253 ( 800 );
     // timerInit8253 ( 900 );
 
-    // See: hal/
+// Setup cr3.
+// This is a Physical address.
+// See: hal/
     x64_load_pml4_table( Thread->pml4_PA );
 
-    // #bugbug: rever isso.
+// Reload tlb.
+// See: https://en.wikipedia.org/wiki/Translation_lookaside_buffer
+// #bugbug: rever isso.
+
     asm ("movq %cr3, %rax");
     asm ("movq %rax, %cr3");
 
-//
-// # check this
-//
-    // See: headlib.asm
-    // Se nao limpar, um iret causa taskswitch
+// #todo 
+// check this
+// See: headlib.asm
+// Se nao limpar, um iret causa taskswitch
+// em sistemas x86 de 32bit. Mas estamos em 64bit.
 
     x64_clear_nt_flag();   
 
-    // #maybe
-	//vamos iniciar antes para que
-	//possamos usar a current_tss quando criarmos as threads
-	//x64_init_gdt ();
+// #maybe
+// Vamos iniciar antes para que
+// possamos usar a current_tss quando criarmos as threads
 
-    // ??
+    //x64_init_gdt();
+
+// ??
     asm ("clts \n");
 
-	// #importante
-	// Mudamos para a última fase da inicialização.
-	// Com isso alguns recursos somente para as fases anteriores
-	// deverão ficar indisponíveis.
+// #importante
+// Mudamos para a última fase da inicialização.
+// Com isso alguns recursos somente para as fases anteriores
+// deverão ficar indisponíveis.
 
 // End of phase.
 // Starting phase 4.
@@ -481,8 +472,8 @@ void I_x64ExecuteInitialProcess (void)
 // #debug
 
     debug_print("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
-    printf     ("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
-    refresh_screen();
+    //printf     ("I_x64ExecuteInitialProcess: [x64] Go to user mode! IRETQ\n");
+    //refresh_screen();
 
     // Here is where the boot routine ends.
 
@@ -509,31 +500,30 @@ void I_x64ExecuteInitialProcess (void)
         panic ("I_x64ExecuteInitialProcess: iopl");
     }
 
-    PROGRESS("-- Fly -----------------------------------\n");
+    PROGRESS("-- Fly ----------------\n");
 
-    unsigned long entry = 0x201000;
-    unsigned long rsp3  = 0x00000000002FFFF0;
+    unsigned long entry = (unsigned long) 0x0000000000201000;
+    unsigned long rsp3  = (unsigned long) 0x00000000002FFFF0;
+
     asm volatile ( 
-        " movq $0, %%rax    \n" 
-        " mov %%ax, %%ds    \n" 
-        " mov %%ax, %%es    \n" 
-        " mov %%ax, %%fs    \n" 
-        " mov %%ax, %%gs    \n" 
-        " movq %0, %%rax    \n" 
-        " movq %1, %%rsp    \n" 
-        " movq $0, %%rbp    \n" 
-        " pushq $0x23       \n"  
-        " pushq %%rsp       \n" 
-        " pushq $0x3002     \n"  // Interrupts disabled for the first thread.
-        " pushq $0x1B       \n" 
-        " pushq %%rax       \n" 
-        " iretq             \n" :: "D"(entry), "S"(rsp3) );
+        " movq $0, %%rax  \n" 
+        " mov %%ax, %%ds  \n" 
+        " mov %%ax, %%es  \n" 
+        " mov %%ax, %%fs  \n" 
+        " mov %%ax, %%gs  \n" 
+        " movq %0, %%rax  \n" 
+        " movq %1, %%rsp  \n" 
+        " movq $0, %%rbp  \n" 
+        " pushq $0x23     \n"  
+        " pushq %%rsp     \n" 
+        " pushq $0x3002   \n"  // Interrupts disabled for the first thread.
+        " pushq $0x1B     \n" 
+        " pushq %%rax     \n" 
+        " iretq           \n" :: "D"(entry), "S"(rsp3) );
 
-// ====
 // Paranoia
-
-    PROGRESS("-- iretq fail ------------\n");
-    panic ("I_x64ExecuteInitialProcess: [FIXME] *breakpoint\n");
+    PROGRESS("I_x64ExecuteInitialProcess: Unexpeted error\n");
+    panic   ("I_x64ExecuteInitialProcess: Unexpeted error\n");
 }
 
 
@@ -830,43 +820,36 @@ void init_globals (void)
 
 //#ifdef EXECVE_VERBOSE
     debug_print("init_globals:\n");
-    printf     ("init_globals:\n");
+    //printf     ("init_globals:\n");
 //#endif
 
 // Inicializa as estruturas do fluxo padrão.
 // Isso vai usar a file table.
 
     Status = (int) kstdio_initialize();
-    if(Status != TRUE)
-        x_panic ("init_globals: kstdio_initialize fail\n");
+    if(Status != TRUE){
+        panic("init_globals: kstdio_initialize fail\n");
+    }
 
-    // Screen
-    // Now we can print strings in the screen.
+// Screen
+// Now we can print strings in the screen.
+// Reinitializing ... we already printed the banner.
 
     screenInit();
-
-//
-// == First message ====================================
-//
-
-    // #todo
-    // Maybe we can print the banner.
-
 
     debug_print("init_globals: [printf] WE HAVE MESSAGES NOW!\n");
     //printf     ("init_globals: [printf] WE HAVE MESSAGES NOW!\n");
 
+// ===================
+// Vamos atrasar configuração de janela 
+// em favor de configuração de mensagem
 
-    // ===================
-    // Vamos atrasar configuração de janela 
-    // em favor de configuração de mensagem
-
-    // ??
-    // What is this?
-    // Atalho para a próxima mensagem de teclado..(test) debug
+// ??
+// What is this?
+// Atalho para a próxima mensagem de teclado..(test) debug
     gNextKeyboardMessage = (int) 0;
 
-    // Essa flag bloqueia e impede que uma janela obtenha o foco.
+// Essa flag bloqueia e impede que uma janela obtenha o foco.
     gFocusBlocked = (int) 0;
 
 // Profiler
@@ -895,7 +878,6 @@ void init_globals (void)
 // Interrupção para serviços do sistema.
     g_profiler_ints_gde_services = 0;
 
-
 // User and group.
     current_user  = 0;
     current_group = 0;
@@ -909,9 +891,9 @@ void init_globals (void)
 // Process, Thread.
 // See: kernel.h
     
-    foreground_process = (int) 0;
+    foreground_process = (pid_t) 0;
     foreground_thread  = (int) 0;
-    current_process    = (int) 0;
+    current_process    = (pid_t) 0;
     current_thread     = (int) 0;
 
 // Network
@@ -959,16 +941,14 @@ void init_globals (void)
 // == fs ==============================
 //
 
-    // ==============================
-    // fs support
+// ==============================
+// fs support
+// FS type.
+// type 1, fat16.
+// #todo
 
-    // FS type.
-    // type 1, fat16.
-    
-    // #todo
-    g_currentvolume_filesystem_type = FS_TYPE_FAT16;    
+    g_currentvolume_filesystem_type = FS_TYPE_FAT16;
     g_currentvolume_fatbits = (int) 16;
-
 }
 
 
@@ -1061,7 +1041,6 @@ int I_init (void)
     //vfsInit();
     fsInit();
     // ...
-
 
 // ==========================
 // network
@@ -1204,7 +1183,6 @@ int I_init (void)
     InitializationPhase = 1;
 
 
-
 // ========================
 // We need to be in the phase 1.
 
@@ -1341,9 +1319,9 @@ int I_init (void)
     debug_print ("I_init: done\n");
     //printf      ("I_init: done\n");
 
-    // ok
-    // Return to the main initialization routine
-    // in x64init.c
+// ok
+// Return to the main initialization routine
+// in x64init.c
 
     return TRUE;
 
@@ -1400,26 +1378,22 @@ int I_x64main (void)
 
     InitialProcessInitialized = FALSE;
 
-
-    // Obs: 
-    // O video já foi inicializado em main.c.
-    // Isso atualiza a estrutura de console do console atual.
-    // #bugbug: 
-    // A inicialização não funciona, pois os elementos das estruturas
-    // não guardam os valores corretamente.
-    // Talvez está escrevendo em lugar inapropriado.
-    // #test: 
-    // Mudamos isso para o momento em que inicializamos os consoles.
+// Obs: 
+// O video já foi inicializado em main.c.
+// Isso atualiza a estrutura de console do console atual.
+// #bugbug: 
+// A inicialização não funciona, pois os elementos das estruturas
+// não guardam os valores corretamente.
+// Talvez está escrevendo em lugar inapropriado.
+// #test: 
+// Mudamos isso para o momento em que inicializamos os consoles.
  
     // #debug
     debug_print ("I_x64main: [TODO]\n");
     //printf      ("I_x64main: [TODO]\n");
     //refresh_screen();
 
-
-//
 // System State
-//
 
     if (system_state != SYSTEM_BOOTING)
     {
@@ -1428,9 +1402,7 @@ int I_x64main (void)
         return FALSE;
     }
 
-//
 // System Arch
-//
 
     if (current_arch != CURRENT_ARCH_X86_64)
     {
@@ -1439,13 +1411,9 @@ int I_x64main (void)
         return FALSE;
     }
 
-
-//
 // Threads counter
-//
 
     UPProcessorBlock.threads_counter = 0;
-
 
 // ================================
 // sse support.
@@ -1498,7 +1466,6 @@ int I_x64main (void)
     }
 
 // Phases 1 and 2.
-// See: sysinit.c
 
     Status = (int) I_init(); 
 
@@ -1514,15 +1481,13 @@ int I_x64main (void)
     InitializationPhase = 3;
 
 //================================
+// Initialize all the kernel graphics support.
     PROGRESS("Kernel:1:3\n"); 
-    // Initialize all the kernel graphics support.
 
-    // Initialize all the kernel graphics support.
-    // some extra things like virtual terminal and tty.
-    // #todo: rever essa inicializaçao.
-    
-    // See: 
-    // users/kgws.c
+// Initialize all the kernel graphics support.
+// some extra things like virtual terminal and tty.
+// #todo: rever essa inicializaçao.
+// See: user/graphics.c
 
     KGWS_initialize();
 
@@ -1565,9 +1530,8 @@ int I_x64main (void)
 
     PROGRESS("Kernel:1:5\n"); 
     debug_print ("[x64] I_x64main: [DANGER] Initializing GDT\n");
-    printf      ("[x86] I_x64main: Initializing GDT\n");      
+    //printf      ("[x86] I_x64main: Initializing GDT\n");      
     x64_init_gdt();
-
 
 // ================================
 // Creating kernel process.
@@ -1687,14 +1651,12 @@ int I_x64main (void)
 // Mas isso faz parte da interface gráfica,
 // Só que somente nesse momento temos recursos 
 // suficientes para essa rotina funcionar.
+// See: kgwm.c
 
     PROGRESS("Kernel:1:11\n"); 
 
     //bg_load_image ();
-
-    // See: kgwm.c
     windowLoadGramadoIcons();
-
 
 
 // ================================

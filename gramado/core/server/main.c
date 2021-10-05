@@ -586,7 +586,7 @@ void dispacher (int fd)
     // para assim obtermos um novo da próxima vez.
 
 
-    gwssrv_debug_print ("dispacher: \n");
+    //gwssrv_debug_print ("dispacher: \n");
 
     // Fail, cleaning.
     if (fd<0){
@@ -937,7 +937,7 @@ gwsProcedure (
     int my_pid = -1;
 
     // #debug
-    debug_print ("gwssrv: gwsProcedure\n");
+    //debug_print ("gwssrv: gwsProcedure\n");
     
     //#debug
     //return 0;
@@ -2847,7 +2847,7 @@ int main (int argc, char **argv)
 
         // Dispatch
         if (IsAcceptingConnections == TRUE){
-            gwssrv_debug_print("gwssrv: accept returned OK\n");
+            //gwssrv_debug_print("gwssrv: accept returned OK\n");
             dispacher(newconn);
             //close(newconn);
         }

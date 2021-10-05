@@ -99,7 +99,7 @@ void dispatcher ( int type )
 {
     struct thread_d *TargetThread;
 
-    debug_print (" DISPATCHER: ");
+    //debug_print (" DISPATCHER: ");
 
 
 //

@@ -473,47 +473,45 @@ socket_inet (
     int __slot = -1;
 
 
-    if ( (void*) sock == NULL )
-    {
+    if ( (void*) sock == NULL ){
         debug_print ("socket_unix: [FAIL] sock\n");
         goto fail;
     }
 
-    if (family != AF_INET)
-    {
+    if (family != AF_INET){
         debug_print ("socket_unix: [FAIL] bad family\n");
         goto fail;
     }
 
 
-    // Process
+// #todo
+// Check index validation.
+
+// Process
 
     Process = (void *) processList[current_process];
 
-    if ( (void *) Process == NULL )
-    {
+    if ( (void *) Process == NULL ){
         printf("socket_inet: Process\n");
         goto fail;
+    }
 
-    }else{
-
-        if ( Process->used != 1 || Process->magic != 1234 ){
-            printf("socket_inet: validation\n");
-            goto fail;
-        }
-        //ok
-    };
-
-
-	//#todo
-	//temos que criar uma rotina que procure slots em Process->Streams[]
-	//e colocarmos em process.c
-	//essa é afunção que estamos criando.
-	// process_find_empty_stream_slot ( struct process_d *process );
+    if ( Process->used != TRUE || 
+         Process->magic != 1234 )
+    {
+        printf("socket_inet: validation\n");
+        goto fail;
+    }
 
 
+//#todo
+//temos que criar uma rotina que procure slots em Process->Streams[]
+//e colocarmos em process.c
+//essa é afunção que estamos criando.
 
-	// #improvisando
+    // process_find_empty_stream_slot ( struct process_d *process );
+
+// #improvisando
 	// 0, 1, 2 são reservados para o fluxo padrão.
 	// Como ainda não temos rotinas par ao fluxo padrão,
 	// pode ser que peguemos os índices reservados.
@@ -532,11 +530,10 @@ socket_inet (
         goto fail;
     }
 
+//
+// == Buffer ==========================
+//
 
-    //
-    // == Buffer ==========================
-    //
-    
     char *buff = (char *) kmalloc(BUFSIZ);
     //char *buff = (char *) newPage ();
 
@@ -549,9 +546,9 @@ socket_inet (
         goto fail;
     }
 
-	//
-	// File.
-	//
+//
+// File
+//
 
     _file = (void *) kmalloc( sizeof(file) );
 
@@ -562,77 +559,81 @@ socket_inet (
         printf ("socket_inet: _file fail\n");
         goto fail;
 
-    }else{
+    }
 
-        memset( _file, 0, sizeof(struct file_d) );
-            
-        _file->used = 1;
-        _file->magic = 1234;
-        _file->pid = (pid_t) current_process;
-        _file->uid = (uid_t) current_user;
-        _file->gid = (gid_t) current_group;
-        _file->____object = ObjectTypeSocket;
+// Clear
+    memset( 
+        _file, 
+        0, 
+        sizeof(struct file_d) );
 
-        // sync
-        _file->sync.sender = -1;
-        _file->sync.receiver = -1;
-        _file->sync.action = ACTION_NULL;
-        _file->sync.can_read = TRUE;
-        _file->sync.can_write = TRUE;
-        _file->sync.can_execute = FALSE;
-        _file->sync.can_accept = TRUE;
-        _file->sync.can_connect = TRUE;
+    _file->used = TRUE;
+    _file->magic = 1234;
 
-        _file->sync.block_on_read = FALSE;
-        _file->sync.block_on_read_empty = TRUE;
+    _file->pid = (pid_t) current_process;
+    _file->uid = (uid_t) current_user;
+    _file->gid = (gid_t) current_group;
+    _file->____object = ObjectTypeSocket;
 
-        _file->sync.block_on_write = TRUE;
-        _file->sync.block_on_write_full = TRUE;     
-        
-        _file->sync.lock = FALSE;   
-        
-        //flags 
-        _file->_flags = __SWR;
+// sync
+    _file->sync.sender = -1;
+    _file->sync.receiver = -1;
+    _file->sync.action = ACTION_NULL;
+    _file->sync.can_read = TRUE;
+    _file->sync.can_write = TRUE;
+    _file->sync.can_execute = FALSE;
+    _file->sync.can_accept = TRUE;
+    _file->sync.can_connect = TRUE;
 
-        // No name for now.
-        _file->_tmpfname = NULL;
-        //_file->_tmpfname = "socket";       
+    _file->sync.block_on_read = FALSE;
+    _file->sync.block_on_read_empty = TRUE;
 
-        // Buffer.
-        _file->_base    = buff;
-        _file->_p       = buff;
-        _file->_lbfsize = BUFSIZ; 
-        
-        // Quanto falta.
-        _file->_cnt = _file->_lbfsize;        
-        
-        _file->_r = 0;
-        _file->_w = 0;
-        
-        
-        _file->socket_buffer_full = 0;  
+    _file->sync.block_on_write = TRUE;
+    _file->sync.block_on_write_full = TRUE;     
 
-        _file->socket = sock;
-        
-        // O arquivo do soquete, o buffer ?
-        sock->private_file = (file *) _file; 
+    _file->sync.lock = FALSE;   
 
-        // Salvamos o ponteira para estrutura de soquete
-        // na estrutura de processo do processo atual.
-        Process->priv = (void *) sock;
+// flags 
+    _file->_flags = __SWR;
 
-        // fd.
-        _file->_file = __slot;
-        
-        //Colocando na lista de arquivos abertos no processo.
-        Process->Objects[__slot] = (unsigned long) _file;
-        
-        debug_print ("socket_inet: done\n");
+// No name for now.
+    _file->_tmpfname = NULL;
+    //_file->_tmpfname = "socket";       
 
-        // ok
-        // Retornamos o fd na lista de arquivos abertos pelo processo.
-        return (int) __slot;
-    };
+// Buffer.
+    _file->_base    = buff;
+    _file->_p       = buff;
+    _file->_lbfsize = BUFSIZ; 
+
+// Quanto falta.
+    _file->_cnt = _file->_lbfsize;        
+
+    _file->_r = 0;
+    _file->_w = 0;
+
+    _file->socket_buffer_full = 0;  
+
+    _file->socket = sock;
+
+// O arquivo do soquete, o buffer ?
+    sock->private_file = (file *) _file; 
+
+// Salvamos o ponteira para estrutura de soquete
+// na estrutura de processo do processo atual.
+    Process->priv = (void *) sock;
+
+// fd
+    _file->_file = __slot;
+
+// Colocando na lista de arquivos abertos no processo.
+    Process->Objects[__slot] = (unsigned long) _file;
+
+    //debug_print ("socket_inet: done\n");
+
+// ok
+// Retornamos o fd na lista de arquivos abertos pelo processo.
+
+    return (int) __slot;
 
 fail:
     debug_print ("socket_inet: [FAIL]\n");
@@ -653,7 +654,6 @@ int socket_init (void)
 
     // ...
 
-    
     return 0;
 }
 
@@ -1062,7 +1062,7 @@ sys_accept (
     int fdClient = -1;    //  <<<------
 
     // #debug
-    debug_print ("sys_accept:\n");
+    // debug_print ("sys_accept:\n");
 
 //
 // fd Server 
@@ -1304,7 +1304,7 @@ sys_accept (
     if ( sSocket->state == SS_CONNECTING || 
          sSocket->state == SS_CONNECTED )
     {
-        debug_print ("sys_accept: CONNECTING !\n");
+        //debug_print ("sys_accept: CONNECTING !\n");
 
         //Server socket. Pre-connect.
         //precisamos mudar no caso de erro no cliente.
@@ -1342,7 +1342,7 @@ sys_accept (
             // uma conexao pendente.
             if( cSocket->magic_string[0] == 'C')
             {
-                debug_print("MAGIC C\n");
+                //debug_print("MAGIC C\n");
                 //printf ("magic: %s\m",cSocket->magic_string);
             }
 
@@ -1362,7 +1362,7 @@ sys_accept (
             sProcess->Objects[ 31 ] = (unsigned long) cFile;  //last
             cFile->_file = 31;
             
-            debug_print ("sys_accept: done\n");
+            //debug_print ("sys_accept: done\n");
 
             return (int) cFile->_file; 
         }
@@ -1417,7 +1417,7 @@ sys_bind (
     int Verbose=FALSE;
 
     // #debug
-    debug_print ("sys_bind:\n");
+    //debug_print ("sys_bind:\n");
 
     // #debug
     if (Verbose==TRUE){
@@ -2256,10 +2256,9 @@ int sys_listen (int sockfd, int backlog)
 
 
 // #debug
-    debug_print ("sys_listen: [TODO]\n");
-    printf      ("sys_listen: [TODO] fd=%d backlog=%d\n",
-        sockfd, backlog);
-
+    //debug_print ("sys_listen: [TODO]\n");
+    //printf      ("sys_listen: [TODO] fd=%d backlog=%d\n",
+        //sockfd, backlog);
 
 // sockfd  = The fd of the server's socket.
     if ( sockfd < 0 || sockfd >= NUMBER_OF_FILES )
@@ -2602,12 +2601,15 @@ int sys_socket ( int family, int type, int protocol )
     // #debug
     // Slow.
 
-    if ( Verbose == TRUE ){
-    printf ("\n======================================\n");
-    printf ("sys_socket: PID %d | family %d | type %d | protocol %d \n",
-        current_process, family, type, protocol );
-    refresh_screen();
+    /*
+    if ( Verbose == TRUE )
+    {
+        printf ("\n======================================\n");
+        printf ("sys_socket: PID %d | family %d | type %d | protocol %d \n",
+            current_process, family, type, protocol );
+        refresh_screen();
     }
+    */
 
 
     debug_print ("sys_socket:\n");

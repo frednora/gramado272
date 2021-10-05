@@ -2,7 +2,6 @@
 // atapci.c
 
 
-
 #include <kernel.h>
 
 
@@ -157,26 +156,26 @@ int diskATAPCIConfigurationSpace ( struct pci_device_d *D )
 
 #ifdef KERNEL_VERBOSE
     printf ("diskATAPCIConfigurationSpace:\n");
-    printf ("Initializing PCI Mass Storage support..\n");
+    //printf ("Initializing PCI Mass Storage support..\n");
 #endif
 
-
-    if ( (void *) D == NULL ){
+    if ( (void *) D == NULL )
+    {
         printf ("diskATAPCIConfigurationSpace: struct\n");
         refresh_screen();
         return PCI_MSG_ERROR;
-    }else{
-        if ( D->used != 1 || D->magic != 1234 ){
-            printf ("diskATAPCIConfigurationSpace: validation\n");
-            refresh_screen();
-            return PCI_MSG_ERROR;
-        }
+    }
 
-		//ok
-    };
+    if ( D->used != TRUE || D->magic != 1234 )
+    {
+        printf ("diskATAPCIConfigurationSpace: validation\n");
+        refresh_screen();
+        return PCI_MSG_ERROR;
+    }
 
+ 
+// Indentification Device
 
-    // Indentification Device
     //data = (uint32_t) diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0 );
 
     // Salvando configurações.
@@ -189,42 +188,37 @@ int diskATAPCIConfigurationSpace ( struct pci_device_d *D )
 #endif
 
 
-	/*
-	if ( D->Vendor == 0x1106 && D->Device == 0x0591 )
-	{
-		kprintf ("VIA disk found\n");
-	
-	} else if (D->Vendor == 0x1106 && D->Device == 0x0591) {
+    /*
+    if ( D->Vendor == 0x1106 && D->Device == 0x0591 )
+    {
+        kprintf ("VIA disk found\n");
+    } else if (D->Vendor == 0x1106 && D->Device == 0x0591){
         // ...
-	}
-	*/
+    };
+    */
 
-
-	// Obtendo informações.
-	// Classe code, programming interface, revision id.
+// Obtendo informações.
+// Classe code, programming interface, revision id.
 
     //data  = (uint32_t) diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 8 );
-    
-	// Saving info.
-	// Classe e sub-classe.
-	// prog if.
-	// Revision.
+
+// Saving info.
+// Classe e sub-classe.
+// prog if.
+// Revision.
 
     //ata_pci->classCode  = data >> 24 & 0xff;
     //ata_pci->subclass   = data >> 16 & 0xff;
     //ata_pci->progif     = data >> 8  & 0xff;
     //ata_pci->revisionId = data       & 0xff;
 
+// #importante:
+// Aqui detectamos o tipo de dispositivo com base 
+// nas informações de classe e subclasse.
 
-	// #importante:
-	// Aqui detectamos o tipo de dispositivo com base 
-	// nas informações de classe e subclasse.
-
-
-	//
-	// # IDE 
-	//
-
+//
+// #IDE 
+//
 
     if ( D->classCode == PCI_CLASSCODE_MASS && 
          D->subclass == PCI_SUBCLASS_IDE )
@@ -274,12 +268,13 @@ int diskATAPCIConfigurationSpace ( struct pci_device_d *D )
 //#endif
 
 
-	//
-	// # RAID
-	//
+//
+// #RAID
+//
 
-		// #todo
-		// Devemos falhar, pois não daremos suporte à IDE RAID por enquanto..
+// #todo
+// Devemos falhar, 
+// pois não daremos suporte à IDE RAID.
 
     }else if ( D->classCode == PCI_CLASSCODE_MASS && D->subclass == PCI_SUBCLASS_RAID )
           {
@@ -356,20 +351,19 @@ int diskATAPCIConfigurationSpace ( struct pci_device_d *D )
                 };
 
 
-	// #obs:
-	// Nesse momento já sabemos se é IDE, RAID, AHCI.
-	// Vamos pegar mais informações,
-	// Salvaremos as informações na estrutura.
+// #obs:
+// Nesse momento já sabemos se é IDE, RAID, AHCI.
+// Vamos pegar mais informações,
+// Salvaremos as informações na estrutura.
 
-
-	// PCI cacheline, Latancy, Headr type, end BIST
+// PCI cacheline, Latancy, Headr type, end BIST
 
     data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0xC );
-    D->latency_timer = data >>  8 & 0xff;
-    D->header_type   = data >> 16 & 0xff;
-    D->bist          = data >> 24 & 0xff;
+    D->latency_timer = (data >> 8)  & 0xff;
+    D->header_type   = (data >> 16) & 0xff;
+    D->bist          = (data >> 24) & 0xff;
 
-    // BARs
+// BARs
 
     D->BAR0 = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x10 );
     D->BAR1 = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x14 );
@@ -378,23 +372,22 @@ int diskATAPCIConfigurationSpace ( struct pci_device_d *D )
     D->BAR4 = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x20 );
     D->BAR5 = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x24 );
 
-    // irqline and irq pin.
+// irqline and irq pin.
     
     data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 0x3C );
     D->irq_line = data & 0xff;
-    D->irq_pin  = data >> 8 & 0xff;
+    D->irq_pin  = (data >> 8) & 0xff;
 
     // PCI command and status.
 
     data = diskReadPCIConfigAddr ( D->bus, D->dev, D->func, 4 );
     D->Command = data & 0xffff; 
-    D->Status  = data >> 16 & 0xffff;
+    D->Status  = (data >> 16) & 0xffff;
 
 
 //
 // #debug
 //
-
 
 #ifdef KERNEL_VERBOSE
     printf ("[ Command %x Status %x ]\n", D->Command, D->Status );

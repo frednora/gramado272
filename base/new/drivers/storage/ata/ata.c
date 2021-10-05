@@ -29,31 +29,15 @@ void __local_io_delay (void);
 
 void ata_wait (int val)
 {
-
-    if ( val <= 0 )
+    if ( val <= 100 )
     {
         val = 400;
     }
 
     val = ( val/100 );
 
-    while (val--)
-    {
+    while (val--){
         io_delay();
-    };
-}
-
-
-// Forces a 400 ns delay.
-void ata_delay (void)
-{
-    int i=0;
-
-    // Waste some time.
-    for (i=0; i < 5; i++)
-    {
-        //__x86_io_delay();
-        __local_io_delay();
     };
 }
 
@@ -61,12 +45,20 @@ void ata_delay (void)
 void __local_io_delay (void)
 {
     asm ("xorl %%eax, %%eax" ::);
-    asm ("outb %%al, $0x80" ::);
+    asm ("outb %%al, $0x80"  ::);
     return;
 }
 
+// Forces a 400 ns delay.
+// Waste some time.
+void ata_delay (void)
+{
+    int i=0;
 
-
+    for (i=0; i < 5; i++){
+        __local_io_delay();
+    };
+}
 
 
 // #bugbug
@@ -75,47 +67,47 @@ void __local_io_delay (void)
 
 unsigned char ata_status_read (void)
 {
-    return in8 ( ata.cmd_block_base_address + ATA_REG_STATUS );
+    return in8( ata.cmd_block_base_address + ATA_REG_STATUS );
 }
 
 void ata_cmd_write (int cmd_val)
 {
     // no_busy 
+    ata_wait_not_busy();
 
-    ata_wait_not_busy ();
-    out8 ( ata.cmd_block_base_address + ATA_REG_CMD, cmd_val );
+    out8 ( 
+        (unsigned short) ((ata.cmd_block_base_address + ATA_REG_CMD) & 0xFFFF), 
+        (unsigned char) (cmd_val & 0xFF) );
 
-	// #todo
-	// Esperamos 400ns
-
-    ata_wait (400);  
+// #todo
+// Esperamos 400ns
+    ata_wait(400);  
 }
 
 
-// ata soft reset. 
 void ata_soft_reset (void)
 {
-    // #todo
-    // Review this thing.
+    unsigned char data = (unsigned char) in8( ata.ctrl_block_base_address );
 
-    //unsigned char data = in8 ( ata.ctrl_block_base_address + 2 );
-    unsigned char data = in8 ( ata.ctrl_block_base_address );
-    
-    out8 ( ata.ctrl_block_base_address, data | 0x4 );
-    out8 ( ata.ctrl_block_base_address, data & 0xfb );
+    out8( 
+        (unsigned short) ata.ctrl_block_base_address, 
+        (unsigned char) (data | 0x4) );
+
+    out8( 
+        (unsigned short) ata.ctrl_block_base_address, 
+        (unsigned char) (data & 0xFB) );
 }
-
 
 
 unsigned char ata_wait_drq (void)
 {
-
-    while (!(ata_status_read () & ATA_SR_DRQ))
-        if ( ata_status_read () & ATA_SR_ERR )
+    while (!(ata_status_read() & ATA_SR_DRQ))
+        if ( ata_status_read() & ATA_SR_ERR )
             return 1;
 
     return 0;
 } 
+
 
 unsigned char ata_wait_no_drq (void)
 {
@@ -705,9 +697,12 @@ int ide_identify_device ( uint8_t nport )
     out8 ( ata.cmd_block_base_address + ATA_REG_LBA2,     0 );  // LBA 23-16
 
 // Select device
-    out8 ( 
-        ( ata.cmd_block_base_address + ATA_REG_DEVSEL), 
-        0xE0 | ata.dev_num << 4 );
+// #todo:
+// Review the data sent to the port.
+
+    out8( 
+        (unsigned short) ( ata.cmd_block_base_address + ATA_REG_DEVSEL), 
+        (unsigned char) 0xE0 | ata.dev_num << 4 );
 
 // Solicitando informações sobre o disco.
 
@@ -1111,11 +1106,11 @@ int ide_dev_init (char port)
     }
 
 
-    //
-    // data thing ??
-    //
+//
+// data thing ??
+//
 
-    data = (int) ide_identify_device (port);
+    data = (int) ide_identify_device(port);
 
     // #todo:
     // Penso que esse valor de '-1' for determinado 
@@ -1318,24 +1313,21 @@ int ide_dev_init (char port)
 
     switch (port){
 
-        case 0:  dev_nport.dev0 = 0x81;  break;
-        case 1:  dev_nport.dev1 = 0x82;  break;
-        case 2:  dev_nport.dev2 = 0x83;  break;
-        case 3:  dev_nport.dev3 = 0x84;  break;
+    case 0:  dev_nport.dev0 = 0x81;  break;
+    case 1:  dev_nport.dev1 = 0x82;  break;
+    case 2:  dev_nport.dev2 = 0x83;  break;
+    case 3:  dev_nport.dev3 = 0x84;  break;
 
-        // #atenção
-        // Essa estrutura é para 32 portas.
-        // para listar as portas AHCI.
-        // Mas aqui está apenas listando as 4 portas IDE.
-
-        default:
-            debug_print ("ide_dev_init: [ERROR] default port number\n");
-            break;
+    // #atenção
+    // Essa estrutura é para 32 portas.
+    // para listar as portas AHCI.
+    // Mas aqui está apenas listando as 4 portas IDE.
+    default:
+        debug_print ("ide_dev_init: [ERROR] default port number\n");
+        break;
     };
 
-
     new_dev->next = NULL;
-
 
 //#ifdef KERNEL_VERBOSE
     // #todo
@@ -1365,7 +1357,6 @@ int ide_dev_init (char port)
 
     tmp_dev->next = new_dev;
 
-
     debug_print ("ide_dev_init: done\n");
 
     return 0;
@@ -1381,11 +1372,11 @@ void ide_mass_storage_initialize (void)
 {
     int port=0;
 
-    //
-    // Vamos trabalhar na lista de dispositivos.
-    //
+//
+// Vamos trabalhar na lista de dispositivos.
+//
 
-	// Iniciando a lista.
+// Iniciando a lista.
 
     ready_queue_dev = ( struct st_dev * ) kmalloc ( sizeof( struct st_dev) );
 
@@ -1393,7 +1384,6 @@ void ide_mass_storage_initialize (void)
     {
         panic ("ide_mass_storage_initialize: ready_queue_dev\n");
     }
-
 
     current_dev = ( struct st_dev * ) ready_queue_dev;
 
@@ -1412,22 +1402,21 @@ void ide_mass_storage_initialize (void)
 
     if ( (void *) ata_identify_dev_buf == NULL )
     {
-        panic ("ide_mass_storage_initialize: ata_identify_dev_buf \n");
+        panic("ide_mass_storage_initialize: ata_identify_dev_buf \n");
     }
 
+//
+// Sondando dispositivos e imprimindo na tela.
+//
 
-	//
-	// Sondando dispositivos e imprimindo na tela.
-	//
-
-
-    // As primeiras quatro portas do controlador IDE.
+// As primeiras quatro portas do controlador IDE.
 
     for ( port=0; port < 4; port++ )
     {
         ide_dev_init (port);
     };
 }
+
 
 /* 
  * dev_switch:
@@ -1436,8 +1425,9 @@ void ide_mass_storage_initialize (void)
 
 static inline void dev_switch (void)
 {
-    // ??
-    // Pula, se ainda não tiver nenhuma unidade.
+
+// ??
+// Pula, se ainda não tiver nenhuma unidade.
 
     if ( !current_dev )
     {
@@ -1445,9 +1435,9 @@ static inline void dev_switch (void)
     }
 
 
-    // Obter a próxima tarefa a ser executada.
-    // Se caímos no final da lista vinculada, 
-    // comece novamente do início.
+// Obter a próxima tarefa a ser executada.
+// Se caímos no final da lista vinculada, 
+// comece novamente do início.
 
     current_dev = current_dev->next;    
     
@@ -1459,23 +1449,25 @@ static inline void dev_switch (void)
 
 static inline int getnport_dev (void)
 {
-
-    if ( (void *) current_dev == NULL )
-        return -1;
-
-    return current_dev->dev_nport;
-}
-
-static inline int getpid_dev (void)
-{
-    if ( (void *) current_dev == NULL )
-    {
+    if ( (void *) current_dev == NULL ){
         return -1;
     }
 
-    return current_dev->dev_id;
+    return (int) current_dev->dev_nport;
 }
 
+
+static inline int getpid_dev (void)
+{
+    if ( (void *) current_dev == NULL ){
+        return -1;
+    }
+
+    return (int) current_dev->dev_id;
+}
+
+// #todo
+// Change name.
 int nport_ajuste ( char nport )
 {
     char i = 0;
@@ -1503,8 +1495,8 @@ int nport_ajuste ( char nport )
     return 0;
 }
 
+
 /*
- **************************************************
  * show_ide_info:
  *     Mostrar as informações obtidas na inicializações 
  * do controlador.
@@ -1572,32 +1564,6 @@ void show_ide_info (void)
 
     //refresh_screen ();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

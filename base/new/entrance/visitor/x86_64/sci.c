@@ -1113,7 +1113,7 @@ void *sci0 (
         // passe o buffer como parametro
         //case SYS_BUFFER_DRAWRECT:
         case 9:
-            debug_print("sci0: [9]\n");
+            //debug_print("sci0: [9]\n");
             drawDataRectangle ( 
                 (unsigned long) message_address[0],    //x 
                 (unsigned long) message_address[1],    //y
@@ -1127,7 +1127,7 @@ void *sci0 (
 
         // 10 - Refresh rectangle.
         case 10:
-            debug_print("sci0: [10]\n");
+            //debug_print("sci0: [10]\n");
             refresh_rectangle ( 
                 (unsigned long) message_address[0],    //x 
                 (unsigned long) message_address[1],    //y
@@ -1792,7 +1792,7 @@ void *sci0 (
 
         // 250
         case SYS_GETSYSTEMMETRICS:
-            debug_print ("sci0: SYS_GETSYSTEMMETRICS\n");
+            //debug_print ("sci0: SYS_GETSYSTEMMETRICS\n");
             return (void *) newos_get_system_metrics ( (int) arg2 );
             break;
 
@@ -1855,7 +1855,7 @@ void *sci2 (
     unsigned long *a4 = (unsigned long*) arg4;
 
 
-    debug_print("sci2: [TODO]\n");
+    //debug_print("sci2: [TODO]\n");
 
     // Profiling in the process structure.
 
@@ -1912,7 +1912,7 @@ void *sci2 (
 // sys_read
 // See: sys.c
     if ( number == 18 ){
-        debug_print("sci2: [18] read\n");
+        //debug_print("sci2: [18] read\n");
         return (void *) sys_read ( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
@@ -1922,7 +1922,7 @@ void *sci2 (
 // sys_write
 // See: sys.c
     if ( number == 19 ){
-        debug_print("sci2: [19] write\n");
+        //debug_print("sci2: [19] write\n");
         return (void *) sys_write ( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
@@ -1953,7 +1953,6 @@ void *sci2 (
     // IN: file name, parent pid, clone flags.
     if ( number == 900 ){
         debug_print("sci2: [900] clone and execute\n");
-        
         return (void *) copy_process( 
                             (const char *) arg2, 
                             (pid_t) current_process, 
@@ -1991,14 +1990,14 @@ void *sci2 (
     // See: sys.c
     // IN: fd, request
     if ( number == 10001 ){
-        debug_print("sci2: [10000] sys_get_file_sync\n");
+        //debug_print("sci2: [10000] sys_get_file_sync\n");
         return (void*) sys_get_file_sync( (int) arg2, (int) arg3 );
     }
 
 
     // Get the tid of the current thread.
     if ( number == 10010 ){
-        debug_print("sci2: [10010] GetCurrentTID\n");
+        //debug_print("sci2: [10010] GetCurrentTID\n");
         return (void*) GetCurrentTID();
     }
 
