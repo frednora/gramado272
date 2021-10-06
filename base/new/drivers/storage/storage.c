@@ -1,13 +1,11 @@
 
+// storage.c
 
 #include <kernel.h>  
 
 
-
 /*
- ********************************************************
  * disk_init:
- *
  *     Initialize the disk manager.
  */
 
@@ -176,6 +174,10 @@ void diskShowCurrentDiskInfo (void)
 // Called by service 251
 void disk_show_info (void)
 {
+    printf ("disk_show_info: #todo\n");
+    refresh_screen();
+
+/*
     struct disk_d *disk;
     int i=0;
 
@@ -184,21 +186,22 @@ void disk_show_info (void)
     int CurrentIDEdevice  = -1;
     int BootTimeIDEChannel = -1;
     int BootTimeIDEdevice  = -1;
-
-    printf ("~Disk info:\n");
-
+*/
+    
+/*
     CurrentIDEChannel  = ata_get_current_ide_channel();
     CurrentIDEdevice   = ata_get_current_ide_device();
     BootTimeIDEChannel = ata_get_boottime_ide_channel();
     BootTimeIDEdevice  = ata_get_boottime_ide_device();
-
+*/
 
     //printf ("CurrentIDEChannel %d\n", CurrentIDEChannel);
     //printf ("CurrentIDEdevice %d\n", CurrentIDEdevice);
     //printf ("BootTimeIDEChannel %d\n", BootTimeIDEChannel);
     //printf ("BootTimeIDEdevice %d\n", BootTimeIDEdevice);
 
-    // ======================================================
+/*
+// ======================================================
     printf("Current:  ");
 
     if ( CurrentIDEChannel == ATA_PRIMARY )
@@ -215,9 +218,11 @@ void disk_show_info (void)
         printf("Slave ");
 
     printf("\n");
-    // ======================================================
+// ======================================================
+*/
 
-    // ======================================================
+/*
+// ======================================================
     printf("Boottime:  ");
 
     if ( BootTimeIDEChannel == ATA_PRIMARY )
@@ -234,8 +239,10 @@ void disk_show_info (void)
         printf("Slave ");
 
     printf("\n");
-    // ======================================================
-    
+// ======================================================
+*/
+
+/*
     // All disks in the list.
     
     for (i=0; i<DISK_COUNT_MAX; i++)
@@ -247,7 +254,10 @@ void disk_show_info (void)
             diskShowDiskInfo(i);
         }
     };
+*/
+
 }
+
 
 /*
  * disk_get_disk_handle:

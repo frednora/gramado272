@@ -501,11 +501,8 @@ ataReadSector (
 // #bugbug
 // This is the port index, not the channel index.
 
-    unsigned int port_index = (unsigned short) g_current_ide_channel;
+    unsigned int port_index = (unsigned int) ata_get_current_ide_port_index();
 
-    //int is_master = (int) g_current_ide_device;
-    //if( is_master != 0 && is_master != 1 )
-        //panic("ataReadSector: is_master");
 
 // IN:
 // (buffer, lba, rw flag, port number, master )
@@ -550,19 +547,10 @@ ataWriteSector (
 // #todo
 // Limits for 'buffer' and 'lba'.
 
-
 // #bugbug
 // This is the port index, not the channel index.
 
-    unsigned int port_index = (unsigned short) g_current_ide_channel;
-
-// #deprecated
-// master slave.
-
-    //int is_master = (int) g_current_ide_device;
-    //if( is_master != 0 && is_master != 1 )
-        //panic("ataWriteSector: is_master");
-
+    unsigned int port_index = (unsigned int) ata_get_current_ide_port_index();
 
 // IN:
 // (buffer, lba, rw flag, port number, master )

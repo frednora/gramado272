@@ -42,38 +42,16 @@
 #define __BAR2  2
 #define __BAR3  3
 
-#define __CHANNEL0  __BAR0  // BAR 0 primary ide channel. master and slave
-#define __CHANNEL1  __BAR2  // BAR 2 secondary ide channel. master and slave
-#define __CHANNEL2  __BAR1  // BAR 1 extra (sata emulating ide)
-#define __CHANNEL3  __BAR3  // BAR 3 extra (sata emulating ide)
+#define __CHANNEL0  __BAR0 
+#define __CHANNEL1  __BAR2
+#define __CHANNEL2  __BAR1
+#define __CHANNEL3  __BAR3
 
-// #bugbug
-// Nesse momento estamos determinando que o driver do
-// controlador ide deve usar o canal 0 e que ele é master.
-// primary/master.
-// Então essas definições aqui são encontradas no driver do controlador.
-// Mas não deve ser assim. Devemos usar uma variável para isso.
-// Talvez algum arquivo de configuração devesse nos dizer 
-// qual canal devemos usar.
-// Ou ainda o número do driver de boot nos de alguma dica.
+
 // See: ata_initialize in ata.c
 
+#define __IDE_PORT    __CHANNEL0
 
-#define __IDE_PORT    __CHANNEL0    // primary
-//#define __IDE_PORT    __CHANNEL1  // secondary
-
-#define __IDE_SLAVE   0             // 0=master 1=slave
-//#define __IDE_SLAVE   1           // 0=master 1=slave
-
-
-
-// #tests:
-
-// + Funcionou BAR=0 slave=0. primary master
-// + Funcionou BAR=0 slave=1. primary slave
-
-// + Funcionou BAR=2 slave=0. secondary master 
-// + Funcionou BAR=2 slave=1. secondary slave
 
 
 // #bugbug
@@ -142,7 +120,7 @@ sixth..     ide5, usually PCI, probed
 
 #define FRED_VHD_32MB
 
-#if	defined(FRED_VHD_32MB)
+#if defined(FRED_VHD_32MB)
 #define VHD_32MB_CHS { 862, 4, 19,  0 }  
 //#define VHD_32MB_CHS { 0x35E, 0x4, 0x13, 0 }  
 #else 

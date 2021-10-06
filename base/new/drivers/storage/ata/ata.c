@@ -277,61 +277,32 @@ static inline void atapi_pio_read ( void *buffer, uint32_t bytes )
         "c"(bytes/2) );
 }
 
-// primary or secondary
-int ata_get_current_ide_channel(void)
-{
-    return (int) g_current_ide_channel;
-}
 
-
-// master or slave
-int ata_get_current_ide_device(void)
-{
-    return (int) g_current_ide_device;
-}
-
-
-// primary or secondary
-void ata_set_current_ide_channel(int channel)
-{
-    g_current_ide_channel = channel;
-}
-
-// master or slave
-void ata_set_current_ide_device(int device)
-{
-    g_current_ide_device = device;
-}
 
 // ====================================
 
 
-
-// primary or secondary
-int ata_get_boottime_ide_channel(void)
+void ata_set_boottime_ide_port_index(unsigned int port_index)
 {
-    return (int) g_boottime_ide_channel;
+    g_boottime_ide_port_index = (int) port_index;
+}
+
+int ata_get_boottime_ide_port_index(void)
+{
+    return (int) g_boottime_ide_port_index;
 }
 
 
-// master or slave
-int ata_get_boottime_ide_device(void)
+
+void ata_set_current_ide_port_index(unsigned int port_index)
 {
-    return (int) g_boottime_ide_device;
+    g_current_ide_port_index = (int) port_index;
 }
 
-// primary or secondary
-void ata_set_boottime_ide_channel(int channel)
+int ata_get_current_ide_port_index(void)
 {
-    g_boottime_ide_channel = channel;
+    return (int) g_current_ide_port_index;
 }
-
-
-// master or slave
-void ata_set_boottime_ide_device(int device)
-{
-    g_boottime_ide_device = device;
-}  
 
 
 
@@ -391,13 +362,11 @@ int ata_initialize ( int ataflag )
 // Usando as definições feitas em config.h
 // até que possamos encontrar dinamicamente 
 // o canal e o dispositivo certos.
-// __IDE_PORT indica qual é o canal.
-// __IDE_SLAVE indica se é master ou slave.
-// ex: primary/master.
+// __IDE_PORT indica qual é o indice de porta.
 // See: config.h
 
-    g_boottime_ide_channel = __IDE_PORT;   // primary
-    g_boottime_ide_device  = __IDE_SLAVE;  // master
+    ata_set_boottime_ide_port_index(__IDE_PORT);
+
 
     // Configumos o atual como sendo o mesmo
     // usado durante o boot.
@@ -405,8 +374,7 @@ int ata_initialize ( int ataflag )
     // Poderemos mudar o atual conforme nossa intenção
     // de acessarmos outros discos.
 
-    g_current_ide_channel =  g_boottime_ide_channel;
-    g_current_ide_device  =  g_boottime_ide_device;
+    ata_set_current_ide_port_index(__IDE_PORT);
 
 //
 // ===============================================================
@@ -547,19 +515,19 @@ int ata_initialize ( int ataflag )
             (unsigned short) (ATA_BAR3_SECONDARY_CONTROL_PORT & 0xFFFF), 
             0x00 );
 
+        // ??
         ata_record_dev     = 0xff;
         ata_record_channel = 0xff;
 
 
-#ifdef KERNEL_VERBOSE
+//#ifdef KERNEL_VERBOSE
         printf ("Initializing IDE Mass Storage device ...\n");
-        refresh_screen ();
-#endif    
+        //refresh_screen ();
+//#endif    
 
-
-	    //
-	    // As estruturas de disco serão colocadas em uma lista encadeada.
-	    //
+        //
+        // As estruturas de disco serão colocadas em uma lista encadeada.
+        //
 
         //ide_mass_storage_initialize();
 
@@ -601,9 +569,9 @@ int ata_initialize ( int ataflag )
             panic ("ata_initialize: ata_identify_dev_buf\n");
         }
 
-		// Sondando dispositivos e imprimindo na tela.
-		// As primeiras quatro portas do controlador IDE. 
-		
+        // Sondando dispositivos e imprimindo na tela.
+        // As primeiras quatro portas do controlador IDE. 
+
         // #todo
         // Create a constant for 'max'. 
 

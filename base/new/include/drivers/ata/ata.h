@@ -182,8 +182,7 @@
 int ATAFlag;
 unsigned short  *ata_identify_dev_buf;
 
-
-
+// ??
 unsigned char ata_record_dev;
 unsigned char ata_record_channel;
 
@@ -192,20 +191,17 @@ unsigned char ata_record_channel;
 // pela rotina de leitura e escrita.
 // See: config.h ata.c hdd.c
 
-int g_current_ide_channel;  //primary or secondary.
-int g_current_ide_device;   //master or slave
-
+int g_current_ide_port_index; 
 
 // #important
 // Qual é o canal e o dispositivo usado no momento do boot 
 // pela rotina de leitura e escrita.
 // See: config.h ata.c hdd.c
 
-int g_boottime_ide_channel;  //primary or secondary.
-int g_boottime_ide_device;   //master or slave
+int g_boottime_ide_port_index; 
+
 
 /*
- **************************************************************
  * PCIDeviceATA:
  *     Estrutura de dispositivos pci para um disco ata.
  *     #bugbug: E se tivermos mais que um instalado ???
@@ -220,7 +216,6 @@ struct pci_device_d *PCIDeviceATA;
 // ...
 
 /*
- **********************************
  * dev_nport:
  *     AHCI ports;
  */
@@ -297,7 +292,6 @@ struct ata_d  ata;
 
 
 /*
- ******************************************************************
  * st_dev:
  * É uma estrutura para dispositivos de armazenamento.
  */
@@ -445,16 +439,13 @@ void ata_pio_write ( void *buffer, int bytes );
 
 static inline void atapi_pio_read ( void *buffer, uint32_t bytes );
 
-int ata_get_current_ide_channel(void);
-int ata_get_current_ide_device(void);
-void ata_set_current_ide_channel(int channel);
-void ata_set_current_ide_device(int device);
 
+void ata_set_boottime_ide_port_index(unsigned int port_index);
+int ata_get_boottime_ide_port_index(void);
 
-int ata_get_boottime_ide_channel(void);
-int ata_get_boottime_ide_device(void);
-void ata_set_boottime_ide_channel(int channel);
-void ata_set_boottime_ide_device(int device);
+void ata_set_current_ide_port_index(unsigned int port_index);
+int ata_get_current_ide_port_index(void);
+
 
 int 
 ata_ioctl ( 
