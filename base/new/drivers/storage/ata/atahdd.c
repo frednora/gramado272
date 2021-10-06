@@ -4,54 +4,75 @@
 
 
 
-uint8_t hdd_ata_status_read (unsigned short port)
+uint8_t hdd_ata_status_read (unsigned int port_index)
 {
-    if (port<0){
-        panic("hdd_ata_status_read: p");
+    unsigned short port=0;
+
+    if (port_index>3){
+        panic("hdd_ata_status_read: port_index");
     }
 
 // #bugbug: 
 // Rever o offset.
 
-    return (uint8_t) in8( (unsigned short) (ide_ports[port].base_port + 7) );
+    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+
+    return (uint8_t) in8( (unsigned short) port );
 }
 
 
-int hdd_ata_wait_not_busy (unsigned short port)
+void 
+hdd_ata_cmd_write ( 
+    unsigned int port_index, 
+    unsigned char cmd_val )
 {
-    while ( hdd_ata_status_read(port) & ATA_SR_BSY )
-    {
-        if ( hdd_ata_status_read(port) & ATA_SR_ERR )
-        {
-            return TRUE;
-        }
-    };
 
-    return FALSE;
-}
+    unsigned short port=0;
 
-void hdd_ata_cmd_write ( unsigned short port, unsigned char cmd_val )
-{
-    if (port<0)
-        panic("hdd_ata_status_read: port");
+    if (port_index>3){
+        panic("hdd_ata_cmd_write: port_index");
+    }
 
-    // no_busy 
-    hdd_ata_wait_not_busy (port);
+// no_busy 
+    hdd_ata_wait_not_busy (port_index);
 
-    //outb(ata.cmd_block_base_address + ATA_REG_CMD,cmd_val);
-    
-    out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 7), 
+    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+
+    out8( 
+        (unsigned short) port, 
         (unsigned char) cmd_val );
 
     ata_wait (400);  
 }
 
-int hdd_ata_wait_no_drq (unsigned short port)
+
+int hdd_ata_wait_not_busy (unsigned int port_index)
 {
-    while ( hdd_ata_status_read(port) & ATA_SR_DRQ)
+    if (port_index>3){
+        panic("hdd_ata_wait_not_busy: port_index");
+    }
+
+    while ( hdd_ata_status_read(port_index) & ATA_SR_BSY )
     {
-        if (hdd_ata_status_read(port) & ATA_SR_ERR)
+        if ( hdd_ata_status_read(port_index) & ATA_SR_ERR )
+        {
+            return TRUE;
+        }
+    };
+
+    return FALSE;
+}
+
+
+int hdd_ata_wait_no_drq (unsigned int port_index)
+{
+    if (port_index>3){
+        panic("hdd_ata_wait_no_drq: port_index");
+    }
+
+    while ( hdd_ata_status_read(port_index) & ATA_SR_DRQ)
+    {
+        if (hdd_ata_status_read(port_index) & ATA_SR_ERR)
         {
             return TRUE;
         }
@@ -62,45 +83,113 @@ int hdd_ata_wait_no_drq (unsigned short port)
 
 
 // #todo: buffer address 64bit
-static void hdd_ata_pio_read ( unsigned short port, void *buffer, int bytes )
+// IN:
+// + port - ata port. (0~3)
+// + buffer
+// + bytes
+static void 
+hdd_ata_pio_read ( 
+    unsigned int port_index, 
+    void *buffer, 
+    int bytes )
 {
+    unsigned short port=0;
+    unsigned long next_lba=0;
 
+    int nwords=0;
+
+    if ( port_index > 3 ){
+        panic("hdd_ata_pio_read: We only support 4 ata ports\n");
+    }
+
+    // bytes/2
+    nwords = (int)(bytes >> 1);
+
+    // #todo
+    // What is the limit for the current disk?
+    // ex: (32*1024*1024/2) sectors for 32mb disk.
+    // (32*1024*1024/2) = 16777216
+
+    unsigned long TestMaxLBA = 16777216;
+
+    if ( next_lba >= TestMaxLBA ){
+        panic("hdd_ata_pio_read: Trying to read outside the disk limits\n");
+    }
+
+// ================================
 // #todo
 // Se possível, invocar a rotina padrão para portas.
 // See: ports64.c
 
     //#todo
     //if ( (void*) buffer == NULL ){ return; );
+
+    port = (unsigned short) (ide_ports[port_index].base_port + 0);
 
     asm volatile (\
         "cld;\
         rep; insw":: "D" (buffer),\
-        "d" ( (unsigned short) (ide_ports[port].base_port + 0) ),\
-        "c" (bytes/2) );
+        "d" ( (unsigned short) port ),\
+        "c" (nwords) );
 }
 
 
 // #todo: buffer address 64bit
-void hdd_ata_pio_write ( unsigned short port, void *buffer, int bytes )
+// IN:
+// + port - ata port. (0~3)
+// + buffer
+// + bytes
+void 
+hdd_ata_pio_write ( 
+    unsigned int port_index, 
+    void *buffer, 
+    int bytes )
 {
+    unsigned short port=0;
+    unsigned long next_lba=0;
 
+    int nwords=0;
+
+    if ( port_index > 3 ){
+        panic("hdd_ata_pio_write: We only support 4 ata ports\n");
+    }
+
+
+    // bytes/2
+    nwords = (int)(bytes >> 1);
+
+
+    // #todo
+    // What is the limit for the current disk?
+    // ex: (32*1024*1024/2) sectors for 32mb disk.
+    // (32*1024*1024/2) = 16777216
+
+    unsigned long TestMaxLBA = 16777216;
+
+    if ( next_lba >= TestMaxLBA ){
+        panic("hdd_ata_pio_write: Trying to write outside the disk limits\n");
+    }
+
+
+// ================================
 // #todo
 // Se possível, invocar a rotina padrão para portas.
 // See: ports64.c
 
     //#todo
     //if ( (void*) buffer == NULL ){ return; );
-    
+
+    port = (unsigned short) (ide_ports[port_index].base_port + 0);
+
     asm volatile (\
         "cld;\
         rep; outsw"::"S" (buffer),\
-        "d" ( (unsigned short) (ide_ports[port].base_port + 0) ),\
-        "c" (bytes/2));
+        "d" ( (unsigned short) port ),\
+        "c" (nwords));
 }
 
 
 /*
- *******************************
  * pio_rw_sector:
  * 
  * IN:
@@ -113,16 +202,15 @@ void hdd_ata_pio_write ( unsigned short port, void *buffer, int bytes )
  *   (IDE PIO)
  */
 
-// # Changing the lba type to 'unsigned int' 32 bit.
-
+// Read and write via pio mode.
 int 
 pio_rw_sector ( 
     unsigned long buffer, 
     unsigned int _lba, 
     int rw, 
-    unsigned short port,
-    int slave )
+    unsigned int port_index )
 {
+    unsigned short port=0;
     unsigned char c=0;
     unsigned int lba = (unsigned int) _lba;
 
@@ -133,20 +221,12 @@ pio_rw_sector (
          return (-1);
     }
 
-// #bugbug> unsigned short?
+// 0~3
+// We only support 4 ports.
+    port_index = (unsigned int) (port_index & 0xFF);
 
-    port = (unsigned short) (port & 0xFFFF);
-
-    if ( port < 0 || port >= 4 )
-    {
-         // msg?
-         return (-1);
-    }
-
-    if (slave<0)
-    {
-         // msg?
-         return (-1);
+    if( port_index > 3 ){
+        panic ("pio_rw_sector: We only support 4 ata ports.");
     }
 
 
@@ -166,24 +246,6 @@ pio_rw_sector (
 	//7 1   Always set.
 
 
-// #todo
-// O número da porta já indica se o dispositivo é 
-// master ou slave.
-// Nesse caso nem precisamos do parâmetro 'slave'.
-// #todo
-// A intenção aqui é não usar mais o parametro 'slave'
-
-// See:
-// ide_ports[port].channel
-// ide_ports[port].dev_num
-
-// #debug
-    if ( ide_ports[port].dev_num != slave )
-    {
-        panic("pio_rw_sector: [DEBUG] WRONG PARAMETER\n");
-    }
-
-
 // =================================================
 // 0x01F6 
 // Port to send drive and bit 24 - 27 of LBA
@@ -199,27 +261,36 @@ pio_rw_sector (
 // slave. bit 4 = 1
 //1111 0000b;
 
+    int is_slave=0;
+
+    is_slave = ide_ports[port_index].dev_num;
+
+    if( is_slave != FALSE && is_slave != TRUE )
+        panic("pio_rw_sector: is_slave");
+
 
 // not slave
-    if (slave == 0){ 
+    if (is_slave == FALSE){ 
         lba = (unsigned int) (lba | 0x000000E0);
     }
 
 // slave
-    if (slave == 1){
+    if (is_slave == TRUE){
         lba = (unsigned int) (lba | 0x000000F0);
     }
 
+    port = (unsigned short) (ide_ports[port_index].base_port + 6);
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 6), 
+        (unsigned short) port, 
         (unsigned char) lba );
 
 // =================================================
 // 0x01F2: 
 // Port to send, number of sectors
     
+    port = (unsigned short) (ide_ports[port_index].base_port + 2);
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 2), 
+        (unsigned short) port, 
         (unsigned char) 1 );
 
 // =================================================
@@ -228,8 +299,9 @@ pio_rw_sector (
 
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba & 0x000000FF);
+    port = (unsigned short) (ide_ports[port_index].base_port + 3); 
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 3), 
+        (unsigned short) port, 
         (unsigned char) lba );
 
 
@@ -240,10 +312,10 @@ pio_rw_sector (
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba >> 8);
     lba = (unsigned int) (lba & 0x000000FF);
+    port = (unsigned short) (ide_ports[port_index].base_port + 4); 
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 4), 
+        (unsigned short) port, 
         (unsigned char) lba );
-
 
 // =================================================
 // 0x1F5  ; Port to send, bit 16 - 23 of LBA
@@ -251,8 +323,9 @@ pio_rw_sector (
     lba = (unsigned int) _lba;
     lba = (unsigned int) (lba >> 16);
     lba = (unsigned int) (lba & 0x000000FF);
+    port = (unsigned short) (ide_ports[port_index].base_port + 5); 
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 5), 
+        (unsigned short) port, 
         (unsigned char) lba );
 
 // =================================================
@@ -260,8 +333,9 @@ pio_rw_sector (
 // rw
 
     rw = (int) (rw & 0x000000FF);
+    port = (unsigned short) (ide_ports[port_index].base_port + 7); 
     out8 ( 
-        (unsigned short) (ide_ports[port].base_port + 7), 
+        (unsigned short) port, 
         (unsigned char) rw );
 
 
@@ -288,7 +362,8 @@ pio_rw_sector (
 again:
 
 // Pega um byte de status.
-    c = (unsigned char) in8 ( (unsigned short) ide_ports[port].base_port + 7 );
+    port = (unsigned short) (ide_ports[port_index].base_port + 7);
+    c = (unsigned char) in8 ( (unsigned short) port );
 
 // Seleciona o bit do byte de status.
     c = (unsigned char) ( c & 8 );
@@ -325,7 +400,7 @@ again:
     case 0x20:
         // read
         hdd_ata_pio_read ( 
-            (unsigned short) port, 
+            (unsigned int) port_index, 
             (void *) buffer, 
             (int) 512 );
         return 0;
@@ -337,17 +412,17 @@ again:
     case 0x30:
         // write
         hdd_ata_pio_write ( 
-            (unsigned short) port, 
+            (unsigned int) port_index, 
             (void *) buffer, 
             (int) 512 );
 
         //Flush Cache
         hdd_ata_cmd_write ( 
-            (unsigned short) port, 
+            (unsigned short) port_index, 
             (unsigned char) ATA_CMD_FLUSH_CACHE );
  
-        hdd_ata_wait_not_busy (port);
-        if ( hdd_ata_wait_no_drq(port) != 0)
+        hdd_ata_wait_not_busy (port_index);
+        if ( hdd_ata_wait_no_drq(port_index) != 0)
         {
             // msg?
             return -1;
@@ -423,11 +498,14 @@ ataReadSector (
 // ====================================================
 */
 
-    unsigned short port = (unsigned short) g_current_ide_channel;
-    int is_master = (int) g_current_ide_device;
+// #bugbug
+// This is the port index, not the channel index.
 
-    if( is_master != 0 && is_master != 1 )
-        panic("ataReadSector: is_master");
+    unsigned int port_index = (unsigned short) g_current_ide_channel;
+
+    //int is_master = (int) g_current_ide_device;
+    //if( is_master != 0 && is_master != 1 )
+        //panic("ataReadSector: is_master");
 
 // IN:
 // (buffer, lba, rw flag, port number, master )
@@ -436,8 +514,7 @@ ataReadSector (
         (unsigned long) buffer, 
         (unsigned long) lba, 
         (int) 0x20,
-        (unsigned short) port,  // 0 ... channel
-        (int) is_master );      // 1 ... master=1 slave=0
+        (unsigned int) port_index ); 
 
     return Status;
 }
@@ -474,11 +551,18 @@ ataWriteSector (
 // Limits for 'buffer' and 'lba'.
 
 
-    unsigned short port = (unsigned short) g_current_ide_channel;
-    int is_master = (int) g_current_ide_device;
+// #bugbug
+// This is the port index, not the channel index.
 
-    if( is_master != 0 && is_master != 1 )
-        panic("ataWriteSector: is_master");
+    unsigned int port_index = (unsigned short) g_current_ide_channel;
+
+// #deprecated
+// master slave.
+
+    //int is_master = (int) g_current_ide_device;
+    //if( is_master != 0 && is_master != 1 )
+        //panic("ataWriteSector: is_master");
+
 
 // IN:
 // (buffer, lba, rw flag, port number, master )
@@ -487,9 +571,7 @@ ataWriteSector (
         (unsigned long) buffer, 
         (unsigned long) lba, 
         (int) 0x30, 
-        (unsigned short) port,  // 0 ... channel
-        (int) is_master );      // 1 ... master=1 slave=0
-
+        (unsigned int) port_index ); 
 
     return Status;
 }

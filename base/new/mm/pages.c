@@ -1,21 +1,16 @@
 
-
-
-
-
+// pages.c
 
 #include <kernel.h>
 
 // These values came from BL.BIN.
 // bootblock, lfb, device width, device height, bpp ...
 //extern unsigned long SavedBootBlock; 
-extern unsigned long SavedLFB;               // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
+extern unsigned long SavedLFB;          // #todo: precisamos que o bl passe  endereço físico para mapearmos o lfb.
 //extern unsigned long SavedX;
 //extern unsigned long SavedY;
 //extern unsigned long SavedBPP;
 // ...
-
-
 
 
 // Vamos criar uma pagetable com 512 entradas
@@ -38,12 +33,7 @@ void *CreateAndIntallPageTable (
     unsigned long region_pa )
 {
 
-
-
-
     panic("CreateAndIntallPageTable: suspended");
-
-
 
     return NULL;
 
@@ -229,8 +219,8 @@ void *CreateAndIntallPageTable (
 
 // #todo
 // Describe this thing.
-unsigned long get_new_frame (void){
-
+unsigned long get_new_frame (void)
+{
     int i=0;
 
     panic("get_new_frame: [FIXME] This is a work in progress\n");
@@ -254,6 +244,7 @@ unsigned long get_new_frame (void){
 // Wrapper
 unsigned long alloc_frame(void)
 {
+    panic("alloc_frame: [FIXME] This is a work in progress\n");
     return (unsigned long) get_new_frame();
 }
 
@@ -290,10 +281,9 @@ unsigned long table_pointer_heap_base = ____DANGER_TABLE_POINTER_HEAP_BASE;
 
 unsigned long get_table_pointer (void)
 {
-
     debug_print ("get_table_pointer:\n");
 
-    table_pointer_heap_base = (table_pointer_heap_base + 0x1000);
+    table_pointer_heap_base = (unsigned long) (table_pointer_heap_base + 0x1000);
 
     // #todo
     // Precisamos de uma nova origem.
@@ -488,16 +478,16 @@ void *clone_pml4 ( unsigned long pml4_va )
 
 
 /*
- ***********************************************************
  * I_initialize_frame_table:
  *     Frame table to handle a pool of page frames.
  */
 
+// See:
+// x64mm.h
 
 int I_initialize_frame_table (void)
 {
     int i=0;
-
 
     debug_print("I_initialize_frame_table:\n");
 
@@ -510,28 +500,28 @@ int I_initialize_frame_table (void)
 
     if( FT.start_pa == 0 ){
          debug_print("I_initialize_frame_table: FT.start_pa\n");
-         x_panic      ("I_initialize_frame_table: FT.start_pa\n");
+         x_panic    ("I_initialize_frame_table: FT.start_pa\n");
     }
 
     if( FT.end_pa == 0 ){
          debug_print("I_initialize_frame_table: FT.end_pa\n");
-         x_panic      ("I_initialize_frame_table: FT.end_pa\n");
+         x_panic    ("I_initialize_frame_table: FT.end_pa\n");
     }
 
-
 // Size in bytes.
-    FT.size_in_bytes = (unsigned long) (FT.end_pa - FT.start_pa);
-
 // Size in KB.
-    FT.size_in_kb = (unsigned long) (FT.size_in_bytes/1024);
-
 // Size in MB.
-    FT.size_in_mb = (unsigned long) (FT.size_in_kb/1024);
+
+    FT.size_in_bytes = (unsigned long) (FT.end_pa - FT.start_pa);
+    FT.size_in_kb    = (unsigned long) (FT.size_in_bytes/1024);
+    FT.size_in_mb    = (unsigned long) (FT.size_in_kb/1024);
+
 
 // Size in frames.
 // Each frame has 4096 bytes. 
 // This is because each page has 4096 bytes.
-    FT.size_in_frames = (FT.size_in_bytes/4096);
+
+    FT.size_in_frames = (unsigned long) (FT.size_in_bytes/4096);
 
 
     FT.number_of_system_frames = (unsigned long) FT_NUMBER_OF_SYSTEM_FRAMES;
@@ -553,7 +543,6 @@ int I_initialize_frame_table (void)
         debug_print("I_initialize_frame_table: FT.size_in_frames\n");
         x_panic    ("I_initialize_frame_table: FT.size_in_frames\n");
     }
-    
 
 //done:
     FT.used = TRUE;
@@ -633,11 +622,11 @@ __virtual_to_physical (
         debug_print ("__virtual_to_physical: [?] virtual_address == 0 \n");
     }
 
-    unsigned int a = (unsigned int) ((virtual_address >> 39) & 0x1FF);   //  9 bits de pml4
-    unsigned int b = (unsigned int) ((virtual_address >> 30) & 0x1FF);   //  9 bits de pdpt
-    unsigned int d = (unsigned int) ((virtual_address >> 21) & 0x1FF);   //  9 bits de page directory
-    unsigned int t = (unsigned int) ((virtual_address >> 12) & 0x1FF);   //  9 bits de page table. 
-    unsigned int o = (unsigned int) (virtual_address      & 0xFFF );     // 12 bits de offset
+    unsigned int a = (unsigned int) ((virtual_address >> 39) & 0x1FF);  // 9 bits de pml4
+    unsigned int b = (unsigned int) ((virtual_address >> 30) & 0x1FF);  // 9 bits de pdpt
+    unsigned int d = (unsigned int) ((virtual_address >> 21) & 0x1FF);  // 9 bits de page directory
+    unsigned int t = (unsigned int) ((virtual_address >> 12) & 0x1FF);  // 9 bits de page table. 
+    unsigned int o = (unsigned int) (virtual_address         & 0xFFF);  // 12 bits de offset
 
     unsigned long tmp=0;
     unsigned long address=0;
@@ -654,11 +643,11 @@ __virtual_to_physical (
         refresh_screen();
         while(1){}
     }
-    
-    // #todo
-    // Por enquanto estamos usando apenas as entradas '0'
-    // de pml4 e pdpt ... mas depois vamos usar todas.
-    
+
+// #todo
+// Por enquanto estamos usando apenas as entradas '0'
+// de pml4 e pdpt ... mas depois vamos usar todas.
+
     // #hackhack
     if ( a != 0 ){
         printf ("__virtual_to_physical: [TODO] a != 0 \n");
@@ -849,6 +838,10 @@ int mm_fill_page_table(
 }
 
 
+// ======================================
+// mmSetUpPaging:
+//     Main routine.
+//
 // Called by:
 // init_runtime in runtime.c
 
@@ -909,7 +902,7 @@ int mmSetUpPaging (void)
 // 0x0009C000va = 0x0009C000pa
 // See: x64gpa.h
 
-    gKernelPML4Address = KERNEL_PML4_VA;
+    gKernelPML4Address = (unsigned long) KERNEL_PML4_VA;
 
 
 // See: x64gva.h
@@ -946,8 +939,8 @@ int mmSetUpPaging (void)
     kernel_mm_data.pd0_va = (unsigned long) kernel_pd0;
     kernel_mm_data.pd0_pa = (unsigned long) KERNEL_PD_PA;
 
-    kernel_mm_data.used   = TRUE;
-    kernel_mm_data.magic  = 1234; 
+    kernel_mm_data.used = TRUE;
+    kernel_mm_data.magic = 1234; 
 
 
 // Check
@@ -1241,18 +1234,15 @@ Entry_0:
     // usada por essa área.
     // (2 MB).
 
-    // Criamos a pagetable.
-    // Criando a primeira entrada do diretório.
-    // Isso mapeia os primeiros 2MB da memória RAM.
-    // SMALL_origin_pa = kernel_address;
+// Criamos a pagetable.
+// Criando a primeira entrada do diretório.
+// Isso mapeia os primeiros 2MB da memória RAM em ring0.
+// SMALL_origin_pa = kernel_address;
 
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_RING0AREA, 
         (unsigned long) &pt_ring0area[0], (unsigned long) kernel_address, 
         (unsigned long) 3 ); 
-
 
 // =======================================
 // Uma área em user mode. 0x00200000 ~ 0x003FFFFF
@@ -1269,20 +1259,15 @@ Entry_1:
 
     // (2 MB).
 
+// Criamos a pagetable.
+// Criando a entrada número 1 do diretório.
+// Isso mapeia 2 MB de memória em user mode.
+// SMALL_user_pa = user_address
 
-    // Criamos a pagetable.
-    // Criando a entrada número 1 do diretório.
-    // Isso mapeia 2 MB de memória em user mode.
-    // SMALL_user_pa = user_address
-
-
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_RING3AREA, 
         (unsigned long) &pt_ring3area[0], (unsigned long) user_address, 
         (unsigned long) 7 ); 
-
 
 // =====================================
 // A imagem do kernel.  0x30000000 ~ 0x301FFFFF
@@ -1296,22 +1281,20 @@ Entry_384:
     // kernel_base = 0x100000pys
     // (0x100000pys = 0x30000000virt).
     // Configurando a área de memória onde ficará a imagem do kernel.
-    // Isso mapeia 2MB começando do primeiro mega. 
-    // (kernel mode).
-    // Preenchendo a tabela pt_ring0area.
-    // 'kernel_base' é o endereço físico da imagem do kernel.
 
-    // Criamos a pagetable.
-    // Criamos a entrada 384 apontando para a pagetable.
-    // SMALL_kernel_base_pa = kernel_base;
+// Isso mapeia 2MB começando do primeiro mega. 
+// (kernel mode).
+// Preenchendo a tabela pt_ring0area.
+// 'kernel_base' é o endereço físico da imagem do kernel.
+// Criamos a pagetable.
+// Criamos a entrada 384 apontando para a pagetable.
+// SMALL_kernel_base_pa = kernel_base;
 
-
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_KERNELIMAGE, 
         (unsigned long) &pt_kernelimage[0], (unsigned long) kernel_base, 
         (unsigned long) 3 ); 
+
 
 //===========================================
 // framebuffer - LFB  0x30200000 ~ 0x303FFFFF 
@@ -1325,23 +1308,20 @@ Entry_385:
     // 0x????pys = 0x30200000virt
     // Uma área em user mode.
     // O endereço físico foi passado pelo bootblock.
-    // Mapear 2MB à partir do endereço configurado
-    // como início do LFB.
-    // O Boot Manager configurou VESA e obteve o endereço do LFB.
-    // O Boot Manager passou para o Boot Loader esse endereço.
-    // Mapeando 2MB da memória fisica começando no 
-    // endereço passado pelo Boot Manager.
-    // O endereço de memória virtual utilizada é 0x30200000virt.
-    // lfb_address = Endereço do LFB, passado pelo Boot Manager.
 
-    // (2 MB).
+// Mapear 2MB à partir do endereço configurado
+// como início do LFB.
+// O Boot Manager configurou VESA e obteve o endereço do LFB.
+// O Boot Manager passou para o Boot Loader esse endereço.
+// Mapeando 2MB da memória fisica começando no 
+// endereço passado pelo Boot Manager.
+// O endereço de memória virtual utilizada é 0x30200000virt.
+// lfb_address = Endereço do LFB, passado pelo Boot Manager.
+// (2 MB).
+// Criamos uma pagetable.
+// Apontamos a pagetable para a entrada 385 do diretório.
+// framebuffer_pa = Endereço físico do lfb.
 
-    // Criamos uma pagetable.
-    // Apontamos a pagetable para a entrada 385 do diretório.
-    // framebuffer_pa = Endereço físico do lfb.
-
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_FRONTBUFFER,
         (unsigned long) &pt_frontbuffer[0], (unsigned long) framebuffer_pa, 
@@ -1359,17 +1339,14 @@ Entry_386:
     // 16mb mark.
     // 0x01000000pys = 0x30400000virt
 
-    
-    // Criamos a pagetable.
-    // Apontamos a pagetable para a entrada 386 do diretório.
+// Mapeando 2mb de memória em ring3 para o backbuffer.
+// Criamos a pagetable.
+// Apontamos a pagetable para a entrada 386 do diretório.
 
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_BACKBUFFER, 
         (unsigned long) &pt_backbuffer[0], (unsigned long) backbuffer_pa, 
         (unsigned long) 7 ); 
-
 
 //++
 // ====================================================================
@@ -1382,6 +1359,8 @@ Entry_387:
 
     // 0x30600000;  // 2mb a mais que o backbuffer
     g_pagedpool_va = (unsigned long) PAGEDPOOL_VA;
+
+// mapeando 2mb de memória em ring3 para o pagedpool.
 
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_PAGEDPOOL, 
@@ -1404,20 +1383,24 @@ Entry_388:
     g_heap_count_max = G_DEFAULT_PROCESSHEAP_COUNTMAX;
     g_heap_size      = G_DEFAULT_PROCESSHEAP_SIZE;  //#bugbug
 
-    // >> (user mode).
-    // Heaps support.
-    // Preparando uma �rea de mem�ria grande o bastante para conter 
-    // o heap de todos os processos.
-    // ex: 
-    // Podemos dar 128 KB para cada processo inicialmente.
 
-    // 2048 KB = (2 MB).
+// Heaps support.
+// Pool de heaps.
+// Esses heaps serão usados pelos processos.
+// Preparando uma área de memória grande o bastante para conter 
+// o heap de todos os processos.
+// ex: 
+// Podemos dar 128 KB para cada processo inicialmente.
+// 2048 KB = (2 MB).
+// >> (user mode).
+// #importante:
+// Os endereços físico e virtual são iguais para essa tabela.
+// #bugbug
+// Lembrando que esses heaps estão em ring3.
+// O Window server é um processo em ring0.
+// Vamos garantir que ele não use um heap vindo desse pool.
+// Pois ele tem seu próprio heap em ring0.
 
-    // #importante:
-    // Os endereços físico e virtual são iguais para essa tabela.
-
-    // #test
-    // Tentando usar o worker para esse trabalho repetitivo.
     mm_fill_page_table( 
         (unsigned long) &kernel_pd0[0], (int) PD_ENTRY_HEAPPOOL, 
         (unsigned long) &pt_heappool[0], (unsigned long) SMALL_heappool_pa, 
@@ -1425,6 +1408,7 @@ Entry_388:
 
 // ====================================================================
 //--
+
 
 //++
 // ====================================================================
@@ -1637,22 +1621,20 @@ initialize_frame_table:
 
     debug_print ("SetUpPaging: Setup memory usage\n");
 
-    // #Importante
-    // Agora vamos calcular a quantidade de mem�ria f�sica usada 
-    // at� agora.
-    // Levando em conta a inicializa��o que fizemos nessa rotina.
-    // Estamos deixando de fora a mem�ria dos dispositivos, pois a 
-    // mem�ria usada pelos dispositivos possuem endere�o f�sico, 
-    // mas est� na parte alta do endere�amento f�sico, muito al�m da 
-    // mem�ria RAM instalada.
-    // Com a exce��o da vga, que fica antes de 1MB.
-    // Os dispositivos por enquanto s�o mem�ria de v�deo e placa 
-    // de rede.
-    // Tem a quest�o do dma a se considerar tamb�m.
-    // Tem dma abaixo da marca de 16mb.
-    // Tem dma que usa mem�ria virtual.
-
-
+// #Importante
+// Agora vamos calcular a quantidade de memória física usada 
+// até agora.
+// Levando em conta a inicialização que fizemos nessa rotina.
+// Estamos deixando de fora a memória dos dispositivos, pois a 
+// memória usada pelos dispositivos possuem endereço físico, 
+// mas está na parte alta do endereçamento físico, 
+// muito além da memória RAM instalada.
+// Com a exceção da vga, que fica antes de 1MB.
+// Os dispositivos por enquanto são memória de vídeo e 
+// placa de rede.
+// Tem a questão do dma a se considerar também.
+// Tem dma abaixo da marca de 16mb.
+// Tem dma que usa memória virtual.
 
 
 // Used.
@@ -1682,9 +1664,7 @@ initialize_frame_table:
 // We need to change these names including KB at the end of them.
 // ex: memorysizeTotal_KB
 
-
 // ==============================================
-
 
     debug_print ("SetUpPaging: [DANGER] Load cr3\n");
 
@@ -1712,7 +1692,6 @@ initialize_frame_table:
     // endereços de 64bit?
     
     load_pml4_table( (void *) &kernel_pml4[0] );
-
 
 
     // ==============================================

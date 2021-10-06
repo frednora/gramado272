@@ -483,26 +483,40 @@ int ata_initialize ( int ataflag );
 
 
 // ===
-uint8_t hdd_ata_status_read (unsigned short port);
-int hdd_ata_wait_not_busy (unsigned short port);
-void hdd_ata_cmd_write ( unsigned short port, unsigned char cmd_val );
-int hdd_ata_wait_no_drq (unsigned short port);
+
+uint8_t hdd_ata_status_read (unsigned int port_index);
+
+void 
+hdd_ata_cmd_write ( 
+    unsigned int port_index, 
+    unsigned char cmd_val );
+
+int hdd_ata_wait_not_busy (unsigned int port_index);
+int hdd_ata_wait_no_drq (unsigned int port_index);
 
 
-static void hdd_ata_pio_read ( unsigned short port, void *buffer, int bytes );
-void hdd_ata_pio_write ( unsigned short port, void *buffer, int bytes );
+// Read disk using pio mode.
+static void 
+hdd_ata_pio_read ( 
+    unsigned int port_index, 
+    void *buffer, 
+    int bytes );
+
+// Write disk using pio mode.
+void 
+hdd_ata_pio_write ( 
+    unsigned int port_index, 
+    void *buffer, 
+    int bytes );
 
 
-// # Changing the lba type to 'unsigned int' 32 bit.
+// Read and write via pio mode.
 int 
 pio_rw_sector ( 
     unsigned long buffer, 
     unsigned int _lba, 
     int rw, 
-    unsigned short port,
-    int slave );
-
-
+    unsigned int port_index );
 
 
 int 

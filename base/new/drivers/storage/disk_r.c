@@ -1,22 +1,29 @@
 
+// disk_r.c
 
 #include <kernel.h>
 
 
 /*
- ***********************************************************
- * load_sequential_directory:
- *    Carrega um diretorio sequencial diretório na memória,
- * dados o endereço, o lba inicial e o número de setores.
+ * __load_sequential_sectors:
+ *    Carrega uma qunatidade de setores, sequencialmente.
  */
 
+// Podemos usar isso para carregarmos o diretório raiz
+// a fat, metafiles ou banco de dados.
 // #bugbug
 // Aqui estamos falando de uma sequência de setores.
 // Isso serve para carregar o diretório raiz em fat16.
 // Mas nao server para carregar subdiretorios.
 
 // #todo
-// Create __read_sequential_sectors and __write_sequential_sectors
+// Create __read_sequential_sectors and 
+// __write_sequential_sectors
+
+
+// #todo
+// Chenage the return value:
+// Use TRUE or FALSE.
 
 int
 __load_sequential_sectors ( 
@@ -26,13 +33,16 @@ __load_sequential_sectors (
 {
     unsigned long i=0;
     unsigned long b=0;
-
+    unsigned long next_lba=0;
 
     debug_print ("__load_sequential_sectors:\n");
-    
+
+
     for ( i=0; i < sectors; i++ )
     {
-        ataReadSector ( address + b, lba + i, 0, 0 );
+        next_lba = (lba + i);
+
+        ataReadSector ( address + b, next_lba, 0, 0 );
         
         b = (b +512);
     };
