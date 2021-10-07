@@ -97,7 +97,7 @@ bl-x86:
 	$(CC) -c x86/ports.c   -I include/ $(CFLAGS)  -o ports.o 
 
 	# mm
-	$(CC) -c pages.c   -I include/ $(CFLAGS) -o pages.o	
+	$(CC) -c pages.c   -I include/ $(CFLAGS) -o pages.o
 	$(CC) -c heap.c    -I include/ $(CFLAGS) -o heap.o
 
     #Sys
@@ -113,8 +113,10 @@ bl-x86:
 
 	$(CC) -c render/r_render.c  -I include/ $(CFLAGS) -o r_render.o
 
-    # dd
-	$(CC) -c dd/pci.c       -I include/ $(CFLAGS)  -o pci.o
+
+	$(CC) -c pci.c  -I include/ $(CFLAGS)  -o pci.o
+
+# dd
 	$(CC) -c dd/keyboard.c  -I include/ $(CFLAGS)  -o keyboard.o
 	$(CC) -c dd/timer.c     -I include/ $(CFLAGS)  -o timer.o
 	$(CC) -c dd/hdd.c       -I include/ $(CFLAGS)  -o hdd.o

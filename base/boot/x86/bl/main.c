@@ -1,5 +1,5 @@
 /*
- * Project Land Loader. "Gramado Boot Loader"
+ * Gramado Boot Loader
  * 
  * (c) Copyright 2015-2020 Fred Nora.
  *
@@ -22,11 +22,8 @@
  *     2020 - Revision.
  *     ... 
  */
- 
- 
+
 #include <bootloader.h>
-
-
 
 //static char *codename = "Gramado Boot";
 //char kernel_file_name[] = "kernel.bin";
@@ -34,21 +31,18 @@
 //static char **envp = { NULL, NULL, NULL };
 
 
-//
-// == Prototypes ==========================================
-//
+
+// == Prototypes =================
 
 unsigned long init_testing_memory_size (int mb);
-
 int newOSLoadKernelImage(void);
-
 void BlSetupPaging(void);
 
-
+// =========================================
 
 // Show menu.
-void blShowMenu (void){
-
+void blShowMenu (void)
+{
     int i=0;
 
 // Cursor.
@@ -146,7 +140,6 @@ ____go:
 /*
  ************************************************
  * OS_Loader_Main:
- * 
  *     This is the entrypoint for the C part of the boot loader.
  *     Initializes, loads the kernel image and returns to head.s.
  */
@@ -159,6 +152,12 @@ void OS_Loader_Main (void)
 // caso o carregamento der errado.
 
     int Status = (-1);
+
+
+// root and fat not loaded yet.
+    g_fat16_root_status = FALSE;
+    g_fat16_fat_status = FALSE;
+
 
 // main flags.
     gdefLegacyBIOSBoot  = FALSE;
@@ -324,20 +323,17 @@ void OS_Loader_Main (void)
     }
 
 
+// #important:
+// ===========
+// Daqui pra frente vamos carregar os arquivos. 
+// Lembrando que o Boot Loader somente carrega 
+// de dispositivo IDE.
 
-    // #important:
-    // ===========
-    //     Daqui pra frente vamos carregar os arquivos. 
-    // Lembrando que o Boot Loader ainda n�o sabe carregar de 
-    // outro dispositivo se n�o IDE. 
+//
+// Inicia os carregamentos.
+//
 
-
-    //
-    // Inicia os carregamentos.
-    //
-
-
-	//Carrega arquivos.
+//Carrega arquivos.
 //#ifdef BL_VERBOSE
 //    printf ("BlMain: Loading rootdir and fat ..\n");
 //    refresh_screen();
@@ -348,6 +344,7 @@ void OS_Loader_Main (void)
 // Maybe we need the return from these routines.
 
 
+// ========
 // #slow
 // Load root dir.
 
@@ -357,7 +354,7 @@ void OS_Loader_Main (void)
     fs_load_rootdirEx();
     g_fat16_root_status = TRUE;
 
-
+// ========
 // #slow
 // Load FAT.
 
@@ -411,13 +408,9 @@ void OS_Loader_Main (void)
     }
 
 
-    /*
-     * 
-     *  ok, depois de carregarmos a imagem do kernel de 64bit
-     *  então devemos configurar o long mode e a paginação para
-     *  64bit ... para por fim saltarmos para o kernel.
-     * 
-     * */
+// ok, depois de carregarmos a imagem do kernel de 64bit
+// então devemos configurar o long mode e a paginação para
+// 64bit ... para por fim saltarmos para o kernel.
 
 
 /*
@@ -444,7 +437,8 @@ void OS_Loader_Main (void)
     clear_backbuffer();
 
 
-    printf ("\n");
+
+/*
     printf ("\n");
     printf ("\n");
     printf ("Gramado BL.BIN: [main.c-OS_Loader_Main()] \n");
@@ -453,8 +447,13 @@ void OS_Loader_Main (void)
     printf ("setup the long mode, the paging and\n");
     printf ("jump to the kernel image\n");
     printf ("Good luck\n");
-
     printf("======================\n");
+*/
+
+
+    printf ("\n");
+    printf ("The kernel image is already loaded\n");
+    printf ("Let's setup long mode, paging and jump to the kernel.\n");
 
     //refresh_screen();
     //while(1){}
@@ -483,7 +482,10 @@ See:
 */
 
 
-    // Verificar suport x86_64
+// ================================
+// Check x86_64 support.
+// Test LM-bit
+    
     unsigned long a=0;
     unsigned long b=0;
     unsigned long c=0;
@@ -493,16 +495,15 @@ See:
         0x80000001, 
         a, b, c, d );
 
-    // Test LM-bit
     unsigned long data = (unsigned long) (d >> 29 );
 
+// YES
     if ( (data & 1) != 0 ){
         printf("OS_Loader_Main: x86_64 hardware supported\n");
         refresh_screen();
     }
 
-    // #todo
-    // Abort! There is nothing to do.
+// NO
     if ( (data & 1) == 0 ){
         printf("OS_Loader_Main: [ERROR] x86_64 hardware not supported\n");
         refresh_screen();
@@ -512,8 +513,8 @@ See:
         };
     }
 
-    printf ("done\n");
-    printf("======================\n");
+    //printf ("done\n");
+    //printf("======================\n");
 
     // #breakpoint
     //refresh_screen();
@@ -524,103 +525,86 @@ See:
 //
 
     asm ("cli");
-    
-    
-    // #bugbug
-    // Talvez não devamos retornar da rotina
-    // de configuração da paginação. Devendo
-    // de lá mesmo chamar a rotina de salto
-    // para o kernel. Pois algo pode atrapalhar nosso retorno
-    // pois a pilha pode ter sido desconfigurada.
-    
-	// Paging:
-	//     Depois carregar o kernel e os m�dulos 
-	//     nos seus endere�os f�sicos, 
-	//     configura a pagina��o e 
-	//     volta para o assembly para 
-	//     configurar os registradores e 
-	//     passar o comando para o kernel.
-	//
-	// #obs:
-	// Essa configuraçao basica nao impede
-	// que o kernel faça uma reconfiguraçao completa.
 
+
+
+// ====
+// Paging:
+//     Depois carregar o kernel e os m�dulos 
+//     nos seus endere�os f�sicos, 
+//     configura a pagina��o e 
+//     volta para o assembly para 
+//     configurar os registradores e 
+//     passar o comando para o kernel.
+// #obs:
+// Essa configuraçao basica nao impede
+// que o kernel faça uma reconfiguraçao completa.
 // #slow
 // #debug
-
-    printf ("OS_Loader_Main: Initializing pages..  ******** \n");
+// In this document.
+    
+    printf ("OS_Loader_Main: Setup paging ...\n");
     refresh_screen();
 
-    // In this document.
     BlSetupPaging();
 
     // nao podemos chamar rotina alguma aqui,
     // somente retornar.
     // os registradores estao bagunçados.
     
-    // Not reached
+// Not reached
     while(1){}
-    
+
     //return;
 }
 
 
 /*
- ************************************
- * LandOSLoadKernelImage: 
- * 
+ * newOSLoadKernelImage: 
  *     It loads the kernel image at 0x00100000.
  *     The entry point is at 0x00101000.
  */ 
 
-    // #todo
-    // This way can chose the filename from a
-    // configuration file.
-    // This routine will try to load the default filename
-    // if the provide name fail.
-
-    // This routine will build the pathname
-    // to search in the default folder.
-    
-    // Called by BlMain()
+// #todo
+// This way can chose the filename from a
+// configuration file.
+// This routine will try to load the default filename
+// if the provide name fail.
+// This routine will build the pathname
+// to search in the default folder.
+// Called by BlMain().
 
 int newOSLoadKernelImage(void)
 {
     int Status = -1;
 
-    // Standard name.
-    // #todo: Maybe we need some options, some config file.
+// Standard name.
+// #todo: Maybe we need some options, some config file.
 
     char *image_name = "KERNEL.BIN";
 
-    // #bugbug
-    // Precisamos que essa rotina retorne
-    // para termos a change de inicializarmos o
-    // rescue shell. Mas acontece que por enquanto
-    // essa função aborta ao primeiro sinal de perigo.
-
+// #bugbug
+// Precisamos que essa rotina retorne
+// para termos a change de inicializarmos o
+// rescue shell. Mas acontece que por enquanto
+// essa função aborta ao primeiro sinal de perigo.
 
     Status = (int) elfLoadKernelImage(image_name);
 
-    // Fail
-    if ( Status != 0 )
-    {
+    if ( Status != 0 ){
         printf ("newOSLoadKernelImage: elfLoadKernelImage fail\n");
         refresh_screen();
-        
         return (int) (-1);
     }
-    
+
     // ok
     return Status;
 }
 
 
- 
 /*
- ********************************************************************
  * BlSetupPaging:
- *     Configura as p�ginas.
+ *     Setup paging.
  *
  * In this function:
  *
@@ -682,10 +666,10 @@ void BlAbort()
  *
  */
  
-void BlKernelModuleMain (){
-
+void BlKernelModuleMain()
+{
     printf ("BlKernelModuleMain: Boot Loader\n");
-    refresh_screen ();
+    refresh_screen();
 }
 
 
@@ -804,19 +788,17 @@ unsigned long init_testing_memory_size (int mb)
 
 
 /*
- *******************************************
  * die:
  *     CLI HLT routine.
- *     No return!
  */
 
+// No return!
 // See: bootloader.h
 
-void die(void){
-
-    printf ("BL.BIN: [DIE] * System Halted\n");
+void die(void)
+{
+    printf ("BL.BIN: [DIE] System Halted\n");
     refresh_screen();
-
     while (1){
         asm ("cli");
         asm ("hlt");

@@ -8,6 +8,7 @@
 
 
 extern st_dev_t *current_dev;
+//extern st_dev_t *current_dev;
 
 
 /* 
@@ -21,9 +22,41 @@ st_dev_t *ready_queue_dev;   // O início da lista.
 uint32_t  dev_next_pid = 0;  // O próximo ID de unidade disponível. 
 
 
+// == prototypes ==================================
+
 // Local
 void __local_io_delay (void);
 
+
+// =======================================================
+
+// low level worker
+void __ata_pio_read ( void *buffer, int bytes )
+{
+
+// #todo:
+// avoid this for compatibility with another compiler.
+
+    asm volatile  (\
+        "cld;\
+        rep; insw"::"D"(buffer),\
+        "d"(ata.cmd_block_base_address + ATA_REG_DATA),\
+        "c"(bytes/2) );
+}
+
+// low level worker
+void __ata_pio_write ( void *buffer, int bytes )
+{
+
+// #todo:
+// avoid this for compatibility with another compiler.
+
+    asm volatile  (\
+        "cld;\
+        rep; outsw"::"S"(buffer),\
+        "d"(ata.cmd_block_base_address + ATA_REG_DATA),\
+        "c"(bytes/2) );
+}
 
 
 
@@ -69,6 +102,7 @@ unsigned char ata_status_read (void)
 {
     return in8( ata.cmd_block_base_address + ATA_REG_STATUS );
 }
+
 
 void ata_cmd_write (int cmd_val)
 {
@@ -145,12 +179,6 @@ unsigned char ata_wait_not_busy (void)
 }
 
 
-
-
-// #atenção.
-extern st_dev_t *current_dev;
-
-
 void set_ata_addr (int channel)
 {
 
@@ -181,7 +209,7 @@ void set_ata_addr (int channel)
 }
 
 
-
+// __ata_assert_dever:
 // Set up the ata.xxx structure.
 // #todo: Where is that structure defined?
 // See: hal/dev/blkdev/ata.h
@@ -189,7 +217,7 @@ void set_ata_addr (int channel)
 // primary ou secondary e se é
 // master ou slave.
 
-unsigned char ata_assert_dever (char nport)
+unsigned char __ata_assert_dever (char nport)
 {
 
 // todo
@@ -230,40 +258,8 @@ unsigned char ata_assert_dever (char nport)
     return 0;
 }
 
-void ata_pio_read ( void *buffer, int bytes )
-{
+// atapi_pio_read:
 
-// #todo:
-// avoid this for compatibility with another compiler.
-
-    asm volatile  (\
-        "cld;\
-        rep; insw"::"D"(buffer),\
-        "d"(ata.cmd_block_base_address + ATA_REG_DATA),\
-        "c"(bytes/2) );
-}
-
-
-void ata_pio_write ( void *buffer, int bytes )
-{
-
-// #todo:
-// avoid this for compatibility with another compiler.
-
-    asm volatile  (\
-        "cld;\
-        rep; outsw"::"S"(buffer),\
-        "d"(ata.cmd_block_base_address + ATA_REG_DATA),\
-        "c"(bytes/2) );
-}
-
-
-
-/*
- * atapi_pio_read:
- * 
- */
- 
 static inline void atapi_pio_read ( void *buffer, uint32_t bytes )
 {
 
@@ -278,14 +274,11 @@ static inline void atapi_pio_read ( void *buffer, uint32_t bytes )
 }
 
 
-
-// ====================================
-
-
 void ata_set_boottime_ide_port_index(unsigned int port_index)
 {
     g_boottime_ide_port_index = (int) port_index;
 }
+
 
 int ata_get_boottime_ide_port_index(void)
 {
@@ -293,17 +286,16 @@ int ata_get_boottime_ide_port_index(void)
 }
 
 
-
 void ata_set_current_ide_port_index(unsigned int port_index)
 {
     g_current_ide_port_index = (int) port_index;
 }
 
+
 int ata_get_current_ide_port_index(void)
 {
     return (int) g_current_ide_port_index;
 }
-
 
 
 int 
@@ -315,8 +307,6 @@ ata_ioctl (
     debug_print("ata_ioctl: [TODO] \n");
     return -1;
 }
-
-
 
 
 // ata_initialize:
@@ -613,11 +603,7 @@ done:
 }
 
 
-/*
- ********************************************
- * ide_identify_device:
- */
-
+// ide_identify_device:
 // ??
 // O número da porta identica qual disco queremos pegar informações.
 // Slavaremos algumas informações na estrutura de disco.
@@ -633,11 +619,11 @@ int ide_identify_device ( uint8_t nport )
 
     unsigned char status=0;
 
-    // #todo:
-    // Rever esse assert. 
-    // Precisamos de uma mensagem de erro aqui.
-    
-    ata_assert_dever(nport);
+// #todo:
+// Rever esse assert. 
+// Precisamos de uma mensagem de erro aqui.
+
+    __ata_assert_dever(nport);
 
     // ??
     // Ponto flutuante
@@ -762,39 +748,33 @@ int ide_identify_device ( uint8_t nport )
         // e eviamos 256 word de dados PIO
 
         ata_wait_drq();
-        ata_pio_read ( ata_identify_dev_buf, 512 );
+        __ata_pio_read ( ata_identify_dev_buf, 512 );
 
         ata_wait_not_busy();
         ata_wait_no_drq();
 
-        // See:
-        // ide.h
+        // See: ide.h
 
-        ide_ports[nport].used    = (int) TRUE;
-        ide_ports[nport].magic   = (int) 1234;
-        ide_ports[nport].id      = (uint8_t) nport;           // Port index.
-        ide_ports[nport].type    = (int) idedevicetypesPATA;  // Device type.
-        ide_ports[nport].name    = "PATA";
+        ide_ports[nport].id = (uint8_t) nport;           // Port index.
+        ide_ports[nport].type = (int) idedevicetypesPATA;  // Device type.
+        ide_ports[nport].name = "PATA";
         ide_ports[nport].channel = ata.channel;  // Primary or secondary.
         ide_ports[nport].dev_num = ata.dev_num;  // Master or slave.
-
+        ide_ports[nport].used = (int) TRUE;
+        ide_ports[nport].magic = (int) 1234;
 
         // Disk
-
-        disk = (struct disk_d *) kmalloc ( sizeof(struct disk_d) );
+        // See: disk.h
+        disk = (struct disk_d *) kmalloc( sizeof(struct disk_d) );
 
         if ((void *) disk != NULL )
         {
-
-            // See:
-            // disk.h
-
             // Object header.
             // #todo
             //disk->objectType = ?
             //disk->objectClass = ?
 
-            disk->used  = TRUE;
+            disk->used = TRUE;
             disk->magic = 1234;
 
             // type and class.
@@ -804,7 +784,6 @@ int ide_identify_device ( uint8_t nport )
             // ID and index.
             disk->id = nport;
             disk->boot_disk_number = 0; // ?? #todo
-
 
             // name
  
@@ -842,47 +821,40 @@ int ide_identify_device ( uint8_t nport )
         // em seguida enviar 256 word de dados PIO.
 
         ata_wait_drq(); 
-        ata_pio_read ( ata_identify_dev_buf, 512 );
+        __ata_pio_read ( ata_identify_dev_buf, 512 );
         ata_wait_not_busy();
         ata_wait_no_drq();
 
-        // See:
-        // ide.h
+        // See: ide.h
 
-        ide_ports[nport].used    = (int) TRUE;
-        ide_ports[nport].magic   = (int) 1234;
-        ide_ports[nport].id      = (uint8_t) nport;
-        ide_ports[nport].type    = (int) idedevicetypesSATA;  // Device type.
-        ide_ports[nport].name    = "SATA";                    // Port name.
+        ide_ports[nport].id = (uint8_t) nport;
+        ide_ports[nport].type = (int) idedevicetypesSATA;  // Device type.
+        ide_ports[nport].name = "SATA";                    // Port name.
         ide_ports[nport].channel = ata.channel;  // Primary or secondary.
         ide_ports[nport].dev_num = ata.dev_num;  // Master or slave.
+        ide_ports[nport].used = (int) TRUE;
+        ide_ports[nport].magic = (int) 1234;
 
         // Disk
-
-        disk = (struct disk_d *) kmalloc (  sizeof(struct disk_d) );
+        // See: disk.h
+        disk = (struct disk_d *) kmalloc(  sizeof(struct disk_d) );
 
         if ((void *) disk != NULL )
         {
-
-            // See:
-            // disk.h
 
             // Object header.
             // #todo
             //disk->objectType = ?
             //disk->objectClass = ?
 
-            disk->used  = TRUE;
+            disk->used = TRUE;
             disk->magic = 1234;
-
             disk->diskType = DISK_TYPE_SATA;
             // disk->diskClass = ?
-
 
             // ID and index.
             disk->id = nport;
             disk->boot_disk_number = 0; // ?? #todo
-
 
             // name
 
@@ -915,37 +887,31 @@ int ide_identify_device ( uint8_t nport )
         ata_cmd_write(ATA_CMD_IDENTIFY_PACKET_DEVICE);
         ata_wait(400);
         ata_wait_drq(); 
-        ata_pio_read ( ata_identify_dev_buf, 512 );
+        __ata_pio_read ( ata_identify_dev_buf, 512 );
         ata_wait_not_busy();
         ata_wait_no_drq();
 
-        // See:
-        // ide.h
-        
-        ide_ports[nport].used    = (int) TRUE;
-        ide_ports[nport].magic   = (int) 1234;
-        ide_ports[nport].id      = (uint8_t) nport;
-        ide_ports[nport].type    = (int) idedevicetypesPATAPI;
-        ide_ports[nport].name    = "PATAPI";
+        // See: ide.h
+
+        ide_ports[nport].id = (uint8_t) nport;
+        ide_ports[nport].type = (int) idedevicetypesPATAPI;
+        ide_ports[nport].name = "PATAPI";
         ide_ports[nport].channel = ata.channel;  // Primary or secondary.
         ide_ports[nport].dev_num = ata.dev_num;  // Master or slave.
+        ide_ports[nport].used = (int) TRUE;
+        ide_ports[nport].magic = (int) 1234;
 
         // Disk
-        
+        // See: disk.h
+
         disk = (struct disk_d *) kmalloc (  sizeof(struct disk_d) );
 
         if ((void *) disk != NULL )
         {
-            // See:
-            // disk.h
-
-
-            disk->used  = TRUE;
+            disk->used = TRUE;
             disk->magic = 1234;
-
             disk->diskType = DISK_TYPE_PATAPI;
             // disk->diskClass = ?
-
             disk->id = nport;  
                         
             // name
@@ -975,32 +941,28 @@ int ide_identify_device ( uint8_t nport )
         ata_cmd_write(ATA_CMD_IDENTIFY_PACKET_DEVICE);
         ata_wait(400);
         ata_wait_drq(); 
-        ata_pio_read(ata_identify_dev_buf,512);
+        __ata_pio_read(ata_identify_dev_buf,512);
         ata_wait_not_busy();
         ata_wait_no_drq();
 
-        // See:
-        // ide.h
+        // See: ide.h
 
-        ide_ports[nport].used    = (int) TRUE;
-        ide_ports[nport].magic   = (int) 1234;
-        ide_ports[nport].type    = (int) idedevicetypesSATAPI;
-        ide_ports[nport].id      = (uint8_t) nport;
-        ide_ports[nport].name    = "SATAPI";
+        ide_ports[nport].id = (uint8_t) nport;
+        ide_ports[nport].type = (int) idedevicetypesSATAPI;
+        ide_ports[nport].name = "SATAPI";
         ide_ports[nport].channel = ata.channel;  // Primary or secondary.
         ide_ports[nport].dev_num = ata.dev_num;  // Master or slave.
+        ide_ports[nport].used = (int) TRUE;
+        ide_ports[nport].magic = (int) 1234;
 
         // Disk
-        
-        disk = (struct disk_d *) kmalloc (  sizeof(struct disk_d) );
+        // See: disk.h
+
+        disk = (struct disk_d *) kmalloc(  sizeof(struct disk_d) );
 
         if ( (void *) disk != NULL )
         {
-
-            // See:
-            // disk.h
-
-            disk->used  = TRUE;
+            disk->used = TRUE;
             disk->magic = 1234;
 
             disk->diskType = DISK_TYPE_SATAPI;
@@ -1034,14 +996,9 @@ int ide_identify_device ( uint8_t nport )
 }
 
 
-/*
- ***********************************
- * ide_dev_init:
- *     ?? Alguma rotina de configuração de dispositivos.
- */
-
+// ide_dev_init:
+// ?? Alguma rotina de configuração de dispositivos.
 // This routine was called by ata_initialize.
-
 // #todo
 // Agora essa função precisa receber um ponteiro 
 // para a estrutura de disco usada pelo gramado.
@@ -1049,7 +1006,6 @@ int ide_identify_device ( uint8_t nport )
 
 int ide_dev_init (char port)
 {
-
     struct st_dev  *tmp_dev;
     int data=0;
 
@@ -1340,10 +1296,7 @@ void ide_mass_storage_initialize (void)
 {
     int port=0;
 
-//
 // Vamos trabalhar na lista de dispositivos.
-//
-
 // Iniciando a lista.
 
     ready_queue_dev = ( struct st_dev * ) kmalloc ( sizeof( struct st_dev) );
@@ -1415,6 +1368,7 @@ static inline void dev_switch (void)
     }
 }
 
+
 static inline int getnport_dev (void)
 {
     if ( (void *) current_dev == NULL ){
@@ -1433,6 +1387,7 @@ static inline int getpid_dev (void)
 
     return (int) current_dev->dev_id;
 }
+
 
 // #todo
 // Change name.
@@ -1532,6 +1487,4 @@ void show_ide_info (void)
 
     //refresh_screen ();
 }
-
-
 

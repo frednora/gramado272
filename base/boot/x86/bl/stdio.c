@@ -88,19 +88,16 @@ void scroll (void)
  
 // #bugbug
 // Não usamos mas esse modo de vídeo. 
- 
+
 int bl_clear (int color)
 {
-
-    //loop
     register unsigned int i=0;
-
-    char *vidmemz = (char *) 0x000B8000; 
+    char *vidmemz = (char *) 0x000B8000;
 
     while (i < (80*25*2)) 
     { 
-        vidmemz[i] = 219;      i++; 
-        vidmemz[i] = color;    i++; 
+        vidmemz[i] = 219;    i++;
+        vidmemz[i] = color;  i++;
     };
 
     g_cursor_x = 0;
@@ -282,9 +279,6 @@ static int printi (
 			*--s = '-';
 		};
     }
-
-
-// Done.
 
 done:
     return pc + prints(out, s, width, pad);
@@ -949,16 +943,17 @@ my_buffer_char_blt (
  *     OBS: Talvez deva usar cli e sti 
  */
 
-void vsync (){
-
-	//Wait until any previous retrace has ended 
+void vsync()
+{
+    // Wait until any previous retrace has ended.
     do {
-     //nothing.
+    // nothing.
     }while ( gui_inb(0x3DA) & 8 );
 
-	//Wait until a new retrace has just begun 
+
+    // Wait until a new retrace has just begun.
     do {
-	 //nothing.
+    //nothing.
     } while( !(gui_inb(0x3DA) & 8) );
 }
 
@@ -968,9 +963,9 @@ void vsync (){
  *     Pega um byte na porta. 
  */
 
-char gui_inb (int port){
-
-    char value = 0;
+char gui_inb (int port)
+{
+    char value=0;
 
     value = in8 (port);
 
@@ -1012,6 +1007,9 @@ void clear_backbuffer(void)
     // We can use unsigned longs.
 
     unsigned char *backbuffer  = (unsigned char *) (0x1000000 - 0x800000); 
+
+// #bugbug
+// Not good for smaller resolutions.
 
     for (i=0; i<(800*600*4); i++)
     {
@@ -1071,10 +1069,10 @@ carrega_bitmap_16x16 (
         : // no inputs
         : "a"(ax), "b"(bx), "c"(cx), "d"(dx) );
 
-    // Coloca no buffer. 
-    // Não precisa esperar o retraço vertical.
+// Coloca no buffer. 
+// Não precisa esperar o retraço vertical.
 
-    my_buffer_load_bitmap_16x16 (); 
+    my_buffer_load_bitmap_16x16(); 
 }
 
 

@@ -1,11 +1,17 @@
 
-// atainit.c
+/*
+ * File: atainit.c
+ * 
+ * History:
+ *     2018 - Ported from Sirius OS, BSD-2-Clause License.
+ *     This driver was created by Nelson Cole for Sirius OS.
+ *     2021 - Some new changes by Fred Nora.
+ */
 
 #include <kernel.h>  
 
 
 /*
- *******************************************
  * ataDialog:
  *     Rotina de diálogo com o driver ATA. 
  */
@@ -47,6 +53,4 @@ ataDialog (
 
     return (int) Status;
 }
-
-
 

@@ -279,18 +279,14 @@ extern void refresh_screen();
 //#test.
 #include <heap.h> 
 
-/*
- * Lib C support.
- */
+// Lib C support.
 #include <types.h>
 #include <stddef.h>
-
-//#test
 #include <stdlib.h>
-
 #include <stdio.h>
 #include <string.h>
 //...
+
 
 //#test
 #include <cpuid.h>
@@ -304,31 +300,24 @@ extern void refresh_screen();
  * File System support.
  */
 #include <sys/exec_elf.h>
-#include <fs.h>
+
+#include <fs/fs.h>
 
 
 #include <pci.h>
 
-/*
- * IRQs support.
- */
+
 
 //#include <timer.h>     //irq 0.
-#include <keyboard.h>    //irq 1.
+#include <dd/keyboard.h>    //irq 1.
+#include <dd/ata.h>
+#include <dd/ide.h>
 
 
-#include <ata.h>
-#include <ide.h>
+// Shell.
+// Boot Loader mini-shell support. 
+// Obs: This must be the last one.
 
-
-//...
-
-
-/*
- * Shell.
- * Boot Loader mini-shell support. 
- * Obs: This must be the last one.
- */
 #include <shell.h>
 
 

@@ -432,10 +432,15 @@ void ata_delay (void);
 
 
 void set_ata_addr (int channel);
-unsigned char ata_assert_dever (char nport);
 
-void ata_pio_read ( void *buffer, int bytes );
-void ata_pio_write ( void *buffer, int bytes );
+// worker
+unsigned char __ata_assert_dever (char nport);
+
+
+// low level workers.
+void __ata_pio_read ( void *buffer, int bytes );
+void __ata_pio_write ( void *buffer, int bytes );
+
 
 static inline void atapi_pio_read ( void *buffer, uint32_t bytes );
 

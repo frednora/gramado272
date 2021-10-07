@@ -86,28 +86,26 @@ void page_enable()
 
 extern void go_to_kernel(void);
 
-int SetUpPaging (){
-
+int SetUpPaging()
+{
     unsigned int i=0;
-
 
     // 9 9 9 9 12
     // Agora as tabelas possuem 512 entradas,
     // pois é isso o que dá pra ter com apenas 9 bits.
 
-
     // Agora o addr de cada tabela é de 52 bits, os outros 12 bits são reservados.
     // Antes cada entrada era de 4 bytes, agora é de 8 bytes.
     // Nesse caso a tabela continua do mesmo tamanho, mas agora com 512 entradas de 8
 
-	//
-	// (Phase 1) 
-	// Endereços da memória físicas acessíveis em Kernel Mode.
-	//
+//
+// (Phase 1) 
+// Endereços da memória físicas acessíveis em Kernel Mode.
+//
 
-	//
-	// Kernel.
-	//
+//
+// Kernel.
+//
 
     // Address. para os 2 primeiros mega da memória fisica.
     // Base, 0x100000, para o kernel que começa no primeiro mega.
@@ -552,23 +550,15 @@ Entry_386:
     refresh_screen();
 
 
-//
 // Go to kernel
-//
-
-    // See: head.s
+// See: head.s
 
     go_to_kernel();
 
-
     // Not reached
     while(1){}
-
     return 0;
-
-    // == cut here ==================
 }
-
 
 
 //

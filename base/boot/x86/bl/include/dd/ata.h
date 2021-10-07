@@ -375,15 +375,14 @@ _u8 ata_wait_irq();
 _u8 ata_status_read();
 void ata_cmd_write(int cmd_val);
 
-_u8 ata_assert_dever(char nport);
+// worker
+_u8 __ata_assert_dever(char nport);
 
 
-// ata_pio.c
-void ata_pio_read(_void *buffer,_i32 bytes);
-void ata_pio_write(_void *buffer,_i32 bytes);
-
-// ide.c
-
+// low level workers.
+void __ata_pio_read(_void *buffer,_i32 bytes);
+void __ata_pio_write(_void *buffer,_i32 bytes);
+static inline void __atapi_pio_read ( void *buffer, uint32_t bytes );
 
 
 //ide_dma.c

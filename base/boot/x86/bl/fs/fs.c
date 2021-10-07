@@ -1054,7 +1054,7 @@ fail:
     printf ("load_path: fail \n");
     refresh_screen();
 
-    // REturning to call the rescue shell.
+    // Returning to call the rescue shell.
 
     return (-1);
 }
@@ -1103,26 +1103,24 @@ unsigned long fsSearchFile (unsigned char *name)
     fs_load_rootdirEx();
 
 
-	// Fixa o número máximo de entradas de acordo 
-	// com o tipo de sistema de arquivos.
+// Fixa o número máximo de entradas de acordo 
+// com o tipo de sistema de arquivos.
+// Not standard.
 
-    switch (g_file_system_type)
-    {
-        // Not standard.
-        case 1:  // fat16
-        case 2:  // fat32
-        case 3:  // ext2
-        default:
-            max = 512;
-            break;
+    switch (g_file_system_type){
+    case 1:  // fat16
+    case 2:  // fat32
+    case 3:  // ext2
+    default:
+        max = 512;
+        break;
     };
 
-
-    // Procura o arquivo no diretório raiz. 
-    // Dado o nome via argumento.
-    // Checa a primeira letra do nome.
-    // Copia o nome e termina incluindo um 0.
-    // Compara 11 caracteres.
+// Procura o arquivo no diretório raiz. 
+// Dado o nome via argumento.
+// Checa a primeira letra do nome.
+// Copia o nome e termina incluindo um 0.
+// Compara 11 caracteres.
 
     // Primeira entrada.
     i = 0;
@@ -1166,7 +1164,8 @@ file_not_found:
 
 //Se o arquivo for encontrado.    
 found:
-    if ( FoundInThisEntry < 0 || FoundInThisEntry >= 512 )
+    if ( FoundInThisEntry < 0 || 
+         FoundInThisEntry >= 512 )
     {
         panic("bl-fsSearchFile: [ERROR] FoundInThisEntry\n"); 
     }
