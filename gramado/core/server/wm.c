@@ -1522,7 +1522,7 @@ do_select:
     int name_len = strlen(next->name);
     if(name_len > 32){ name_len = 32; }
     char w_name[64];
-    sprintf(w_name,":: ");
+    sprintf(w_name,"| ");
     strncat(w_name,next->name,name_len);
     w_name[63]=0;
 
@@ -3808,22 +3808,42 @@ int get_window_tid( struct gws_window_d *window)
 // teremos mais argumentos
 void wm_Update_TaskBar( char *string )
 {
-    //unsigned long w = gws_get_device_width();
-    //unsigned long h = gws_get_device_height();
 
+// Fail
+    if ( (void*) __taskbar_window == NULL )
+        return;
+
+// Redraw the bar.
     redraw_window(__taskbar_window,TRUE);
+// Redraw the button.
     redraw_window(__taskbar_startmenu_button_window,TRUE);
 
-// text
-    dtextDrawText(
-        __taskbar_window,
-        __taskbar_window->width - 100,//100,
-        8,
-        COLOR_YELLOW,
-        string );
+//
+// String
+//
 
+// String info.
+    unsigned long string_left = (unsigned long) (__taskbar_window->width - 100);
+    unsigned long string_top  = 8;
+    unsigned int string_color = COLOR_YELLOW;
+    size_t string_size;
+
+    string_size = (size_t) strlen(string);
+
+// Draw the text.
+// less than 10 chars.
+    if ( string_size < 10 )
+    {
+        dtextDrawText(
+            __taskbar_window,
+            string_left, string_top, 
+            string_color, string );
+    }
+
+// Show the window.
     flush_window(__taskbar_window);
 }
+
 
 //
 // End.

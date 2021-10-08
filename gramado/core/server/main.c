@@ -1234,14 +1234,14 @@ gwsProcedure (
 }
 
 
-//
-
+// Taskbar
 void create_taskbar (void)
 {
+    int WindowId = -1;  // bar
+    int menu_wid;       // button
+
     unsigned long w = gws_get_device_width();
     unsigned long h = gws_get_device_height();
-    int WindowId = -1;
-
 
     gwssrv_debug_print ("gwssrv: create_taskbar\n");
 
@@ -1256,29 +1256,31 @@ void create_taskbar (void)
 
 // The bar.
 
-    __taskbar_window = (struct gws_window_d *) CreateWindow ( 
-                                            WT_SIMPLE, 
-                                            0, //style
-                                            1, //status 
-                                            1, //view
-                                            "TaskBar",  
-                                            0, h-40, w, 40,   
-                                            gui->screen_window, 0, 
-                                            COLOR_GRAY, COLOR_GRAY );    
+    unsigned long wLeft   = (unsigned long) 0;
+    unsigned long wTop    = (unsigned long) (h-40);
+    unsigned long wWidth  = (unsigned long) w;
+    unsigned long wHeight = (unsigned long) 40;
 
-
-    // #debug
-    // asm ("int $3");
+    __taskbar_window = 
+        (struct gws_window_d *) CreateWindow ( 
+                                    WT_SIMPLE, 
+                                    0, //style
+                                    1, //status 
+                                    1, //view
+                                    "TaskBar",  
+                                    wLeft, wTop, wWidth, wHeight,   
+                                    gui->screen_window, 0, 
+                                    COLOR_GRAY, COLOR_GRAY );
 
     if ( (void *) __taskbar_window == NULL )
     {
         gwssrv_debug_print ("create_taskbar: __taskbar_window\n"); 
         printf             ("create_taskbar: __taskbar_window\n");
         exit(1);
-        //return;
     }
 
-    if ( __taskbar_window->used != TRUE || __taskbar_window->magic != 1234 )
+    if ( __taskbar_window->used != TRUE || 
+         __taskbar_window->magic != 1234 )
     {
         gwssrv_debug_print ("create_background: __taskbar_window validation\n"); 
         printf             ("create_background: __taskbar_window validation\n");
@@ -1286,7 +1288,8 @@ void create_taskbar (void)
     }
 
 // Register
-    WindowId = RegisterWindow(__taskbar_window);
+
+    WindowId = (int) RegisterWindow(__taskbar_window);
     if (WindowId<0)
     {
         gwssrv_debug_print ("create_taskbar: Couldn't register window\n");
@@ -1295,10 +1298,13 @@ void create_taskbar (void)
     }
     __taskbar_window->id = WindowId;
 
-    flush_window(__taskbar_window);
+// Show
+    //flush_window(__taskbar_window);
+
+
+// #debug
 
     /*
-    //#debug
     printf ("bar: %d %d %d %d\n",
         __taskbar_window->left,
         __taskbar_window->top,
@@ -1309,13 +1315,19 @@ void create_taskbar (void)
     //while(1){}
     */
 
+
 // =======================================================
 // start menu button
 
-    unsigned long b_width = 52;
-    unsigned long b_height = 28;
-    unsigned long b_left = (unsigned long) (__taskbar_window->width - b_width) >> 1;
-    unsigned long b_top = 4;
+    unsigned long Space=4;
+
+    unsigned long b_width = 8*10;
+    unsigned long b_height = 40-(Space*2);
+    
+    //unsigned long b_left = (unsigned long) (__taskbar_window->width - b_width) >> 1;
+    unsigned long b_left = Space;
+    unsigned long b_top = Space;
+
 
 // The button.
 
@@ -1341,21 +1353,28 @@ void create_taskbar (void)
         exit(1);
     }
 
-    int menu_wid; //provisorio
 // Register
     menu_wid = RegisterWindow(__taskbar_startmenu_button_window);
     if (menu_wid<0)
     {
-        gwssrv_debug_print ("create_taskbar: Couldn't register __taskbar_window\n");
-        printf             ("create_taskbar: Couldn't register __taskbar_window\n");
+        gwssrv_debug_print ("create_taskbar: Couldn't register __taskbar_startmenu_button_window\n");
+        printf             ("create_taskbar: Couldn't register __taskbar_startmenu_button_window\n");
         exit(1);
     }
 
-    flush_window(__taskbar_startmenu_button_window);
+// Show.
+    //flush_window(__taskbar_startmenu_button_window);
+
+//
+// Show window.
+// 
+
+    flush_window(__taskbar_window);
 
 
-    /*
-    //#debug
+// #debug
+
+/*
     printf ("button: %d %d %d %d\n",
         __taskbar_startmenu_button_window->left,
         __taskbar_startmenu_button_window->top,
@@ -1364,32 +1383,9 @@ void create_taskbar (void)
 
     refresh_screen();
     while(1){}
-    */
-
-// =======================================================
-
-    //while(1){}
-    
-    //#debug
-    //asm ("int $3");
-
-    //__root_window->dirty = 1;
-
-
-    // See: 
-    // gws.c
-/*
-    if (current_mode == GRAMADO_JAIL)
-    {
-        gwssrv_debug_print ("gwssrv: create_taskbar: Calling refresh_screen\n");
-        //refresh_screen();
-    }
 */
 
     gwssrv_debug_print ("gwssrv: create_taskbar: done\n");
-
-    //#debug
-    //while(1){}
 }
 
 
@@ -1437,7 +1433,8 @@ void create_background (void)
         exit(1);
     }
 
-    if ( __root_window->used != TRUE || __root_window->magic != 1234 )
+    if ( __root_window->used != TRUE || 
+         __root_window->magic != 1234 )
     {
         gwssrv_debug_print ("create_background: __root_window validation\n"); 
         printf             ("create_background: __root_window validation\n");
@@ -1515,11 +1512,7 @@ int initGraphics (void)
     window_server->graphics_initialization_status = FALSE;
 
 
-
-//
 // gwsInit
-//
-
 // Initialize the window server infrastructure.
 // The current display and the current screen.
 // It will create the root window.
@@ -1534,13 +1527,13 @@ int initGraphics (void)
         exit(1);
     }
 
-// cria a root window
+// Create root window.
+
     create_background();
 
-// cria a taskbar
-// ela vai nos mostrar qual janela eh a ativa ... e talvez o foco ... etc
-    create_taskbar();
+// Create taskbar window.
 
+    create_taskbar();
     wm_Update_TaskBar("Welcome!");
 
 //#debug
