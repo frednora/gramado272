@@ -878,7 +878,7 @@ void *gde_extra_services (
 
     // ioctl ()
     // IN: fd, request, arg
-    // See: sci/sys/sys.c    
+    // See: sys.c    
     
     if ( number == 8000 ){
         return (void *) sys_ioctl ( 
@@ -889,7 +889,7 @@ void *gde_extra_services (
 
 
     // fcntl()
-    // See: sci/sys/sys.c    
+    // See: sys.c    
     if ( number == 8001 ){
         return (void *) sys_fcntl ( 
                             (int) arg2, 

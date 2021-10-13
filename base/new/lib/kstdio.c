@@ -1551,7 +1551,7 @@ void __initialize_stdin(void)
 
 
 // done:
-    stdin->used  = TRUE;
+    stdin->used = TRUE;
     stdin->magic = 1234;
     return;
 }
@@ -1619,7 +1619,7 @@ void __initialize_stdout(void)
 
 
 //done:
-    stdout->used  = TRUE;
+    stdout->used = TRUE;
     stdout->magic = 1234;
     return;
 }
@@ -1685,7 +1685,7 @@ void __initialize_stderr(void)
         sizeof( stderr->inode->path ) );
 
 //done:
-    stderr->used  = TRUE;
+    stderr->used = TRUE;
     stderr->magic = 1234;
     return;
 }

@@ -127,8 +127,8 @@ void gns_send_error_response (int fd, int code, char *error_message)
 // in the top of this file.
 // Called by main.
 
-void xxxHandleNextRequest(int fd){
-
+void xxxHandleNextRequest(int fd)
+{
     // Isso permite ler a mensagem na forma de longs.
     unsigned long *message_buffer = (unsigned long *) &__buffer[0];   
 
@@ -136,7 +136,7 @@ void xxxHandleNextRequest(int fd){
     int n_writes = 0;    // For responses.
 
 
-    // Fail. Cleaning
+// Fail. Cleaning
 
     if (fd<0){
         debug_print ("gnssrv: xxxHandleNextRequest fd\n");
@@ -148,31 +148,29 @@ void xxxHandleNextRequest(int fd){
         return;
     }
 
+// Check if we heave a new request.
 
-    // Check if we heave a new request.
-    
     int value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
 
+    // Not a request.
     if ( value != ACTION_REQUEST )
     {
         gnssrv_yield();
-        return;           // drop it!
+        return;
     }
 
-
-//__loop:
-
-    // #todo
-    // Devemos escrever em nosso próprio
-    // socket e o kernel copia??
-    // o kernel copia para aquele arquivo ao qual esse estivere conectado.
-    // olhando em accept[0]
+// Read the request.
 
     n_reads = read ( fd, __buffer, sizeof(__buffer) );
 
     if (n_reads <= 0)
     { 
         debug_print ("gnssrv: xxxHandleNextRequest n_reads\n");
+
+        // No reply
+        rtl_set_file_sync( 
+            fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+
         // Cleaning
         message_buffer[0] = 0;
         message_buffer[1] = 0;
@@ -190,12 +188,18 @@ void xxxHandleNextRequest(int fd){
     if (message_buffer[1] == 0)
     { 
         debug_print ("gnssrv: xxxHandleNextRequest Unknown message\n");
+
+        // No reply
+        rtl_set_file_sync( 
+            fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+
         // Cleaning
         message_buffer[0] = 0;
         message_buffer[1] = 0;
         message_buffer[2] = 0;
         message_buffer[3] = 0;
         gnssrv_yield(); 
+      
         return;
     }
 
@@ -272,18 +276,22 @@ void xxxHandleNextRequest(int fd){
 // == Response =============================== 
 //
 
-    // set response
+// set response
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REPLY );
-    
-    //
-    // Send
-    //
+
+//
+// Send
+//
 
     n_writes = write ( fd, __buffer, sizeof(__buffer) );
     if (n_writes<=0){
         debug_print ("gnssrv: xxxHandleNextRequest Response fail\n");
+        
+        // No response. It fails.
+        rtl_set_file_sync( 
+            fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+        return;
     }
-
 
     // Cleaning
     message_buffer[0] = 0;
@@ -297,10 +305,8 @@ void xxxHandleNextRequest(int fd){
         next_response[c] = 0;
     };
 
-
     debug_print ("gnssrv: Response sent\n"); 
-    
-    gnssrv_yield(); 
+    //gnssrv_yield(); 
 }
 
 

@@ -217,9 +217,9 @@ ssize_t read (int fd, const void *buf, size_t count)
         return -1;
     }
 
-    // #todo
-    // Maybe we need to call another layer, not the kernel service.
-    
+// #todo
+// Maybe we need to call another layer, not the kernel service.
+
     //return (ssize_t) gramado_system_call ( 18, 
     //                     (unsigned long) fd,
     //                     (unsigned long) buf, 
@@ -229,16 +229,14 @@ ssize_t read (int fd, const void *buf, size_t count)
     //rtl_enter_critical_section();
     //rtl_exit_critical_section();
 
-//
 // Read the data.
-//
 
-    return (ssize_t) sc82 ( 18, 
+    return (ssize_t) sc82 ( 
+              (unsigned long) 18, 
               (unsigned long) fd,
               (unsigned long) buf, 
-              (unsigned long) count ); 
+              (unsigned long) count );
 }
-
 
 
 /*
@@ -246,10 +244,11 @@ ssize_t read (int fd, const void *buf, size_t count)
  * write: 
  *     Standard write() function. 
  */
+
 // Usam a lista de arquivos abertos do processo. 
+
 ssize_t write (int fd, const void *buf, size_t count)
 {
-
     int res = -1;
     
     if (fd<0){
@@ -281,15 +280,14 @@ ssize_t write (int fd, const void *buf, size_t count)
     //rtl_enter_critical_section();
     //rtl_exit_critical_section();
 
-    debug_print ("write: Calling sc82\n");
-        
+    // debug_print ("write: Calling sc82\n");
+
     return (ssize_t) sc82 ( 
-        19, 
+        (unsigned long) 19, 
         (unsigned long) fd,
         (unsigned long) buf, 
         (unsigned long) count ); 
 }
-
 
 
 ssize_t pread (int fd, void *buf, size_t count, off_t offset)

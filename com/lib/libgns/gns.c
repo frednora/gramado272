@@ -74,7 +74,7 @@ new_message:
     //
 
     // #debug
-    debug_print ("gns.bin: Writing ...\n");      
+    debug_print ("__gns_hello_request: Writing ...\n");      
 
     // Enviamos um request para o servidor.
     // ?? Precisamos mesmo de um loop para isso. ??
@@ -115,85 +115,84 @@ int __gns_hello_response(int fd)
     unsigned long *message_buffer = (unsigned long *) &__gns_buffer[0];   
     int n_reads = 0;    // For receiving responses.
 
-
-    //
-    // waiting
-    //
-
-    // Espera para ler a resposta. 
-    // Esperando com yield como teste.
-    // Isso demora, pois a resposta só será enviada depois de
-    // prestado o servido.
-    // obs: Nesse momento deveríamos estar dormindo.
+// waiting
+// Espera para ler a resposta. 
+// Esperando com yield como teste.
+// Isso demora, pois a resposta só será enviada depois de
+// prestado o servido.
+// obs: Nesse momento deveríamos estar dormindo.
 
     // #debug
-    debug_print ("__gns_hello_response: Waiting ...\n");      
+    //debug_print ("__gns_hello_response: Waiting ...\n");      
 
-    int y;
-    for(y=0; y<15; y++)
-        gns_yield();
+    //int y;
+    //for(y=0; y<15; y++)
+        //gns_yield();
 
-
-
-    //
-    // read
-    //
+//
+// read
+//
 
     // #debug
     debug_print ("__gns_hello_response: reading ...\n");      
 
 
-       //#caution
-       //we can stay here for ever.
-       //it's a test yet.
-__again:
     n_reads = read ( 
                   fd, 
                   __gns_buffer, 
                   sizeof(__gns_buffer) );
 
+    // #bugbug
+    // If we do not read the file, so the flag will not switch
+    // and we will not be able to write into the socket.
+
     if (n_reads <= 0)
     {
         printf ("__gns_hello_response: recv fail\n");
-        gns_yield();
+        
+        // Tentamos ler e falhou.
+        
         return -1;
     }
-        
-    // Get the message sended by the server.
+
+// Get the message sended by the server.
     int msg = (int) message_buffer[1];
-    
-    switch (msg)
-    {
-        case GNS_SERVER_PACKET_TYPE_REQUEST:
-            gns_yield();
-            goto __again;
-            break;
-            
-        case GNS_SERVER_PACKET_TYPE_REPLY:
-            debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_REPLY received\n"); 
-            goto process_reply;
-            break;
-            
-        case GNS_SERVER_PACKET_TYPE_EVENT:
-            //todo: call procedure.
-            goto __again;
-            break;
-            
-        case GNS_SERVER_PACKET_TYPE_ERROR:
-            debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_ERROR\n");
-            goto __again;
-            //exit (-1);
-            break;
-        
-        default:
-            goto __again;
-            break; 
+
+    switch (msg){
+ 
+    // reply
+    case GNS_SERVER_PACKET_TYPE_REPLY:
+        debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_REPLY received\n"); 
+        goto process_reply;
+        break;
+
+//
+// error
+//
+
+    case GNS_SERVER_PACKET_TYPE_ERROR:
+        debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_ERROR\n");
+        return -1;
+        break;
+
+    case GNS_SERVER_PACKET_TYPE_REQUEST:
+        debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_REQUEST\n");
+        return -1;
+        break;
+
+    case GNS_SERVER_PACKET_TYPE_EVENT:
+        debug_print ("__gns_hello_response: GNS_SERVER_PACKET_TYPE_EVENT\n");
+        return -1;
+        break;
+
+    default:
+        return -1;
+        break;
     };
 
-
-    //
-    // done:
-    //
+//
+// done:
+//
 
     char response_buffer[64];
     response_buffer[0]=0;
@@ -214,34 +213,68 @@ process_reply:
 }
 
 
-
-
 // =============================================
 
 int gns_hello (int fd)
 {
-    
+    int status=-1;
+
     if (fd<0){
         debug_print("gns_hello: fd\n");
+        return FALSE;
     }
 
-    //gnst_hello_request(fd);
-    __gns_hello_request(fd);
+
+// Reset flags.
+// Configuramos a flag para que possamos escrever.
+   debug_print ("gns_hello: reset flags\n");      
     
-    // Avisamos que um request foi enviado.
+   rtl_set_file_sync( 
+       fd,   // fd 
+       216,  // request. (We can write)
+       0 );  // data
+
+
+// Request.
+// Avisamos que um request foi enviado.
+   debug_print ("gns_hello: Send request\n");      
+
+    __gns_hello_request(fd);
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
-    // Waiting to read the response.
+
+// Response.
+// Waiting to read the response.
+   debug_print ("gns_hello: Read response\n");      
+
     int value=0;
     while (1){
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
-        gns_yield();
+        if (value == ACTION_NULL )  { return -1; }  // no reply
     };
+    
+    // A sicronização nos diz que ja temos um reply,
+    // então não precisamos esperar.
+    status = (int) __gns_hello_response(fd);
 
-    //return (int) gnst_hello_response(fd);
-    return (int) __gns_hello_response(fd);
+    // Se não conseguimos ler a resposta.
+    // Então vamos reconfigurar as flags do arquivo
+    // dizendo que queremos autorização para escrever.
+    // Na verdade esse erro na hora de ler a resposta
+    // ja é motivo pra fechar a conexão.
+    /*
+    if (status<0)
+    {
+        rtl_set_file_sync( 
+            fd,   // fd 
+            216,  // request
+            0 );  // data
+    }
+    */
+    
+    return TRUE;
 }
 
 

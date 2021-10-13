@@ -2234,6 +2234,10 @@ int __gws_createwindow_response(int fd)
                   sizeof(__gws_message_buffer), 
                   0 );
 
+    // #bugbug
+    // If we do not read the file, so the flag will not switch
+    // and we will not be able to write into the socket.
+
     if (n_reads <= 0) {  return -1;  }
 
 //
@@ -2250,18 +2254,18 @@ int __gws_createwindow_response(int fd)
 
     switch (msg){
 
-        // reply
-        case GWS_SERVER_PACKET_TYPE_REPLY: 
-            return (int) wid;
-            break;
+    // reply
+    case GWS_SERVER_PACKET_TYPE_REPLY: 
+        return (int) wid;
+        break;
 
-        // error
-        case GWS_SERVER_PACKET_TYPE_REQUEST:
-        case GWS_SERVER_PACKET_TYPE_EVENT:
-        case GWS_SERVER_PACKET_TYPE_ERROR:
-        default:
-            return -1;
-            break;
+    // error
+    case GWS_SERVER_PACKET_TYPE_REQUEST:
+    case GWS_SERVER_PACKET_TYPE_EVENT:
+    case GWS_SERVER_PACKET_TYPE_ERROR:
+    default:
+        return -1;
+        break;
     };
 
 fail:
@@ -2425,8 +2429,8 @@ gws_draw_char (
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 
-    // Response
-    // Waiting to read the response.
+// Response
+// Waiting to read the response.
     gws_debug_print("gws_draw_char: response\n");
     while (1){
         Value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
@@ -2964,11 +2968,7 @@ gws_create_window (
         Name = title_when_no_title;
     }
 
-
-//
 // Request
-//
-
     __gws_createwindow_request ( 
         fd, 
         x, y, width, height, 
@@ -2976,13 +2976,9 @@ gws_create_window (
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 
-//
 // Response
-//
-
 // Waiting to read the response.
 // Return the index returned by the window server.
-
 // ??
 // E se o arquivo for fechado pelo sistema?
 // Ficaremos aqui para sempre?
@@ -2991,7 +2987,6 @@ gws_create_window (
         value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
         if (value == ACTION_REPLY ) { break; }
         if (value == ACTION_ERROR ) { return -1; }
-        //gws_yield();
     };
     // A sincronização nos diz que já temos um reply.
     wid = (int) __gws_createwindow_response(fd); 

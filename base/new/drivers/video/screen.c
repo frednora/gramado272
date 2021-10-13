@@ -122,49 +122,48 @@ void fb_refresh_screen (unsigned long flags)
     unsigned long *backbuffer_long  = (unsigned long *) BACKBUFFER_VA;
     unsigned long *frontbuffer_long = (unsigned long *) FRONTBUFFER_VA;
 
-
-    debug_print_string("refresh_screen:\n");
+// #debug
+    //debug_print_string("fb_refresh_screen:\n");
 
 //  if(flags & 1)
     vsync();
 
-    if ( SavedX == 0 || SavedY == 0 || SavedBPP == 0 )
+    if ( SavedX == 0 || 
+         SavedY == 0 || 
+         SavedBPP == 0 )
     {
-        debug_print_string("refresh_screen: [FAIL] validation\n");
+        debug_print_string("fb_refresh_screen: [FAIL] validation\n");
         return;
     }
-
 
 // We can't refresh.
     if ( refresh_screen_enabled != TRUE ){
-        debug_print_string("refresh_screen: [FAIL-FIXME] refresh_screen_flag\n");
+        debug_print_string("fb_refresh_screen: [FAIL-FIXME] refresh_screen_flag\n");
         return;
     }
 
+
+// #todo
+// Isso significa que só poderemos 
+// usar o modo 320x200 por enquanto.
+// clipping:
+// Podemos recortar, e mesmo que a resoluçao seja alta,
+// somente escreveremos nos primeiros 2mb ...
+// Isso seria divertido, a velocidade seria alta,
+// mas teriamos uma tela recortada. kkk
+// Essa tecnica pode ser uma opçao configuravel
 
     //int Total = (int)(SavedX*SavedBPP*SavedY);
-    
     int Total = (screen_size_in_kb * 1024);
 
-    // #todo
-    // Isso significa que só poderemos 
-    // usar o modo 320x200 por enquanto.
-    
-    // clipping:
-    // Podemos recortar, e mesmo que a resoluçao seja alta,
-    // somente escreveremos nos primeiros 2mb ...
-    // Isso seria divertido, a velocidade seria alta,
-    // mas teriamos uma tela recortada. kkk
-    // Essa tecnica pode ser uma opçao configuravel
-
-    if ( Total >= (2*1024*1024) )
-    {
-        debug_print_string("refresh_screen: [FAIL-FIXME] Total\n");
+    //if ( Total >= (2*1024*1024) )
+    if(Total >= 2097152 ){
+        debug_print_string("fb_refresh_screen: [FAIL-FIXME] Total\n");
         return;
     }
 
-    // Fast way ?
-    // Divisible by 8. So use the fast way.
+// Fast way ?
+// Divisible by 8. So use the fast way.
     int FastTotal=0;
     if ( (Total % 8) == 0 )
     {
@@ -175,7 +174,7 @@ void fb_refresh_screen (unsigned long flags)
         return;
     }
 
-    // Slow way.
+// Slow way.
     for ( i=0; i<Total; i++ ){
         frontbuffer[i] = backbuffer[i];
     };

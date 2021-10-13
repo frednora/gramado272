@@ -950,24 +950,27 @@ int sys_write (unsigned int fd, char *ubuf, int count)
         // not writing yet
         if ((__file->_flags & __SWR) == 0) 
         {
-            //debug_print("sys_write: [FAIL] flag __SWR \n");
+            debug_print("sys_write: [FAIL] flag __SWR \n");
             //yield (current_thread);
             goto fail;
         }
 
         // cheio? 
-        // Nao podemos escrever.
+        // Não podemos escrever porque o buffer está cheio.
         // Acorde os leitores para esvaziar.
+        // Mas e se não tiver mais escritores.
+        // #todo: Indicação da quantidade de escritores.
+        // Sendo assim, vamos dizer que também podem ler
+        // caso existam leitores. Mas não pode mais escrever.
         if ( __file->socket_buffer_full == TRUE )
         {
             debug_print("sys_write: [FAIL] can't write on a full buffer\n");
 
             debug_print("sys_write: WAKEUP READER\n");
-            __file->_flags = 0;
+            __file->_flags = 0; // não pode mais escrever.
             __file->_flags |= __SRD;                 // pode ler.
             do_thread_ready( __file->tid_waiting );  // acorda leitores
             __file->tid_waiting = -1;
-
 
             if ( __file->sync.block_on_write_full == TRUE )
             {
@@ -981,10 +984,11 @@ int sys_write (unsigned int fd, char *ubuf, int count)
             goto fail;
         }
 
-        // vazio? escreva e acorde os leitores.
+        // Se o buffer não estiver cheio,
+        // Então escreva e acorde os leitores.
         if ( __file->socket_buffer_full == FALSE )
         {
-            
+            // Se podemos escrever.
             if( __file->_flags & __SWR )
             {
                 //debug_print ("sys_write: >>>> WRITE\n");
@@ -1026,9 +1030,6 @@ int sys_write (unsigned int fd, char *ubuf, int count)
                     
                     // #bugbug: test ...
                     //  impedir que eu mesmo me leia.
-                    //yield (current_thread);
-                    //yield (current_thread);
-                    //yield (current_thread);
                     //yield (current_thread);
                     
                     return nbytes;                           // bytes written
@@ -2236,8 +2237,8 @@ void sys_set_file_sync(int fd, int request, int data)
     // #todo
     // check validation
 
-    // object
-        
+// object
+
     object = (file *) p->Objects[fd];
 
     if ( (void*) object == NULL )
@@ -2251,23 +2252,53 @@ void sys_set_file_sync(int fd, int request, int data)
         debug_print("sys_set_file_sync: validation\n");
         return;
     }
-    
+
+// request.
+
     switch (request){
 
-        // set last action
-        case SYNC_REQUEST_SET_ACTION:
-            object->sync.action = data;
-            break;
+    // set last action
+    case SYNC_REQUEST_SET_ACTION:
+        object->sync.action = data;
+        break;
         
-        //case ?:
-            //break;
+    // #test
+    // reset
+    // Now we can write
+    case 216:
         
-        // ...
+        //#debug
+        printf("216:\n"); 
+        refresh_screen();
         
-        default:
-            debug_print("sys_set_file_sync: [FAIL] Default request\n");
-            return;
-            break;
+        object->sync.action = 0;
+        //object->_flags = (__SWR | __SRD); 
+        object->_flags = __SWR;
+        k_rewind(object);
+        object->_r = 0;
+        object->_w = 0;
+        object->socket_buffer_full = FALSE; //empty buffer
+        break;
+
+    // #test
+    // Now we can read
+    case 217:
+
+        //#debug
+        printf("217:\n"); 
+        refresh_screen();
+
+        object->sync.action = 0;
+        //object->_flags = (__SWR | __SRD); 
+        object->_flags = __SRD;
+        break;
+
+    // ...
+        
+    default:
+        debug_print("sys_set_file_sync: [FAIL] Default request\n");
+        return;
+        break;
     };
 
     // ...
