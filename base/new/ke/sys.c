@@ -1926,7 +1926,7 @@ int sys_get_file_sync (int fd, int request)
 
     //#bugbug
     // Pensaremos nessa possibilidade.
-    
+
     /*
     if (fd == 0 || fd == 1 || fd == 2 )
     {
@@ -1977,21 +1977,20 @@ int sys_get_file_sync (int fd, int request)
 
     switch (request){
 
-        // get last action
-        case SYNC_REQUEST_GET_ACTION:
-            return (int) object->sync.action;
-            break;
-        
+    // get last action
+    case SYNC_REQUEST_GET_ACTION:
+        return (int) object->sync.action;
+        break;
 
-        //case ?:
-            //break;
+    //case ?:
+        //break;
+
+    // ...
         
-        // ...
-        
-        default:
-            debug_print("sys_get_file_sync: [FAIL] Default request\n");
-            return (int) (-1);
-            break;
+    default:
+        debug_print("sys_get_file_sync: [FAIL] Default request\n");
+        return (int) (-1);
+        break;
     };
 
     // ...

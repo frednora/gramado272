@@ -11,13 +11,13 @@
 
 /*
  * task_switch:
- * Switch the thread.
- * Save and restore context.
- * Select the next thread and dispatch.
- * return to _irq0.
- * Called by KiTaskSwitch.
+ *     Switch the thread.
+ *     Save and restore context.
+ *     Select the next thread and dispatch.
+ *     return to _irq0.
+ *     Called by KiTaskSwitch.
  */
- 
+
 void task_switch (void)
 {
 
@@ -30,14 +30,19 @@ void task_switch (void)
     struct thread_d   *TargetThread;
 
     pid_t pid = -1;
-
     int tmp_tid = -1;
+
+
+// =======================================================
 
 //
 // Current thread
 //
-    // Check current thread limits.
-    if ( current_thread < 0 || current_thread >= THREAD_COUNT_MAX )
+
+// Check current thread limits.
+
+    if ( current_thread < 0 || 
+         current_thread >= THREAD_COUNT_MAX )
     {
         panic ("ts: current_thread\n");
     }
@@ -47,18 +52,29 @@ void task_switch (void)
     if ( (void *) CurrentThread == NULL ){
         panic ("ts: CurrentThread\n");
     }
-    
-    // #todo
-    // Check the thread's validation. 
-    // used and magic.
+
+// validation
+    if ( CurrentThread->used != TRUE ||  
+         CurrentThread->magic != 1234 )
+    {
+        panic ("ts: CurrentThread validation\n");
+    }
+
+// =======================================================
 
 //
 // Current process
 //
+
     pid = (pid_t) CurrentThread->ownerPID;
 
-    // #todo: Check overflow too.
-    if (pid<0){
+// #todo: 
+// Check overflow too.
+// Check max limit.
+
+    if ( pid < 0 ||
+         pid >= PROCESS_COUNT_MAX )
+    {
         panic ("ts: pid\n");
     }
 
@@ -68,13 +84,14 @@ void task_switch (void)
         panic ("ts: CurrentProcess\n");
     }
 
-    // validation
-    if ( CurrentProcess->used != TRUE && CurrentProcess->magic != 1234 )
+// validation
+    if ( CurrentProcess->used != TRUE ||  
+         CurrentProcess->magic != 1234 )
     {
         panic ("ts: CurrentProcess validation\n");
     }
 
-   // Update the global variable.
+// Update the global variable.
 
    current_process = (int) CurrentProcess->pid;
 
@@ -82,12 +99,12 @@ void task_switch (void)
 //  == Conting =================================
 //
 
-    // 1 second = 1000 milliseconds
-    // sys_time_hz = 600 ticks per second.
-    //1/600 de segundo a cada tick
-    //1000/100 = 10 ms quando em 100HZ.
-    //1000/600 = 1.x ms quando em 600HZ.
-    //x = 0 + (x ms); 
+// 1 second = 1000 milliseconds
+// sys_time_hz = 600 ticks per second.
+// 1/600 de segundo a cada tick
+// 1000/100 = 10 ms quando em 100HZ.
+// 1000/600 = 1.x ms quando em 600HZ.
+// x = 0 + (x ms); 
 
 
 // step: 
@@ -178,9 +195,10 @@ The remainder ??
             // e colocar ela no estado de pronta.
             // Coloca no estado de pronto e limpa a flag.
             // Em seguida vamos procurar outra.
-            if ( CurrentThread->state == RUNNING && CurrentThread->_yield == TRUE )
+            if ( CurrentThread->state == RUNNING && 
+                 CurrentThread->_yield == TRUE )
             {
-                CurrentThread->state  = READY;
+                CurrentThread->state = READY;
                 CurrentThread->_yield = FALSE;
                 goto try_next;
             }

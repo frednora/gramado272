@@ -2260,10 +2260,10 @@ int fsLoadFileFromCurrentTargetDir (void)
     //taskswitch_lock ();
     //scheduler_lock ();
     Ret = (int) fsLoadFile ( 
-                    VOLUME1_FAT_ADDRESS,                       // fat cache address
-                    current_target_dir.current_dir_address,    // src dir address 
-                    FAT16_ROOT_ENTRIES, //#bugbug: Number of entries.          // number of entries.
-                    (unsigned char *) current_target_dir.name,                 // file name 
+                    (unsigned long) VOLUME1_FAT_ADDRESS,                       // fat cache address
+                    (unsigned long) current_target_dir.current_dir_address,    // src dir address 
+                    (int) FAT16_ROOT_ENTRIES, //#bugbug: Number of entries.          // number of entries.
+                    (const char *) current_target_dir.name,                 // file name 
                     (unsigned long)   current_target_dir.current_dir_address,  // file address
                     (unsigned long) xxxTempFileSize );                                    // #bugbug buffer limit 4KB.
     //scheduler_unlock ();
@@ -2918,10 +2918,10 @@ fs_load_path (
                 Ret = fsLoadFile ( 
                           (unsigned long) VOLUME1_FAT_ADDRESS,  // fat address
                           (unsigned long) __src_buffer,         // dir address. onde procurar.
-                          MaxEntries,                           // #bugbug: Number of entries.  
-                          (unsigned char *) buffer,             // nome que pegamos no path 
+                          (int) MaxEntries,                           // #bugbug: Number of entries.  
+                          (const char *) buffer,             // nome que pegamos no path 
                           (unsigned long) __dst_buffer,         // onde carregar. 
-                          limits );                             // tamanho do buffer onde carregar.
+                          (unsigned long) limits );                             // tamanho do buffer onde carregar.
                           
                           
                 // ok.

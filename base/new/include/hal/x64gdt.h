@@ -95,26 +95,30 @@ struct segment_descriptor_d
     unsigned long base_15_0  :16;
     unsigned long base_23_16 :8;
 
-    unsigned long type    :4;  //segment type
-    unsigned long s       :1;  //s
-    unsigned long dpl     :2;  //segment descriptor priority level 
-    unsigned long p       :1;  //segment descriptor present 
+    unsigned long type :4;  //segment type
+    unsigned long s    :1;  //s
+    unsigned long dpl  :2;  //segment descriptor priority level 
+    unsigned long p    :1;  //segment descriptor present 
 
     unsigned long limit_19_16 :4;
 
-    unsigned long avl    :1;
-    unsigned long l      :1;
-    unsigned long db     :1;
-    unsigned long g      :1;
+    unsigned long avl :1;
+    unsigned long l   :1;
+    unsigned long db  :1;
+    unsigned long g   :1;
 
     unsigned long long base_31_24 :8;
 
 } __attribute__((packed));
 
 
+// #todo
+// We will use this in the future.
+// We will setup gdt using C code instead of Assembly.
+// For now we are setting up gdt at the initialization
+// using Assembly language. 
 // Isso é uma gdt com 32 entradas.
 static struct segment_descriptor_d xxx_gdt[32];
-
 
 // Isso é o registro da gdt
 static struct gdt_ptr_d xxx_gdt_ptr;

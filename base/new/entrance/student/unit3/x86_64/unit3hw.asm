@@ -1,3 +1,6 @@
+
+; unit3hw.asm
+
 ;
 ; Imports
 ;
@@ -47,10 +50,12 @@ extern _contextR15
 
 ; Irq0 release.
 ; Timer interrupt.
+; See: _irq0 in unit1hw.asm.
+
 unit3Irq0Release:
 
-    ; 64bit
-    ; This is a 64bit pointer to the pml4 table.
+; 64bit
+; This is a 64bit pointer to the pml4 table.
 
     mov RAX, CR3  
     IODELAY 
@@ -110,17 +115,12 @@ unit3Irq0Release:
     ; Acumulator.
     mov rax, qword [_contextRAX]
 
-    ;; #bugbug
-    ;; We do NOT need the 'sti'. 
-    ;; The flags in the 'eflags' will reenable it.
-    
+; #bugbug
+; We do NOT need the 'sti'. 
+; The flags in the 'eflags' will reenable it.
+
     sti
     iretq
-
-
-;; #delete
-;hwlib_something: 
-    ;ret
 
 
 ;----------------------------------------------

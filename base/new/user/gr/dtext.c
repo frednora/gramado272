@@ -13,7 +13,7 @@ draw_string (
     unsigned long x,
     unsigned long y,
     unsigned int color,
-    unsigned char *string )
+    char *string )
 {
 
     // loop
@@ -59,15 +59,16 @@ draw_string (
     };
 }
 
+
 void x_panic( char *string )
 {
     drawDataRectangle( 0, 0, 200, 28, COLOR_RED, 0 );
     my_buffer_horizontal_line( 0, 28, 200, COLOR_YELLOW, 0 );
 
-    // string 1
+// string 1
     draw_string(8,8,COLOR_WHITE,"x_panic: ");
 
-    // string2
+// string2
     if( (void*) string != NULL ){
         draw_string(80,8,COLOR_WHITE,string);
     }

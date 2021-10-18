@@ -6,7 +6,7 @@
 
 
 //#test
-#define NR_OPEN    32
+//#define NR_OPEN    32
 
 
 #endif    

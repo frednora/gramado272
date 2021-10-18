@@ -132,44 +132,36 @@ int grInit (void)
         exit(1);
     }
 
-    // center of the screen.
-    // #todo: 
-    // We need the option to put the hotspot 
-    // at the center of the window.
+// center of the screen.
+// #todo: 
+// We need the option to put the hotspot 
+// at the center of the window.
     
     HotSpotX = (deviceWidth>>1);
     HotSpotY = (deviceHeight>>1);
 
 
-//
 // == Camera ==========
-//
+// Initialize the current camera.
+// Change some attributes for the current camera.
 
     gwssrv_debug_print ("grInit: camera\n");
-        
-    // initialize the current camera.
     camera_initialize();
-    
-    
-    // change some attributes for the current camera.
     camera ( 
         -40, -40, 0,     // position vector
         -40,  40, 0,     // upview vector
          10,  10, 10 );  // lookat vector
 
 
-//
 // == Projection =========
-//
+// Initialize the current projection.
+// Change the view for the current projection.
 
     gwssrv_debug_print ("grInit: projection\n");
-    
-    // initialize the current projection.
     projection_initialize();
-
-    // change the view for the current projection.
     view(0,40);
-     
+
+
     // ...
 
     gwssrv_debug_print ("grInit: done\n");
@@ -181,7 +173,7 @@ int grInit (void)
 int camera_initialize(void)
 {
 
-    CurrentCamera = (void *) malloc ( sizeof( struct gr_camera_d ) );
+    CurrentCamera = (void *) malloc( sizeof( struct gr_camera_d ) );
 
     if ( (void*) CurrentCamera == NULL ){
         printf("camera_initialize: fail\n");
@@ -258,9 +250,9 @@ int projection_initialize(void)
     CurrentProjection->type = 1; 
 
     // ??
-    CurrentProjection->zNear   =  0;
-    CurrentProjection->zFar    = 40;
-    CurrentProjection->zRange  = (CurrentProjection->zFar - CurrentProjection->zNear);
+    CurrentProjection->zNear  =  0;
+    CurrentProjection->zFar   = 40;
+    CurrentProjection->zRange = (CurrentProjection->zFar - CurrentProjection->zNear);
 
     //CurrentProjection->angle_of_view = ?;
     //CurrentProjection->ar = ?;
@@ -282,9 +274,11 @@ int view (int near, int far)
         return -1;
         //exit(1);
     }
+
     CurrentProjection->zNear  = near;
     CurrentProjection->zFar   = far;
     CurrentProjection->zRange = (CurrentProjection->zFar - CurrentProjection->zNear);
+
     return 0;
 }
 
@@ -351,7 +345,7 @@ grPlot0 (
     int z, 
     int x, 
     int y, 
-    unsigned long color )
+    unsigned int color )
 {
 
 // #todo
@@ -549,10 +543,8 @@ grPlot0 (
         goto draw;
     }
 
-    // Fail
-
+// Fail
     Draw = FALSE;
-
     return (-1);
 
 //
@@ -560,14 +552,14 @@ grPlot0 (
 //
 
 draw:
-    
-    //
-    // Clipping
-    //
-    
-    // #todo: 
-    // We need to check the window limits
-    // if we are drawing inside a given window.
+
+//
+// Clipping
+//
+
+// #todo: 
+// We need to check the window limits
+// if we are drawing inside a given window.
 
     // Checking the device screen limits.
         
@@ -595,7 +587,8 @@ draw:
             // 2D, No clipping or transformation.
 
             if ( UseClipping == FALSE ){
-                grBackBufferPutpixel(color,X,Y); 
+                grBackBufferPutpixel(
+                    (unsigned int) color, X, Y ); 
             }
 
             // Se temos uma janela válida.
@@ -605,7 +598,8 @@ draw:
                      Y >= w->top   &&
                      Y <= w->bottom )
                  {
-                     grBackBufferPutpixel(color,X,Y); 
+                     grBackBufferPutpixel(
+                         (unsigned int) color, X, Y ); 
                  }
             }
 
@@ -635,17 +629,17 @@ grPlot1 (
     int x, 
     int y, 
     int z, 
-    unsigned long color,
+    unsigned int color,
     unsigned long flags )
 {
 
-    //#todo
-    //Describe the flags.
+//#todo
+//Describe the flags.
 
     int xValue = 0;
     int yValue = 0;
     int zValue = 0;
-    unsigned long colorValue = 0;
+    unsigned int colorValue=0;
 
 
     int fBlack=FALSE;  // black pixel
@@ -658,7 +652,7 @@ grPlot1 (
         xValue = x;
         yValue = y;
         zValue = z;
-        colorValue = color;
+        colorValue = (unsigned int) color;
         goto PlotPixel;
     }
 
@@ -668,7 +662,7 @@ grPlot1 (
     if ( flags & 0x00000001 )
     {
         fBlack = TRUE;
-        colorValue = (unsigned long) 0x00000000;
+        colorValue = (unsigned int) 0x00000000;
     }
 
     if ( flags & 0x00000020 )
@@ -684,8 +678,9 @@ PlotPixel:
     return (int) grPlot0 ( 
                      clipping_window, 
                      zValue, xValue, yValue, 
-                     colorValue );
+                     (unsigned int) colorValue );
 }
+
 
 // #todo
 // See: gwsProcedure(), service 2040 in main.c

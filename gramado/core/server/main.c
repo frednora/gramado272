@@ -1590,18 +1590,17 @@ int initGraphics (void)
 // Seleciona a animaçao.
 // Nao deve travar, deve ter timeout.
 
-
     if (current_mode == GRAMADO_JAIL)
     {
-         //demos_startup_animation(1);   //ok
-         //demos_startup_animation(2);   //it works
-         //demos_startup_animation(3);   //it works
-         //demos_startup_animation(4);   //it works.
-         //demos_startup_animation(5);   //it works.
-         //demos_startup_animation(6);   //ok
-         //demos_startup_animation(7);   //ok
-         //demos_startup_animation(8);   //ok
-         //demos_startup_animation(9);     //ok
+         //demos_startup_animation(1);
+         //demos_startup_animation(2);
+         //demos_startup_animation(3);
+         //demos_startup_animation(4);
+         //demos_startup_animation(5);
+         //demos_startup_animation(6);
+         //demos_startup_animation(7);
+         //demos_startup_animation(8);
+         //demos_startup_animation(9);
          //gwssrv_show_backbuffer();
          //while(1){}
          // ...
@@ -1613,13 +1612,12 @@ int initGraphics (void)
     //while(1){}
 
 
-
     // #debug
     //asm("int $3");
 
-    //
-    // == tests =================================================
-    //
+//
+// == tests =================================================
+//
  
     /*
      //testes com z positivo
@@ -2001,8 +1999,7 @@ int initGraphics (void)
     
     //printf     ("gwssrv: InitGraphics done *hang\n");
     //while(1){}
- 
-    // ok
+
     return 0;
 }
 
@@ -2045,24 +2042,20 @@ void gwssrv_init_client_support (void)
         printf             ("gwssrv_init_client_support: [FATAL] Couldn't create serverClient\n");
         exit(1);
     }
-    
-    
+
+
     serverClient->id = 0;
     serverClient->is_connected = FALSE;
-        
     serverClient->fd = -1;
-        
-    serverClient->pid = getpid();
+    serverClient->pid = (pid_t) getpid();
     serverClient->gid = getgid();
     // ...
-
     connections[SERVER_CLIENT_INDEX] = (unsigned long) serverClient;
 
 //done:
-    serverClient->used  = TRUE;
+    serverClient->used = TRUE;
     serverClient->magic = 1234;
 }
-
 
 
 void init_client_struct ( struct gws_client_d *c )
@@ -2085,7 +2078,7 @@ void init_client_struct ( struct gws_client_d *c )
     c->gid = -1;
 
 //done:
-    c->used  = TRUE;
+    c->used = TRUE;
     c->magic = 1234;
 }
 
@@ -2186,15 +2179,13 @@ int serviceAsyncCommand (void)
     // parameters
     //
 
-    // window_id   = message_address[0];
-    message_id     = message_address[1];   // message
-    request_id     = message_address[2]; 
-    subrequest_id  = message_address[3];
-    Data           = message_address[4];
-
+    // window_id  = message_address[0];
+    message_id    = message_address[1];   // message
+    request_id    = message_address[2]; 
+    subrequest_id = message_address[3];
+    Data          = message_address[4];
 
     // ...
-
 
     // Validate our message number.
 

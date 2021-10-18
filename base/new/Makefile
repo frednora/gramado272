@@ -24,26 +24,6 @@ PYTHON3	= python3
 RUBY	= ruby
 
 
-# See:
-# https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
-
-#original: gramado 32bit
-#CFLAGS := -m64 \
-#	-std=gnu89 \
-#	-nodefaultlibs \
-#	-nostdinc \
-#	-nostdlib \
-#	-static \
-#	-fgnu89-inline \
-#	-ffreestanding \
-#	-fno-builtin \
-#	-fno-pie \
-#	-fleading-underscore \
-#	-fno-stack-protector \
-#	-s \
-#	-Werror=strict-prototypes    
-
-
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
 CFLAGS := \

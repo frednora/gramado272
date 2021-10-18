@@ -17,9 +17,9 @@ struct gr_vec3D_d
     int x;
     int y;
     int z;
-    
-    // for interpolation.
-    unsigned long color;
+
+// For interpolation.
+    unsigned int color;
 };
 
 
@@ -53,13 +53,14 @@ struct gr_cube_d
 
 struct gr_polygon_d 
 {
-    // type: POLYLINE, POLYPOINT
+
+// type: POLYLINE, POLYPOINT
     int type;
-    
-    // number of elements.
+
+// number of elements.
     int n;
-    
-    // List of vectors.
+
+// List of vectors.
     void *list_address;
 };
 
@@ -192,18 +193,18 @@ struct gr_bitmap_d
     
     unsigned long width;
     unsigned long height;
-    
-    // 32 falgs.
+
+// 64 falgs.
     unsigned long flags;
-    
-    unsigned long color;
-    
-    // translation.
+
+    unsigned int color;
+
+// Translation.
     int x;
     int y;
     int z;
-    
-    // buffer
+
+// buffer
     char *body;
 };
 
@@ -226,9 +227,14 @@ static int projection4x4[4][4] = {
         };
 
  
-void multiply4 (int mat1[][4], int mat2[][4], int res[][4]);
+void 
+multiply4(
+    int mat1[][4], 
+    int mat2[][4], 
+    int res[][4] );
 
-// function to multiply two matrices
+
+// Function to multiply two matrices
 void 
 multiplyMatrices (
     int  first[][10],
@@ -240,7 +246,6 @@ multiplyMatrices (
 
 
 
-
 //
 // ===========================================================
 //
@@ -249,8 +254,8 @@ multiplyMatrices (
 #define grMIN2(a, b)  (((a) < (b)) ? (a) : (b))
 #define grMAX2(a, b)  (((a) > (b)) ? (a) : (b))
 
-#define grMIN3(x,y,z)     (x < y  ? (x < z ? x : z) : (y < z ? y : z))
-#define grMAX3(x,y,z)     ( (x>y) ? ((x>z)?x:z)     : ((y>z)?y:z) )
+#define grMIN3(x,y,z)    (x < y  ? (x < z ? x : z) : (y < z ? y : z))
+#define grMAX3(x,y,z)    ( (x>y) ? ((x>z)?x:z)     : ((y>z)?y:z) )
 
 
 /*
@@ -260,14 +265,19 @@ multiplyMatrices (
 #define MAX3(v0,v1,v2) ((v0>v1)?((v0>v2)?v0:v2):((v1>v2)?v1:v2))
 */
 
+//#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
-// define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
+
 
 int grInit(void);
 
 
+//
 // Camera
+//
+
 int camera_initialize(void);
+
 int 
 camera ( 
     int x, int y, int z,
@@ -278,7 +288,7 @@ camera (
 int projection_initialize(void);
 
 
-// chaging the view for the current projection
+// Chaging the view for the current projection
 int view(int near, int far);
 
 
@@ -289,7 +299,8 @@ grPlot0 (
     int z, 
     int x, 
     int y, 
-    unsigned long color );
+    unsigned int color );
+
 
 int 
 grPlot1 ( 
@@ -297,7 +308,7 @@ grPlot1 (
     int x, 
     int y, 
     int z, 
-    unsigned long color,
+    unsigned int color,
     unsigned long flags );
 
 int serviceGrPlot0(void);
@@ -332,7 +343,6 @@ plotQuadBezierSeg (
 //
 
 
-
 void
 rectangle (
     int left, int top, 
@@ -362,7 +372,7 @@ int serviceGrRectangle(void);
 
 
 //
-// == triangle =====================================================
+// == triangle ==========================
 //
 
 int xxxTriangleZ ( struct gr_triandle_d *triangle );
@@ -370,7 +380,7 @@ int xxxTriangleZ ( struct gr_triandle_d *triangle );
 int grTriangle( struct gr_triandle_d *triangle);
 
 //
-// == polygon =====================================================
+// == polygon ===========================
 //
 
 int xxxPolygonZ ( struct gr_polygon_d *polygon );
@@ -378,7 +388,7 @@ int xxxPolygonZ ( struct gr_polygon_d *polygon );
 
 
 //
-// == Cube ========================================================
+// == Cube ============================
 //
 
 int xxxInflateCubeZ ( struct gr_cube_d *cube, int value );
@@ -389,12 +399,17 @@ int serviceGrCubeZ(void);
 
 
 
-
 //
-// == Circle =================================================
+// == Circle ===========================
 //
 
-void plotCircle (int xm, int ym, int r, unsigned long color);
+void 
+plotCircle(
+    int xm, 
+    int ym, 
+    int r, 
+    unsigned long color );
+
 void 
 plotCircleZ ( 
     int xm, 
@@ -405,10 +420,17 @@ plotCircleZ (
 
 
 //
-// == Ellipse =================================================
+// == Ellipse ====================================
 //
 
-void plotEllipseRect(int x0, int y0, int x1, int y1, unsigned long color);
+void 
+plotEllipseRect(
+    int x0, 
+    int y0, 
+    int x1, 
+    int y1, 
+    unsigned long color );
+
 void 
 plotEllipseRectZ (
     int x0, int y0, 
@@ -419,7 +441,8 @@ plotEllipseRectZ (
 
 
 //
-// Fred Nora's algo. Prime stuff;
+// Fred Nora's algo. 
+// Prime stuff;
 //
 
 void noraDrawingStuff(void);
@@ -428,6 +451,7 @@ void noraDrawingStuff3(int x, int y, int z);
 
 
 // Fibonacci Series using Recursion 
+// #todo: Create fib_int and fib_long
 int fib(int n);
 
 

@@ -38,6 +38,23 @@ static unsigned long npar = 0;
 static unsigned long ques = 0;
 static unsigned char attr = 0x07;
 
+static int saved_x=0;
+static int saved_y=0;
+
+
+//
+// == prototypes ===============================
+//
+
+void __local_ri (void);
+void csi_J (int par);
+void csi_K(int par);
+void csi_m(void);
+void csi_M ( int nr, int console_number );
+void csi_L (int nr, int console_number);
+
+
+// =======================
 
 void __local_ri (void)
 {
@@ -72,8 +89,6 @@ __local_gotoxy (
 
 
 
-static int saved_x=0;
-static int saved_y=0;
 
 void __local_save_cur (int console_number)
 {

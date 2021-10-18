@@ -133,13 +133,13 @@ _irq0:
     and rax, 3
     mov [_contextCPL], rax
 
-; Timer support. No task switch.
-; See: pit.c
+
+; Timer and taskswitching.
+; See: ke/hal/x86_64/pit.c
 
     call _irq0_TIMER
 
-; Essa é a única interrupção que tem seu retorno
-; na unit 3.
+; Release a bandit.
 
     jmp unit3Irq0Release
 ; --------------------------------------
