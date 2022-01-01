@@ -85,7 +85,7 @@ void *kmalloc (size_t size){
     // Alocar memória no heap do kernel.
     // ps/x86/memory.c
     
-    h = (void *) heapAllocateMemory (s);
+    h = (void *) heapAllocateMemory(s);
 
     if ( (void *) h == NULL ){
         debug_print ("kmalloc: h\n");
@@ -95,6 +95,7 @@ void *kmalloc (size_t size){
     // Ok.
     return (void *) h; 
 }
+
 
 /*
  ************************************

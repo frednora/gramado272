@@ -222,10 +222,8 @@ void memory_destroy_heap (struct heap_d *heap)
 
 int mmInit(void)
 {
-
     int Status=0;
     int i=0;
-
 
     debug_print("mmInit: [TODO] [FIXME]\n");
 

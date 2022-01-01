@@ -36,15 +36,16 @@ This repository has the source code for:
 
 ## Fred's compilation on Linux.
 ```
-    Host machine: Ubuntu 18.04.5 LTS
-    Linux 5.4.0-77-generic x86_64
-    gcc (Ubuntu) 7.5.0 
-    GNU ld (GNU Binutils for Ubuntu) 2.30
-    NASM version 2.13.02
+    Host machine: Ubuntu 20.04.3 LTS
+    Linux 5.11.0-43-generic x86_64
+    gcc (Ubuntu) 9.3.0 
+    GNU ld (GNU Binutils for Ubuntu) 2.34
+    NASM version 2.14.02
 ```
+
 ## How to Build?
 
-> See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/master/docs/build.md)
+> See the [Gramado OS build instructions](https://github.com/frednora/gramado/blob/main/admin/docs/build.md)
 
 ## Testing
 
@@ -59,8 +60,7 @@ Please, give us some feedback.
 
 ## Documentation
 
-> See the [docs](https://github.com/frednora/gramado/tree/master/docs/).
-> See the [DOCS](https://github.com/frednora/gramado/blob/master/base/GRAMADO/DOCS/).
+> See the [docs](https://github.com/frednora/gramado/tree/main/admin/docs).
 
 ## More information
 
